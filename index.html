@@ -52,12 +52,13 @@
             </button>
             <div class="auto-refresh">
                 <label class="auto-refresh-label">
-                    <input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh()">
+                    <input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh()" checked>
                     <span>自動更新</span>
                 </label>
                 <select id="auto-refresh-interval" onchange="updateAutoRefreshInterval()">
+                    <option value="15" selected>15秒</option>
                     <option value="30">30秒</option>
-                    <option value="60" selected>1分</option>
+                    <option value="60">1分</option>
                     <option value="180">3分</option>
                     <option value="300">5分</option>
                 </select>
