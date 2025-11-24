@@ -69,10 +69,12 @@ function showView(viewName) {
     if (viewName === 'shift') {
         document.getElementById('shift-view').classList.add('active');
         document.querySelector('.nav-btn:nth-child(1)').classList.add('active');
+        // ★★★ チェック連動: シフトリストを再描画 ★★★
+        renderShiftList();
     } else if (viewName === 'all') {
-        // ★★★ 全キャストタブを追加 ★★★
         document.getElementById('all-view').classList.add('active');
         document.querySelector('.nav-btn:nth-child(2)').classList.add('active');
+        // ★★★ チェック連動: 全キャストリストを再描画 ★★★
         renderAllCastList();
     } else if (viewName === 'url') {
         document.getElementById('url-view').classList.add('active');
@@ -337,6 +339,25 @@ function parseTime(timeStr) {
     return totalMinutes;
 }
 
+/**
+ * メイン店舗バッジのHTMLを取得
+ */
+function getMainStoreBadge(name) {
+    const person = urlData.find(u => u.name === name);
+    if (!person || !person.mainStore) return '';
+    
+    const storeNames = {
+        'delidosu': 'でりどす',
+        'anecan': 'アネキャン',
+        'ainoshizuku': 'しずく'
+    };
+    
+    const storeName = storeNames[person.mainStore] || '';
+    if (!storeName) return '';
+    
+    return `<span class="main-store-badge ${person.mainStore}">${storeName}</span>`;
+}
+
 // ===============================
 // あいうえお順グループ化
 // ===============================
@@ -469,15 +490,16 @@ function renderShiftList() {
         }
         
         return `
-            <div class="shift-item ${shift.checked === '済' ? 'checked' : ''}">
+            <div class="shift-item ${shift.checked === '済' ? 'checked' : ''}" data-name="${shift.name}">
                 <div class="shift-header">
                     <div class="shift-info">
                         <input type="checkbox" class="shift-checkbox" 
+                               data-name="${shift.name}"
                                ${shift.checked === '済' ? 'checked' : ''} 
-                               onchange="toggleCheck('${shift.name}', event)">
+                               onchange="toggleCheck('${shift.name}', this.checked)">
                         <span class="shift-name">${shift.name}</span>
                         <span class="shift-time">${formattedTime}</span>
-                        ${mainBadge}
+                        ${getMainStoreBadge(shift.name)}
                     </div>
                 </div>
                 <div class="shift-buttons">
@@ -622,8 +644,9 @@ function renderCastCard(cast) {
             <div class="shift-header">
                 <div class="shift-info">
                     <input type="checkbox" class="shift-checkbox" 
+                           data-name="${cast.name}"
                            ${cast.checked === '済' ? 'checked' : ''} 
-                           onchange="toggleCheck('${cast.name}', event)">
+                           onchange="toggleCheck('${cast.name}', this.checked)">
                     <span class="shift-name">${cast.name}</span>
                     ${mainBadge}
                 </div>
@@ -668,48 +691,54 @@ function filterAllCastList() {
 // チェック機能
 // ===============================
 
-async function toggleCheck(name, event) {
-    event.preventDefault();
-    event.stopPropagation();
+/**
+ * チェック状態を切り替え
+ */
+async function toggleCheck(name, isChecked) {
+    console.log('toggleCheck: name =', name, 'isChecked =', isChecked);
     
-    const checkbox = event.target;
-    const checked = checkbox.checked;
+    // メモリ上のurlDataを更新
+    const person = urlData.find(p => p.name === name);
+    if (person) {
+        person.checked = isChecked ? '済' : '';
+        console.log('toggleCheck: person.checked =', person.checked);
+    }
     
+    // DOM上のすべての該当カードを更新（両タブで連動）
+    document.querySelectorAll(`.shift-item[data-name="${name}"]`).forEach(item => {
+        if (isChecked) {
+            item.classList.add('checked');
+        } else {
+            item.classList.remove('checked');
+        }
+    });
+    
+    // チェックボックスも同期
+    document.querySelectorAll(`.shift-checkbox[data-name="${name}"]`).forEach(checkbox => {
+        checkbox.checked = isChecked;
+    });
+    
+    // スプレッドシートに保存
     try {
         const response = await fetch(`${API_URL}?action=updateCheckStatus`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
             },
-            body: JSON.stringify({ name: name, checked: checked })
+            body: JSON.stringify({ name: name, checked: isChecked })
         });
         
         const result = await response.json();
+        console.log('toggleCheck: 保存結果', result);
         
-        if (result.success) {
-            // シフトデータを更新
-            const shiftIndex = shiftData.findIndex(s => s.name === name);
-            if (shiftIndex !== -1) {
-                shiftData[shiftIndex].checked = checked ? '済' : '';
-            }
-            
-            // URL管理データを更新
-            const urlIndex = urlData.findIndex(u => u.name === name);
-            if (urlIndex !== -1) {
-                urlData[urlIndex].checked = checked ? '済' : '';
-            }
-            
-            console.log(`toggleCheck: ${name} の状態を ${checked ? 'チェック' : 'チェック解除'} に更新しました`);
-        } else {
-            checkbox.checked = !checked;
-            throw new Error(result.error);
+        if (!result.success) {
+            console.error('toggleCheck: 保存失敗', result.error);
         }
     } catch (error) {
-        console.error('チェック更新エラー:', error);
-        checkbox.checked = !checked;
-        showToast('チェック状態の更新に失敗しました', 'error');
+        console.error('toggleCheck: 例外', error);
     }
 }
+
 
 // ===============================
 // URLリスト表示
