@@ -11,6 +11,7 @@ let urlData = [];
 let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
+let currentStoreFilter = 'all'; // 現在の店舗フィルター
 
 // ===============================
 // 初期化
@@ -359,6 +360,62 @@ function getMainStoreBadge(name) {
 }
 
 // ===============================
+// 店舗フィルター機能
+// ===============================
+
+/**
+ * 店舗フィルターを切り替え
+ */
+function filterByStore(store) {
+    console.log('filterByStore:', store);
+    currentStoreFilter = store;
+    
+    // フィルターボタンのアクティブ状態を更新
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.dataset.store === store) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // 現在表示中のタブに応じて再描画
+    if (document.getElementById('shift-view').classList.contains('active')) {
+        renderShiftList();
+    } else if (document.getElementById('all-view').classList.contains('active')) {
+        renderAllCastList();
+    } else if (document.getElementById('url-view').classList.contains('active')) {
+        renderUrlList();
+    }
+}
+
+/**
+ * 店舗フィルターでデータを絞り込み
+ */
+function filterDataByStore(data, store) {
+    if (store === 'all') {
+        return data;
+    }
+    
+    return data.filter(item => {
+        // urlDataからメイン店舗を取得
+        const person = urlData.find(u => u.name === item.name);
+        return person && person.mainStore === store;
+    });
+}
+
+/**
+ * 店舗フィルターでurlDataを絞り込み（在籍・管理タブ用）
+ */
+function filterUrlDataByStore(data, store) {
+    if (store === 'all') {
+        return data;
+    }
+    
+    return data.filter(item => item.mainStore === store);
+}
+
+// ===============================
 // あいうえお順グループ化
 // ===============================
 
@@ -441,11 +498,15 @@ function renderShiftList() {
         return;
     }
     
-    if (shiftData.length === 0) {
+    // ★★★ 店舗フィルターを適用 ★★★
+    const filteredData = filterDataByStore(shiftData, currentStoreFilter);
+    console.log('フィルター後のデータ件数:', filteredData.length, '(フィルター:', currentStoreFilter, ')');
+    
+    if (filteredData.length === 0) {
         listElement.style.display = 'none';
         emptyElement.style.display = 'block';
         if (document.getElementById('date-display')) {
-            document.getElementById('date-display').textContent = '';
+            document.getElementById('date-display').textContent = currentShiftDate || '';
         }
         return;
     }
@@ -454,7 +515,7 @@ function renderShiftList() {
     emptyElement.style.display = 'none';
     
     // ★★★ URL管理データを取得してチェック状態を反映 ★★★
-    const mergedData = shiftData.map(shift => {
+    const mergedData = filteredData.map(shift => {
         const urlInfo = urlData.find(u => u.name === shift.name);
         return {
             ...shift,
@@ -547,7 +608,11 @@ function renderAllCastList() {
         return;
     }
     
-    if (urlData.length === 0) {
+    // ★★★ 店舗フィルターを適用 ★★★
+    const filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);
+    console.log('フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
+    
+    if (filteredUrlData.length === 0) {
         listElement.style.display = 'none';
         if (emptyElement) emptyElement.style.display = 'block';
         return;
@@ -563,7 +628,7 @@ function renderAllCastList() {
         '通常': []
     };
     
-    urlData.forEach(cast => {
+    filteredUrlData.forEach(cast => {
         const castClass = cast.class || '通常';
         if (classGroups[castClass]) {
             classGroups[castClass].push(cast);
@@ -748,7 +813,11 @@ function renderUrlList() {
     const listElement = document.getElementById('url-list');
     const emptyElement = document.getElementById('url-empty-state');
     
-    if (urlData.length === 0) {
+    // ★★★ 店舗フィルターを適用 ★★★
+    const filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);
+    console.log('renderUrlList: フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
+    
+    if (filteredUrlData.length === 0) {
         listElement.style.display = 'none';
         emptyElement.style.display = 'block';
         return;
@@ -757,7 +826,7 @@ function renderUrlList() {
     listElement.style.display = 'flex';
     emptyElement.style.display = 'none';
     
-    listElement.innerHTML = urlData.map(url => `
+    listElement.innerHTML = filteredUrlData.map(url => `
         <div class="url-item" data-name="${url.name}">
             <div class="url-item-header">
                 <div class="url-item-name">${url.name}</div>
