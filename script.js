@@ -96,6 +96,7 @@ function showView(viewName) {
 
 async function loadAllData() {
     console.log('loadAllData: 全データロード開始');
+    await loadShiftDate();  // ★★★ 日付を読み込み ★★★
     await loadShiftData();
     await loadUrlData();
     console.log('loadAllData: 全データロード完了');
@@ -184,9 +185,12 @@ async function handleExcelUpload(file) {
             const dateDisplay = document.getElementById('date-display');
             dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
             dateDisplay.classList.add('has-date');
+            
+            // ★★★ 日付をスプレッドシートに保存 ★★★
+            await saveShiftDate(currentShiftDate);
         }
         
-        // ★★★ 新しい日のファイル → チェックを全リセット ★★★
+        // ★★★ チェックを全リセット ★★★
         console.log('チェック状態をリセット中...');
         await resetAllChecks();
         console.log('チェック状態リセット完了');
@@ -846,6 +850,51 @@ function getCheckStatus(name, store) {
             return person.checkedAinoshizuku === '済';
         default:
             return false;
+    }
+}
+
+/**
+ * シフト日付を保存（API呼び出し）
+ */
+async function saveShiftDate(date) {
+    try {
+        const response = await fetch(`${API_URL}?action=saveShiftDate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: JSON.stringify({ date: date })
+        });
+        
+        const result = await response.json();
+        console.log('saveShiftDate: 結果', result);
+        return result;
+    } catch (error) {
+        console.error('saveShiftDate: 例外', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * シフト日付を取得（API呼び出し）
+ */
+async function loadShiftDate() {
+    try {
+        const response = await fetch(`${API_URL}?action=getShiftDate`);
+        const result = await response.json();
+        console.log('loadShiftDate: 結果', result);
+        
+        if (result.success && result.date) {
+            currentShiftDate = result.date;
+            const dateDisplay = document.getElementById('date-display');
+            dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
+            dateDisplay.classList.add('has-date');
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('loadShiftDate: 例外', error);
+        return { success: false, error: error.message };
     }
 }
 
