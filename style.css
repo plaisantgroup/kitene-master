@@ -882,6 +882,37 @@ body {
     padding: 8px 15px;
 }
 
+/* ===== 管理タブ コンパクト表示 ===== */
+.url-item-compact {
+    padding: 12px 16px;
+}
+
+.url-item-compact .url-item-header {
+    margin-bottom: 0;
+}
+
+.url-item-compact .url-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.url-item-compact .url-item-name {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.url-item-compact .url-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.url-item-compact .btn-edit,
+.url-item-compact .btn-delete {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
 /* ===== レスポンシブ ===== */
 @media (max-width: 600px) {
     .container {
@@ -963,5 +994,20 @@ body {
     .store-checkbox {
         width: 16px;
         height: 16px;
+    }
+    
+    /* 管理タブ コンパクト表示 */
+    .url-item-compact {
+        padding: 10px 12px;
+    }
+    
+    .url-item-compact .url-item-name {
+        font-size: 1rem;
+    }
+    
+    .url-item-compact .btn-edit,
+    .url-item-compact .btn-delete {
+        padding: 5px 10px;
+        font-size: 0.8rem;
     }
 }
