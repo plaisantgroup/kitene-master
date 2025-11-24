@@ -12,6 +12,8 @@ let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
+let autoRefreshInterval = null;  // 自動リロードのインターバルID
+let autoRefreshSeconds = 60;     // 自動リロードの間隔（秒）
 
 // ===============================
 // 初期化
@@ -1140,6 +1142,154 @@ function showLoading(show) {
 
 function hideLoading() {
     showLoading(false);
+}
+
+// ===============================
+// 更新・自動リロード
+// ===============================
+
+/**
+ * データを手動更新
+ */
+async function refreshData() {
+    const refreshBtn = document.querySelector('.refresh-btn');
+    
+    // ボタンを無効化
+    refreshBtn.classList.add('loading');
+    refreshBtn.textContent = '🔄 更新中...';
+    
+    try {
+        // データを再読み込み
+        await loadUrlData();
+        await loadShiftData();
+        
+        // 現在のタブに応じて再描画
+        if (document.getElementById('shift-view').classList.contains('active')) {
+            renderShiftList();
+        } else if (document.getElementById('all-view').classList.contains('active')) {
+            renderAllCastList();
+        } else if (document.getElementById('url-view').classList.contains('active')) {
+            renderUrlList();
+        }
+        
+        // 最終更新時刻を表示
+        updateLastRefreshTime();
+        
+        showToast('データを更新しました', 'success');
+    } catch (error) {
+        console.error('refreshData: エラー', error);
+        showToast('更新に失敗しました', 'error');
+    } finally {
+        // ボタンを有効化
+        refreshBtn.classList.remove('loading');
+        refreshBtn.textContent = '🔄 更新';
+    }
+}
+
+/**
+ * 自動リロードのON/OFF切り替え
+ */
+function toggleAutoRefresh() {
+    const checkbox = document.getElementById('auto-refresh-toggle');
+    const autoRefreshDiv = document.querySelector('.auto-refresh');
+    
+    if (checkbox.checked) {
+        // 自動リロードを開始
+        startAutoRefresh();
+        autoRefreshDiv.classList.add('active');
+        showToast(`自動更新を開始しました（${autoRefreshSeconds}秒間隔）`, 'success');
+    } else {
+        // 自動リロードを停止
+        stopAutoRefresh();
+        autoRefreshDiv.classList.remove('active');
+        showToast('自動更新を停止しました', 'success');
+    }
+}
+
+/**
+ * 自動リロード間隔を変更
+ */
+function updateAutoRefreshInterval() {
+    const select = document.getElementById('auto-refresh-interval');
+    autoRefreshSeconds = parseInt(select.value);
+    
+    // 自動リロードが有効なら再起動
+    if (document.getElementById('auto-refresh-toggle').checked) {
+        stopAutoRefresh();
+        startAutoRefresh();
+        showToast(`自動更新間隔を${autoRefreshSeconds}秒に変更しました`, 'success');
+    }
+}
+
+/**
+ * 自動リロードを開始
+ */
+function startAutoRefresh() {
+    // 既存のインターバルをクリア
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    // 新しいインターバルを設定
+    autoRefreshInterval = setInterval(async () => {
+        console.log('自動リロード実行:', new Date().toLocaleTimeString());
+        
+        try {
+            await loadUrlData();
+            await loadShiftData();
+            
+            // 現在のタブに応じて再描画
+            if (document.getElementById('shift-view').classList.contains('active')) {
+                renderShiftList();
+            } else if (document.getElementById('all-view').classList.contains('active')) {
+                renderAllCastList();
+            } else if (document.getElementById('url-view').classList.contains('active')) {
+                renderUrlList();
+            }
+            
+            updateLastRefreshTime();
+            
+            // ★★★ 自動更新時もトースト通知を表示 ★★★
+            showToast('データを更新しました', 'success');
+        } catch (error) {
+            console.error('自動リロードエラー:', error);
+            showToast('自動更新に失敗しました', 'error');
+        }
+    }, autoRefreshSeconds * 1000);
+    
+    console.log(`自動リロード開始: ${autoRefreshSeconds}秒間隔`);
+}
+
+/**
+ * 自動リロードを停止
+ */
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        console.log('自動リロード停止');
+    }
+}
+
+/**
+ * 最終更新時刻を表示
+ */
+function updateLastRefreshTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    
+    // 既存の最終更新表示を削除
+    const existing = document.querySelector('.last-updated');
+    if (existing) {
+        existing.remove();
+    }
+    
+    // 新しい最終更新表示を追加
+    const refreshBtn = document.querySelector('.refresh-btn');
+    const lastUpdated = document.createElement('span');
+    lastUpdated.className = 'last-updated';
+    lastUpdated.textContent = `最終更新: ${timeStr}`;
+    refreshBtn.parentNode.insertBefore(lastUpdated, refreshBtn.nextSibling);
 }
 
 function showToast(message, type = 'success') {
