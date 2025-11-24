@@ -359,6 +359,24 @@ function getMainStoreBadge(name) {
     return `<span class="main-store-badge ${person.mainStore}">${storeName}</span>`;
 }
 
+/**
+ * URL管理用のメイン店舗バッジを取得
+ */
+function getMainStoreBadgeForUrl(url) {
+    if (!url.mainStore) return '';
+    
+    const storeNames = {
+        'delidosu': 'でりどす',
+        'anecan': 'アネキャン',
+        'ainoshizuku': 'しずく'
+    };
+    
+    const storeName = storeNames[url.mainStore] || '';
+    if (!storeName) return '';
+    
+    return `<span class="main-store-badge ${url.mainStore}">${storeName}</span>`;
+}
+
 // ===============================
 // 店舗フィルター機能
 // ===============================
@@ -904,50 +922,15 @@ function renderUrlList() {
     emptyElement.style.display = 'none';
     
     listElement.innerHTML = filteredUrlData.map(url => `
-        <div class="url-item" data-name="${url.name}">
+        <div class="url-item url-item-compact" data-name="${url.name}">
             <div class="url-item-header">
-                <div class="url-item-name">${url.name}</div>
+                <div class="url-item-info">
+                    <h3 class="url-item-name">${url.name}</h3>
+                    ${getMainStoreBadgeForUrl(url)}
+                </div>
                 <div class="url-item-actions">
                     <button class="btn-edit" onclick="showEditModal('${url.name}')">編集</button>
                     <button class="btn-delete" onclick="showDeleteModal('${url.name}')">削除</button>
-                </div>
-            </div>
-            <div class="url-item-content">
-                <div class="url-row">
-                    <div class="url-label">でりどす名</div>
-                    <div class="url-value ${url.delidosuName ? '' : 'empty'}">
-                        ${url.delidosuName || '未設定'}
-                    </div>
-                </div>
-                <div class="url-row">
-                    <div class="url-label">でりどすURL</div>
-                    <div class="url-value ${url.delidosuUrl ? '' : 'empty'}">
-                        ${url.delidosuUrl || '未設定'}
-                    </div>
-                </div>
-                <div class="url-row">
-                    <div class="url-label">アネキャン名</div>
-                    <div class="url-value ${url.anecanName ? '' : 'empty'}">
-                        ${url.anecanName || '未設定'}
-                    </div>
-                </div>
-                <div class="url-row">
-                    <div class="url-label">アネキャンURL</div>
-                    <div class="url-value ${url.anecanUrl ? '' : 'empty'}">
-                        ${url.anecanUrl || '未設定'}
-                    </div>
-                </div>
-                <div class="url-row">
-                    <div class="url-label">愛の雫名</div>
-                    <div class="url-value ${url.ainoshizukuName ? '' : 'empty'}">
-                        ${url.ainoshizukuName || '未設定'}
-                    </div>
-                </div>
-                <div class="url-row">
-                    <div class="url-label">愛の雫URL</div>
-                    <div class="url-value ${url.ainoshizukuUrl ? '' : 'empty'}">
-                        ${url.ainoshizukuUrl || '未設定'}
-                    </div>
                 </div>
             </div>
         </div>
