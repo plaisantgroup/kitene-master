@@ -883,12 +883,16 @@ body {
 }
 
 /* ===== 管理タブ コンパクト表示 ===== */
+/* ===== 管理タブ コンパクト表示 ===== */
 .url-item-compact {
-    padding: 12px 16px;
+    padding: 12px 16px !important;
 }
 
 .url-item-compact .url-item-header {
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .url-item-compact .url-item-info {
@@ -900,6 +904,10 @@ body {
 .url-item-compact .url-item-name {
     font-size: 1.1rem;
     margin: 0;
+}
+
+.url-item-compact .url-item-content {
+    display: none !important;
 }
 
 .url-item-compact .url-item-actions {
