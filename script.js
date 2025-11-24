@@ -551,34 +551,57 @@ function renderShiftList() {
         }
         
         return `
-            <div class="shift-item ${shift.checked === '済' ? 'checked' : ''}" data-name="${shift.name}">
+            <div class="shift-item" data-name="${shift.name}">
                 <div class="shift-header">
                     <div class="shift-info">
-                        <input type="checkbox" class="shift-checkbox" 
-                               data-name="${shift.name}"
-                               ${shift.checked === '済' ? 'checked' : ''} 
-                               onchange="toggleCheck('${shift.name}', this.checked)">
                         <span class="shift-name">${shift.name}</span>
                         <span class="shift-time">${formattedTime}</span>
                         ${getMainStoreBadge(shift.name)}
                     </div>
                 </div>
-                <div class="shift-buttons">
-                    <button class="btn-link btn-delidosu" 
-                            onclick="window.open('${shift.delidosuUrl}', '_blank')"
-                            ${!shift.delidosuUrl ? 'disabled' : ''}>
-                        ${shift.delidosuUrl ? 'でりどす' : '未登録'}
-                    </button>
-                    <button class="btn-link btn-anecan" 
-                            onclick="window.open('${shift.anecanUrl}', '_blank')"
-                            ${!shift.anecanUrl ? 'disabled' : ''}>
-                        ${shift.anecanUrl ? 'アネキャン' : '未登録'}
-                    </button>
-                    <button class="btn-link btn-ainoshizuku" 
-                            onclick="window.open('${shift.ainoshizukuUrl}', '_blank')"
-                            ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
-                        ${shift.ainoshizukuUrl ? '愛のしずく' : '未登録'}
-                    </button>
+                <div class="check-buttons">
+                    <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'delidosu') ? 'checked' : ''}">
+                        <input type="checkbox" 
+                               class="store-checkbox" 
+                               data-name="${shift.name}" 
+                               data-store="delidosu"
+                               ${getCheckStatus(shift.name, 'delidosu') ? 'checked' : ''}
+                               onchange="toggleStoreCheck('${shift.name}', 'delidosu', this.checked)"
+                               ${!shift.delidosuUrl ? 'disabled' : ''}>
+                        <button class="btn-link btn-delidosu" 
+                                onclick="window.open('${shift.delidosuUrl}', '_blank')"
+                                ${!shift.delidosuUrl ? 'disabled' : ''}>
+                            ${shift.delidosuUrl ? 'でりどす' : '未登録'}
+                        </button>
+                    </div>
+                    <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}">
+                        <input type="checkbox" 
+                               class="store-checkbox" 
+                               data-name="${shift.name}" 
+                               data-store="anecan"
+                               ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}
+                               onchange="toggleStoreCheck('${shift.name}', 'anecan', this.checked)"
+                               ${!shift.anecanUrl ? 'disabled' : ''}>
+                        <button class="btn-link btn-anecan" 
+                                onclick="window.open('${shift.anecanUrl}', '_blank')"
+                                ${!shift.anecanUrl ? 'disabled' : ''}>
+                            ${shift.anecanUrl ? 'アネキャン' : '未登録'}
+                        </button>
+                    </div>
+                    <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}">
+                        <input type="checkbox" 
+                               class="store-checkbox" 
+                               data-name="${shift.name}" 
+                               data-store="ainoshizuku"
+                               ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}
+                               onchange="toggleStoreCheck('${shift.name}', 'ainoshizuku', this.checked)"
+                               ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
+                        <button class="btn-link btn-ainoshizuku" 
+                                onclick="window.open('${shift.ainoshizukuUrl}', '_blank')"
+                                ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
+                            ${shift.ainoshizukuUrl ? '愛のしずく' : '未登録'}
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -705,33 +728,56 @@ function renderCastCard(cast) {
     }
     
     return `
-        <div class="shift-item ${cast.checked === '済' ? 'checked' : ''}" data-name="${cast.name}">
+        <div class="shift-item" data-name="${cast.name}">
             <div class="shift-header">
                 <div class="shift-info">
-                    <input type="checkbox" class="shift-checkbox" 
-                           data-name="${cast.name}"
-                           ${cast.checked === '済' ? 'checked' : ''} 
-                           onchange="toggleCheck('${cast.name}', this.checked)">
                     <span class="shift-name">${cast.name}</span>
                     ${mainBadge}
                 </div>
             </div>
-            <div class="shift-buttons">
-                <button class="btn-link btn-delidosu" 
-                        onclick="window.open('${cast.delidosuUrl}', '_blank')"
-                        ${!cast.delidosuUrl ? 'disabled' : ''}>
-                    ${cast.delidosuUrl ? 'でりどす' : '未登録'}
-                </button>
-                <button class="btn-link btn-anecan" 
-                        onclick="window.open('${cast.anecanUrl}', '_blank')"
-                        ${!cast.anecanUrl ? 'disabled' : ''}>
-                    ${cast.anecanUrl ? 'アネキャン' : '未登録'}
-                </button>
-                <button class="btn-link btn-ainoshizuku" 
-                        onclick="window.open('${cast.ainoshizukuUrl}', '_blank')"
-                        ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
-                    ${cast.ainoshizukuUrl ? '愛のしずく' : '未登録'}
-                </button>
+            <div class="check-buttons">
+                <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'delidosu') ? 'checked' : ''}">
+                    <input type="checkbox" 
+                           class="store-checkbox" 
+                           data-name="${cast.name}" 
+                           data-store="delidosu"
+                           ${getCheckStatus(cast.name, 'delidosu') ? 'checked' : ''}
+                           onchange="toggleStoreCheck('${cast.name}', 'delidosu', this.checked)"
+                           ${!cast.delidosuUrl ? 'disabled' : ''}>
+                    <button class="btn-link btn-delidosu" 
+                            onclick="window.open('${cast.delidosuUrl}', '_blank')"
+                            ${!cast.delidosuUrl ? 'disabled' : ''}>
+                        ${cast.delidosuUrl ? 'でりどす' : '未登録'}
+                    </button>
+                </div>
+                <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'anecan') ? 'checked' : ''}">
+                    <input type="checkbox" 
+                           class="store-checkbox" 
+                           data-name="${cast.name}" 
+                           data-store="anecan"
+                           ${getCheckStatus(cast.name, 'anecan') ? 'checked' : ''}
+                           onchange="toggleStoreCheck('${cast.name}', 'anecan', this.checked)"
+                           ${!cast.anecanUrl ? 'disabled' : ''}>
+                    <button class="btn-link btn-anecan" 
+                            onclick="window.open('${cast.anecanUrl}', '_blank')"
+                            ${!cast.anecanUrl ? 'disabled' : ''}>
+                        ${cast.anecanUrl ? 'アネキャン' : '未登録'}
+                    </button>
+                </div>
+                <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'ainoshizuku') ? 'checked' : ''}">
+                    <input type="checkbox" 
+                           class="store-checkbox" 
+                           data-name="${cast.name}" 
+                           data-store="ainoshizuku"
+                           ${getCheckStatus(cast.name, 'ainoshizuku') ? 'checked' : ''}
+                           onchange="toggleStoreCheck('${cast.name}', 'ainoshizuku', this.checked)"
+                           ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
+                    <button class="btn-link btn-ainoshizuku" 
+                            onclick="window.open('${cast.ainoshizukuUrl}', '_blank')"
+                            ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
+                        ${cast.ainoshizukuUrl ? '愛のしずく' : '未登録'}
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -753,34 +799,61 @@ function filterAllCastList() {
 }
 
 // ===============================
-// チェック機能
+// 3チェック機能
 // ===============================
 
 /**
- * チェック状態を切り替え
+ * チェック状態を取得
  */
-async function toggleCheck(name, isChecked) {
-    console.log('toggleCheck: name =', name, 'isChecked =', isChecked);
+function getCheckStatus(name, store) {
+    const person = urlData.find(u => u.name === name);
+    if (!person) return false;
+    
+    switch(store) {
+        case 'delidosu':
+            return person.checkedDelidosu === '済';
+        case 'anecan':
+            return person.checkedAnecan === '済';
+        case 'ainoshizuku':
+            return person.checkedAinoshizuku === '済';
+        default:
+            return false;
+    }
+}
+
+/**
+ * 店舗別チェック状態を切り替え
+ */
+async function toggleStoreCheck(name, store, isChecked) {
+    console.log('toggleStoreCheck:', name, store, isChecked);
     
     // メモリ上のurlDataを更新
     const person = urlData.find(p => p.name === name);
     if (person) {
-        person.checked = isChecked ? '済' : '';
-        console.log('toggleCheck: person.checked =', person.checked);
+        switch(store) {
+            case 'delidosu':
+                person.checkedDelidosu = isChecked ? '済' : '';
+                break;
+            case 'anecan':
+                person.checkedAnecan = isChecked ? '済' : '';
+                break;
+            case 'ainoshizuku':
+                person.checkedAinoshizuku = isChecked ? '済' : '';
+                break;
+        }
     }
     
-    // DOM上のすべての該当カードを更新（両タブで連動）
-    document.querySelectorAll(`.shift-item[data-name="${name}"]`).forEach(item => {
-        if (isChecked) {
-            item.classList.add('checked');
-        } else {
-            item.classList.remove('checked');
-        }
-    });
-    
-    // チェックボックスも同期
-    document.querySelectorAll(`.shift-checkbox[data-name="${name}"]`).forEach(checkbox => {
+    // DOM上のすべての該当チェックボックスとラッパーを更新（タブ間連動）
+    document.querySelectorAll(`.store-checkbox[data-name="${name}"][data-store="${store}"]`).forEach(checkbox => {
         checkbox.checked = isChecked;
+        const wrapper = checkbox.closest('.check-btn-wrapper');
+        if (wrapper) {
+            if (isChecked) {
+                wrapper.classList.add('checked');
+            } else {
+                wrapper.classList.remove('checked');
+            }
+        }
     });
     
     // スプレッドシートに保存
@@ -790,17 +863,21 @@ async function toggleCheck(name, isChecked) {
             headers: {
                 'Content-Type': 'text/plain',
             },
-            body: JSON.stringify({ name: name, checked: isChecked })
+            body: JSON.stringify({ 
+                name: name, 
+                store: store,
+                checked: isChecked 
+            })
         });
         
         const result = await response.json();
-        console.log('toggleCheck: 保存結果', result);
+        console.log('toggleStoreCheck: 保存結果', result);
         
         if (!result.success) {
-            console.error('toggleCheck: 保存失敗', result.error);
+            console.error('toggleStoreCheck: 保存失敗', result.error);
         }
     } catch (error) {
-        console.error('toggleCheck: 例外', error);
+        console.error('toggleStoreCheck: 例外', error);
     }
 }
 
