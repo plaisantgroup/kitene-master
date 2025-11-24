@@ -45,6 +45,25 @@
             </button>
         </div>
 
+        <!-- 更新コントロール -->
+        <div class="refresh-control">
+            <button class="refresh-btn" onclick="refreshData()">
+                🔄 更新
+            </button>
+            <div class="auto-refresh">
+                <label class="auto-refresh-label">
+                    <input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh()">
+                    <span>自動更新</span>
+                </label>
+                <select id="auto-refresh-interval" onchange="updateAutoRefreshInterval()">
+                    <option value="30">30秒</option>
+                    <option value="60" selected>1分</option>
+                    <option value="180">3分</option>
+                    <option value="300">5分</option>
+                </select>
+            </div>
+        </div>
+
         <!-- シフト一覧ビュー -->
         <div id="shift-view" class="view active">
             <!-- アップロードエリア -->
