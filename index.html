@@ -67,6 +67,9 @@
 
         <!-- シフト一覧ビュー -->
         <div id="shift-view" class="view active">
+            <!-- 日付表示 -->
+            <div class="date-display" id="date-display">📅 日付未選択</div>
+
             <!-- アップロードエリア -->
             <div class="upload-area">
                 <label for="excel-upload" class="upload-label">
@@ -75,9 +78,6 @@
                 </label>
                 <p class="upload-hint">シフト_YYYYMMDD.xlsx をアップロード</p>
             </div>
-
-            <!-- 日付表示 -->
-            <div class="date-display" id="date-display"></div>
 
             <!-- ローディング -->
             <div id="loading" class="loading" style="display: none;">
