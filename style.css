@@ -167,6 +167,102 @@ body {
     border-color: #3b82f6;
 }
 
+/* ===== 更新コントロール ===== */
+.refresh-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.refresh-btn {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.refresh-btn:active {
+    transform: translateY(0);
+}
+
+.refresh-btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.auto-refresh {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auto-refresh-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.auto-refresh-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--secondary-color);
+    cursor: pointer;
+}
+
+.auto-refresh-label span {
+    font-weight: 600;
+}
+
+.auto-refresh select {
+    padding: 6px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.auto-refresh select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* 自動更新中の表示 */
+.auto-refresh.active .auto-refresh-label span {
+    color: var(--secondary-color);
+}
+
+.auto-refresh.active .auto-refresh-label span::after {
+    content: ' (ON)';
+}
+
+/* 最終更新時刻 */
+.last-updated {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: 10px;
+}
+
 /* ===== ビュー切り替え ===== */
 .view {
     display: none;
@@ -989,6 +1085,23 @@ body {
         font-size: 0.8rem;
     }
     
+    /* 更新コントロール */
+    .refresh-control {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .refresh-btn {
+        width: 100%;
+        padding: 10px;
+    }
+    
+    .auto-refresh {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
     /* 3チェック機能 */
     .check-buttons {
         gap: 5px;
@@ -1006,7 +1119,7 @@ body {
     
     /* 管理タブ コンパクト表示 */
     .url-item-compact {
-        padding: 10px 12px;
+        padding: 10px 12px !important;
     }
     
     .url-item-compact .url-item-name {
