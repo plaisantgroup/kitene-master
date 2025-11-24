@@ -179,7 +179,17 @@ async function handleExcelUpload(file) {
             const [, year, month, day] = dateMatch;
             console.log('日付抽出:', year, month, day);
             currentShiftDate = `${year}年${month}月${day}日`;
+            
+            // ★★★ 日付表示を更新 ★★★
+            const dateDisplay = document.getElementById('date-display');
+            dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
+            dateDisplay.classList.add('has-date');
         }
+        
+        // ★★★ 新しい日のファイル → チェックを全リセット ★★★
+        console.log('チェック状態をリセット中...');
+        await resetAllChecks();
+        console.log('チェック状態リセット完了');
         
         // ★★★ ステップ2: URL管理データを取得（追加） ★★★
         console.log('ステップ2: URL管理データを取得中...');
@@ -529,9 +539,6 @@ function renderShiftList() {
     if (filteredData.length === 0) {
         listElement.style.display = 'none';
         emptyElement.style.display = 'block';
-        if (document.getElementById('date-display')) {
-            document.getElementById('date-display').textContent = currentShiftDate || '';
-        }
         return;
     }
     
@@ -631,10 +638,7 @@ function renderShiftList() {
         `;
     }).join('');
     
-    // ★★★ 日付表示 ★★★
-    if (currentShiftDate && document.getElementById('date-display')) {
-        document.getElementById('date-display').textContent = currentShiftDate;
-    }
+    // 日付表示（handleExcelUpload関数で設定済みなので、ここでは何もしない）
     
     console.log('renderShiftList: 描画完了');
 }
@@ -842,6 +846,41 @@ function getCheckStatus(name, store) {
             return person.checkedAinoshizuku === '済';
         default:
             return false;
+    }
+}
+
+/**
+ * 全チェック状態をリセット（API呼び出し）
+ */
+async function resetAllChecks() {
+    try {
+        const response = await fetch(`${API_URL}?action=resetAllChecks`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: JSON.stringify({})
+        });
+        
+        const result = await response.json();
+        console.log('resetAllChecks: 結果', result);
+        
+        if (result.success) {
+            // メモリ上のurlDataもリセット
+            urlData.forEach(person => {
+                person.checkedDelidosu = '';
+                person.checkedAnecan = '';
+                person.checkedAinoshizuku = '';
+            });
+            showToast('チェックをリセットしました', 'success');
+        } else {
+            console.error('resetAllChecks: エラー', result.error);
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('resetAllChecks: 例外', error);
+        return { success: false, error: error.message };
     }
 }
 
