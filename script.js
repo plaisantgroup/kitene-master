@@ -13,7 +13,7 @@ let currentDeleteName = null;
 let currentShiftDate = '';
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
 let autoRefreshInterval = null;  // 自動リロードのインターバルID
-let autoRefreshSeconds = 60;     // 自動リロードの間隔（秒）
+let autoRefreshSeconds = 15;     // 自動リロードの間隔（秒）
 
 // ===============================
 // 初期化
@@ -51,6 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // データの読み込み
     console.log('初期データをロード中...');
     loadAllData();
+    
+    // ★★★ デフォルトで自動更新を開始 ★★★
+    startAutoRefresh();
+    document.querySelector('.auto-refresh').classList.add('active');
 });
 
 // ===============================
