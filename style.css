@@ -769,6 +769,48 @@ body {
     border-left: 4px solid var(--danger-color);
 }
 
+/* ===== 3チェック機能 ===== */
+.check-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.check-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.store-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--secondary-color);
+}
+
+.check-btn-wrapper.checked .btn-link {
+    box-shadow: 0 0 0 2px var(--secondary-color);
+}
+
+.check-btn-wrapper .btn-link {
+    flex: 1;
+}
+
+/* チェック済みボタンのスタイル */
+.check-btn-wrapper.checked .btn-delidosu {
+    box-shadow: 0 0 0 3px #22c55e;
+}
+
+.check-btn-wrapper.checked .btn-anecan {
+    box-shadow: 0 0 0 3px #22c55e;
+}
+
+.check-btn-wrapper.checked .btn-ainoshizuku {
+    box-shadow: 0 0 0 3px #22c55e;
+}
+
 /* ===== メイン店舗バッジ ===== */
 .main-store-badge {
     display: inline-block;
@@ -895,5 +937,31 @@ body {
     .nav-btn {
         font-size: 0.85rem;
         padding: 10px 15px;
+    }
+    
+    /* 店舗フィルター */
+    .store-filter {
+        gap: 5px;
+        padding: 8px;
+    }
+    
+    .filter-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    /* 3チェック機能 */
+    .check-buttons {
+        gap: 5px;
+    }
+    
+    .check-btn-wrapper {
+        flex: 1;
+        min-width: calc(33% - 5px);
+    }
+    
+    .store-checkbox {
+        width: 16px;
+        height: 16px;
     }
 }
