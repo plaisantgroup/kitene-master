@@ -29,6 +29,22 @@
             </button>
         </nav>
 
+        <!-- 店舗フィルター -->
+        <div class="store-filter">
+            <button class="filter-btn active" data-store="all" onclick="filterByStore('all')">
+                全店舗
+            </button>
+            <button class="filter-btn" data-store="delidosu" onclick="filterByStore('delidosu')">
+                でりどす
+            </button>
+            <button class="filter-btn" data-store="anecan" onclick="filterByStore('anecan')">
+                アネキャン
+            </button>
+            <button class="filter-btn" data-store="ainoshizuku" onclick="filterByStore('ainoshizuku')">
+                しずく
+            </button>
+        </div>
+
         <!-- シフト一覧ビュー -->
         <div id="shift-view" class="view active">
             <!-- アップロードエリア -->
