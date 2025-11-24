@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>キテネマスター</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- XLSX読み込みライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1 class="logo">✨ キテネマスター</h1>
+            <p class="subtitle">Shift Management System</p>
+        </header>
+
+        <!-- ナビゲーション -->
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showView('shift')">
+                📋 シフト一覧
+            </button>
+            <button class="nav-btn" onclick="showView('all')">
+                👥 全キャスト
+            </button>
+            <button class="nav-btn" onclick="showView('url')">
+                ⚙️ URL管理
+            </button>
+        </nav>
+
+        <!-- シフト一覧ビュー -->
+        <div id="shift-view" class="view active">
+            <!-- アップロードエリア -->
+            <div class="upload-area">
+                <label for="excel-upload" class="upload-label">
+                    📤 Excelファイルをアップロード
+                    <input type="file" id="excel-upload" accept=".xlsx,.xls" style="display: none;">
+                </label>
+                <p class="upload-hint">シフト_YYYYMMDD.xlsx をアップロード</p>
+            </div>
+
+            <!-- 日付表示 -->
+            <div class="date-display" id="date-display"></div>
+
+            <!-- ローディング -->
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>読み込み中...</p>
+            </div>
+
+            <!-- シフトリスト -->
+            <div id="shift-list" class="shift-list"></div>
+
+            <!-- 空状態 -->
+            <div id="empty-state" class="empty-state">
+                <p>📂</p>
+                <p>Excelファイルをアップロードしてください</p>
+            </div>
+        </div>
+
+        <!-- 全キャストビュー -->
+        <div id="all-view" class="view">
+            <!-- 検索バー -->
+            <div class="search-bar">
+                <input type="text" id="all-search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterAllCastList()">
+            </div>
+
+            <!-- 全キャストリスト -->
+            <div id="all-cast-list" class="shift-list"></div>
+
+            <!-- 空状態 -->
+            <div id="all-empty-state" class="empty-state">
+                <p>📝</p>
+                <p>URL登録済みのキャストがいません</p>
+            </div>
+        </div>
+
+        <!-- URL管理ビュー -->
+        <div id="url-view" class="view">
+            <!-- 検索バー -->
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterUrlList()">
+                <button class="btn-primary" onclick="showAddModal()">➕ 新規追加</button>
+            </div>
+
+            <!-- URLリスト -->
+            <div id="url-list" class="url-list"></div>
+
+            <!-- 空状態 -->
+            <div id="url-empty-state" class="empty-state">
+                <p>📝</p>
+                <p>URL情報が登録されていません</p>
+                <button class="btn-primary" onclick="showAddModal()">最初のURL情報を追加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- URL追加/編集モーダル -->
+    <div id="url-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">URL情報を追加</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>源氏名 <span class="required">*</span></label>
+                    <input type="text" id="modal-name" placeholder="例: うい">
+                </div>
+                <div class="form-group">
+                    <label>クラス</label>
+                    <select id="modal-class" class="form-select">
+                        <option value="通常">通常</option>
+                        <option value="姫デコ">姫デコ</option>
+                        <option value="新人">新人</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="label-with-checkbox">
+                        <span>でりどす名</span>
+                        <label class="main-checkbox-label">
+                            <input type="checkbox" id="modal-deli-main" class="main-store-checkbox" data-store="delidosu">
+                            <span class="main-checkbox-text">メイン</span>
+                        </label>
+                    </label>
+                    <input type="text" id="modal-deli-name" placeholder="例: うい">
+                </div>
+                <div class="form-group">
+                    <label>でりどすURL</label>
+                    <input type="url" id="modal-deli-url" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label class="label-with-checkbox">
+                        <span>アネキャン名</span>
+                        <label class="main-checkbox-label">
+                            <input type="checkbox" id="modal-ane-main" class="main-store-checkbox" data-store="anecan">
+                            <span class="main-checkbox-text">メイン</span>
+                        </label>
+                    </label>
+                    <input type="text" id="modal-ane-name" placeholder="例: すず">
+                </div>
+                <div class="form-group">
+                    <label>アネキャンURL</label>
+                    <input type="url" id="modal-ane-url" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label class="label-with-checkbox">
+                        <span>愛のしずく名</span>
+                        <label class="main-checkbox-label">
+                            <input type="checkbox" id="modal-aino-main" class="main-store-checkbox" data-store="ainoshizuku">
+                            <span class="main-checkbox-text">メイン</span>
+                        </label>
+                    </label>
+                    <input type="text" id="modal-aino-name" placeholder="例: まり">
+                </div>
+                <div class="form-group">
+                    <label>愛のしずくURL</label>
+                    <input type="url" id="modal-aino-url" placeholder="https://...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
+                <button class="btn-primary" onclick="saveUrlData()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 削除確認モーダル -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>削除の確認</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>「<span id="delete-name"></span>」のURL情報を削除しますか?</p>
+                <p class="warning-text">この操作は取り消せません。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeDeleteModal()">キャンセル</button>
+                <button class="btn-danger" onclick="confirmDelete()">削除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
