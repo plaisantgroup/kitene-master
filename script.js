@@ -729,7 +729,7 @@ function renderAllCastList() {
         const groupOrder = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ', 'その他'];
         groupOrder.forEach(group => {
             if (kanaGroups[group] && kanaGroups[group].length > 0) {
-                html += `<div class="class-header"><h3>📋 ${group}行</h3></div>`;
+                html += `<div class="class-header kana"><h3>📋 ${group}行</h3></div>`;
                 kanaGroups[group].forEach(cast => {
                     html += renderCastCard(cast);
                 });
