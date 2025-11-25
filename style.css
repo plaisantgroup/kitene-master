@@ -314,17 +314,24 @@ body {
     color: var(--text-secondary);
 }
 
-/* ===== 日付表示 ===== */
+/* ===== 日付表示（改善版） ===== */
 .date-display {
     text-align: center;
-    padding: 12px;
-    background: var(--card-bg);
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
     border-radius: var(--radius-md);
     margin-bottom: 20px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--primary-color);
-    box-shadow: var(--shadow-sm);
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #60a5fa;
+    box-shadow: var(--shadow-md);
+    border: 1px solid #3b82f6;
+}
+
+.date-display.has-date {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    color: #6ee7b7;
+    border-color: #10b981;
 }
 
 /* ===== ローディング ===== */
@@ -954,28 +961,31 @@ body {
 /* 姫デコヘッダー */
 .class-header.himede {
     border-left-color: #fbbf24;
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.15) 100%);
 }
 
 .class-header.himede h3 {
-    color: #fbbf24;
+    color: #fcd34d;
 }
 
 /* 新人ヘッダー */
 .class-header.newbie {
     border-left-color: #34d399;
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(16, 185, 129, 0.15) 100%);
 }
 
 .class-header.newbie h3 {
-    color: #34d399;
+    color: #6ee7b7;
 }
 
-.class-header.kana-group {
-    border-left-color: var(--primary-color);
-    background: rgba(99, 102, 241, 0.05);
-    font-size: 1rem;
-    padding: 8px 15px;
+/* あいうえお順ヘッダー */
+.class-header.kana {
+    border-left-color: #60a5fa;
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(59, 130, 246, 0.12) 100%);
+}
+
+.class-header.kana h3 {
+    color: #93c5fd;
 }
 
 /* ===== 管理タブ コンパクト表示 ===== */
