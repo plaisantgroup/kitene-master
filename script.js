@@ -261,12 +261,24 @@ function readExcelFile(file) {
                 console.log('readExcelFile: JSON変換完了、行数:', jsonData.length);
                 console.log('最初の3行:', jsonData.slice(0, 3));
                 
-                // 「出勤予」のデータのみ抽出
+                // 「出勤予」と「出勤確」のデータを抽出
                 const filteredData = jsonData
                     .filter(row => {
-                        const isMatch = row['シフト状態'] === '出勤予';
+                        const status = row['シフト状態'];
+                        const isMatch = status === '出勤予' || status === '出勤確';
                         if (!isMatch) {
-                            console.log('フィルタアウト:', row['源氏名'], 'シフト状態:', row['シフト状態']);
+                            console.log('❌ フィルタアウト:', {
+                                name: row['源氏名'],
+                                time: row['出勤時間'],
+                                status: status,
+                                statusType: typeof status
+                            });
+                        } else {
+                            console.log('✅ OK:', {
+                                name: row['源氏名'],
+                                time: row['出勤時間'],
+                                status: status
+                            });
                         }
                         return isMatch;
                     })
