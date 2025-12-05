@@ -1227,6 +1227,9 @@ function showAddModal() {
     document.getElementById('modal-last-video-date').value = '';
     document.getElementById('modal-interview-comment').value = '';
     
+    // 面談スタッフのドロップダウンを更新
+    updateStaffDropdown('');
+    
     document.getElementById('url-modal').classList.add('active');
 }
 
@@ -1258,10 +1261,11 @@ function showEditModal(name) {
     
     // ★★★ 面談情報を設定 ★★★
     document.getElementById('modal-last-work-date').value = urlInfo.lastWorkDate || '';
-    document.getElementById('modal-last-interview-date').value = urlInfo.lastInterviewDate || '';
-    document.getElementById('modal-interview-staff').value = urlInfo.interviewStaff || '';
-    document.getElementById('modal-last-photo-date').value = urlInfo.lastPhotoDate || '';
-    document.getElementById('modal-last-video-date').value = urlInfo.lastVideoDate || '';
+    document.getElementById('modal-last-interview-date').value = formatDateForInput(urlInfo.lastInterviewDate);
+    // 面談スタッフのドロップダウンを更新
+    updateStaffDropdown(urlInfo.interviewStaff || '');
+    document.getElementById('modal-last-photo-date').value = formatDateForInput(urlInfo.lastPhotoDate);
+    document.getElementById('modal-last-video-date').value = formatDateForInput(urlInfo.lastVideoDate);
     document.getElementById('modal-interview-comment').value = urlInfo.interviewComment || '';
     
     document.getElementById('url-modal').classList.add('active');
@@ -1325,6 +1329,13 @@ async function saveUrlData() {
             showToast('メイン店舗に設定する場合、愛のしずくのURLを入力してください', 'error');
             return;
         }
+    }
+    
+    // スタッフクラス以外はメイン店舗必須
+    const selectedClass = document.getElementById('modal-class').value;
+    if (selectedClass !== 'スタッフ' && !mainStore) {
+        showToast('メイン店舗を選択してください', 'error');
+        return;
     }
     
     const data = {
@@ -1822,6 +1833,43 @@ function formatDisplayDate(dateValue) {
     }
     
     return dateValue;
+}
+
+/**
+ * 日付をinput type="date"用にフォーマット（YYYY-MM-DD形式）
+ */
+function formatDateForInput(dateValue) {
+    if (!dateValue) return '';
+    try {
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    } catch (e) {
+        return '';
+    }
+}
+
+/**
+ * 面談スタッフのドロップダウンを更新
+ */
+function updateStaffDropdown(selectedValue = '') {
+    const select = document.getElementById('modal-interview-staff');
+    if (!select) return;
+    
+    // スタッフクラスの人を取得
+    const staffList = urlData.filter(u => u.class === 'スタッフ');
+    
+    // 選択肢を生成
+    let options = '<option value="">選択してください</option>';
+    staffList.forEach(staff => {
+        const selected = staff.name === selectedValue ? 'selected' : '';
+        options += `<option value="${staff.name}" ${selected}>${staff.name}</option>`;
+    });
+    
+    select.innerHTML = options;
 }
 
 /**
