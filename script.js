@@ -55,6 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ★★★ デフォルトで自動更新を開始 ★★★
     startAutoRefresh();
     document.querySelector('.auto-refresh').classList.add('active');
+    
+    // トップに戻るボタンのスクロール監視
+    window.addEventListener('scroll', handleScroll);
 });
 
 // ===============================
@@ -2016,4 +2019,33 @@ async function updateLastWorkDate(names, date) {
         console.error('updateLastWorkDate: 例外', error);
         return { success: false, error: error.message };
     }
+}
+
+// ===============================
+// トップに戻るボタン
+// ===============================
+
+/**
+ * スクロール時の処理
+ */
+function handleScroll() {
+    const backToTopBtn = document.getElementById('back-to-top');
+    if (!backToTopBtn) return;
+    
+    // 200px以上スクロールしたら表示
+    if (window.scrollY > 200) {
+        backToTopBtn.classList.add('show');
+    } else {
+        backToTopBtn.classList.remove('show');
+    }
+}
+
+/**
+ * トップにスクロール
+ */
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
 }
