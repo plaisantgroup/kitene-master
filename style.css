@@ -1,5 +1,5 @@
 /* ===============================
-   キテネマスター - スタイルシート
+   キテネマスター v5.0 - スタイルシート
    =============================== */
 
 /* ===== 基本設定 ===== */
@@ -988,6 +988,280 @@ body {
     color: #93c5fd;
 }
 
+/* ===== ジャンプボタン ===== */
+.jump-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.jump-btn {
+    padding: 8px 12px;
+    min-width: 40px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.jump-btn:hover:not(.disabled) {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+}
+
+.jump-btn:active:not(.disabled) {
+    transform: scale(0.95);
+}
+
+.jump-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--bg-color);
+}
+
+.jump-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* ===== 面談カード ===== */
+.interview-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary-color);
+}
+
+.interview-card:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.interview-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.interview-card-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.interview-card-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.interview-card-body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.interview-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.interview-info-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.interview-info-value {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.interview-info-value.empty {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* 面談コメント（全幅） */
+.interview-comment {
+    grid-column: 1 / -1;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary-color);
+}
+
+.interview-comment-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.interview-card-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ===== アラート表示（日付警告） ===== */
+/* 赤アラート: 最終出勤から30日以上 */
+.interview-card.alert-red {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+}
+
+.interview-card.alert-red .interview-card-name {
+    color: #fca5a5;
+}
+
+.alert-badge-red {
+    display: inline-block;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+/* 黄アラート: 最終面談から60日以上 */
+.interview-card.alert-yellow {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+}
+
+.interview-card.alert-yellow .interview-card-name {
+    color: #fcd34d;
+}
+
+.alert-badge-yellow {
+    display: inline-block;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+/* ===== モーダルセクション ===== */
+.modal-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.modal-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-color);
+    display: inline-block;
+}
+
+.modal-section-title .required {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* ===== テキストエリア ===== */
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.3s ease;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+/* ===== 無効化された入力フィールド ===== */
+.form-input-disabled {
+    background: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ===== 日付入力フィールド ===== */
+.form-group input[type="date"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Chromeの日付ピッカーアイコンをスタイリング */
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+    cursor: pointer;
+}
+
+/* ===== スタッフクラスヘッダー ===== */
+.class-header.staff {
+    border-left-color: #6b7280;
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.25) 0%, rgba(75, 85, 99, 0.15) 100%);
+}
+
+.class-header.staff h3 {
+    color: #9ca3af;
+}
+
 /* ===== 管理タブ コンパクト表示 ===== */
 /* ===== 管理タブ コンパクト表示 ===== */
 .url-item-compact {
@@ -1074,14 +1348,16 @@ body {
         padding: 8px 12px;
     }
     
-    /* ナビゲーション */
+    /* ナビゲーション（4タブ対応） */
     .nav {
-        gap: 5px;
+        gap: 4px;
+        flex-wrap: nowrap;
     }
     
     .nav-btn {
-        font-size: 0.85rem;
-        padding: 10px 15px;
+        font-size: 0.7rem;
+        padding: 8px 6px;
+        white-space: nowrap;
     }
     
     /* 店舗フィルター */
@@ -1140,5 +1416,36 @@ body {
     .url-item-compact .btn-delete {
         padding: 5px 10px;
         font-size: 0.8rem;
+    }
+    
+    /* ジャンプボタン */
+    .jump-buttons {
+        gap: 4px;
+        padding: 8px;
+    }
+    
+    .jump-btn {
+        padding: 6px 8px;
+        min-width: 32px;
+        font-size: 0.8rem;
+    }
+    
+    /* 面談カード */
+    .interview-card-body {
+        grid-template-columns: 1fr;
+    }
+    
+    .interview-card-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .interview-card-name {
+        font-size: 1.1rem;
+    }
+    
+    /* モーダルセクション */
+    .modal-section-title {
+        font-size: 0.9rem;
     }
 }
