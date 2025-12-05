@@ -24,6 +24,9 @@
             <button class="nav-btn" onclick="showView('all')">
                 👥 在籍
             </button>
+            <button class="nav-btn" onclick="showView('interview')">
+                📝 面談
+            </button>
             <button class="nav-btn" onclick="showView('url')">
                 ⚙️ 管理
             </button>
@@ -102,6 +105,21 @@
                 <input type="text" id="all-search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterAllCastList()">
             </div>
 
+            <!-- ジャンプボタン -->
+            <div class="jump-buttons" id="all-jump-buttons">
+                <button class="jump-btn" data-group="あ" onclick="jumpToGroup('all', 'あ')">あ</button>
+                <button class="jump-btn" data-group="か" onclick="jumpToGroup('all', 'か')">か</button>
+                <button class="jump-btn" data-group="さ" onclick="jumpToGroup('all', 'さ')">さ</button>
+                <button class="jump-btn" data-group="た" onclick="jumpToGroup('all', 'た')">た</button>
+                <button class="jump-btn" data-group="な" onclick="jumpToGroup('all', 'な')">な</button>
+                <button class="jump-btn" data-group="は" onclick="jumpToGroup('all', 'は')">は</button>
+                <button class="jump-btn" data-group="ま" onclick="jumpToGroup('all', 'ま')">ま</button>
+                <button class="jump-btn" data-group="や" onclick="jumpToGroup('all', 'や')">や</button>
+                <button class="jump-btn" data-group="ら" onclick="jumpToGroup('all', 'ら')">ら</button>
+                <button class="jump-btn" data-group="わ" onclick="jumpToGroup('all', 'わ')">わ</button>
+                <button class="jump-btn" data-group="他" onclick="jumpToGroup('all', '他')">他</button>
+            </div>
+
             <!-- 全キャストリスト -->
             <div id="all-cast-list" class="shift-list"></div>
 
@@ -112,12 +130,59 @@
             </div>
         </div>
 
+        <!-- 面談タブビュー -->
+        <div id="interview-view" class="view">
+            <!-- 検索バー -->
+            <div class="search-bar">
+                <input type="text" id="interview-search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterInterviewList()">
+            </div>
+
+            <!-- ジャンプボタン -->
+            <div class="jump-buttons" id="interview-jump-buttons">
+                <button class="jump-btn" data-group="あ" onclick="jumpToGroup('interview', 'あ')">あ</button>
+                <button class="jump-btn" data-group="か" onclick="jumpToGroup('interview', 'か')">か</button>
+                <button class="jump-btn" data-group="さ" onclick="jumpToGroup('interview', 'さ')">さ</button>
+                <button class="jump-btn" data-group="た" onclick="jumpToGroup('interview', 'た')">た</button>
+                <button class="jump-btn" data-group="な" onclick="jumpToGroup('interview', 'な')">な</button>
+                <button class="jump-btn" data-group="は" onclick="jumpToGroup('interview', 'は')">は</button>
+                <button class="jump-btn" data-group="ま" onclick="jumpToGroup('interview', 'ま')">ま</button>
+                <button class="jump-btn" data-group="や" onclick="jumpToGroup('interview', 'や')">や</button>
+                <button class="jump-btn" data-group="ら" onclick="jumpToGroup('interview', 'ら')">ら</button>
+                <button class="jump-btn" data-group="わ" onclick="jumpToGroup('interview', 'わ')">わ</button>
+                <button class="jump-btn" data-group="他" onclick="jumpToGroup('interview', '他')">他</button>
+            </div>
+
+            <!-- 面談リスト -->
+            <div id="interview-list" class="shift-list"></div>
+
+            <!-- 空状態 -->
+            <div id="interview-empty-state" class="empty-state">
+                <p>📝</p>
+                <p>面談情報が登録されていません</p>
+            </div>
+        </div>
+
         <!-- URL管理ビュー -->
         <div id="url-view" class="view">
             <!-- 検索バー -->
             <div class="search-bar">
                 <input type="text" id="search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterUrlList()">
                 <button class="btn-primary" onclick="showAddModal()">➕ 新規追加</button>
+            </div>
+
+            <!-- ジャンプボタン -->
+            <div class="jump-buttons" id="url-jump-buttons">
+                <button class="jump-btn" data-group="あ" onclick="jumpToGroup('url', 'あ')">あ</button>
+                <button class="jump-btn" data-group="か" onclick="jumpToGroup('url', 'か')">か</button>
+                <button class="jump-btn" data-group="さ" onclick="jumpToGroup('url', 'さ')">さ</button>
+                <button class="jump-btn" data-group="た" onclick="jumpToGroup('url', 'た')">た</button>
+                <button class="jump-btn" data-group="な" onclick="jumpToGroup('url', 'な')">な</button>
+                <button class="jump-btn" data-group="は" onclick="jumpToGroup('url', 'は')">は</button>
+                <button class="jump-btn" data-group="ま" onclick="jumpToGroup('url', 'ま')">ま</button>
+                <button class="jump-btn" data-group="や" onclick="jumpToGroup('url', 'や')">や</button>
+                <button class="jump-btn" data-group="ら" onclick="jumpToGroup('url', 'ら')">ら</button>
+                <button class="jump-btn" data-group="わ" onclick="jumpToGroup('url', 'わ')">わ</button>
+                <button class="jump-btn" data-group="他" onclick="jumpToGroup('url', '他')">他</button>
             </div>
 
             <!-- URLリスト -->
@@ -140,59 +205,98 @@
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>源氏名 <span class="required">*</span></label>
-                    <input type="text" id="modal-name" placeholder="例: うい">
+                <!-- 基本情報セクション -->
+                <div class="modal-section">
+                    <h3 class="modal-section-title">📋 基本情報</h3>
+                    <div class="form-group">
+                        <label>源氏名 <span class="required">*</span></label>
+                        <input type="text" id="modal-name" placeholder="例: うい">
+                    </div>
+                    <div class="form-group">
+                        <label>クラス</label>
+                        <select id="modal-class" class="form-select">
+                            <option value="通常">通常</option>
+                            <option value="姫デコ">姫デコ</option>
+                            <option value="新人">新人</option>
+                            <option value="スタッフ">スタッフ</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>クラス</label>
-                    <select id="modal-class" class="form-select">
-                        <option value="通常">通常</option>
-                        <option value="姫デコ">姫デコ</option>
-                        <option value="新人">新人</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="label-with-checkbox">
-                        <span>でりどす名</span>
-                        <label class="main-checkbox-label">
-                            <input type="checkbox" id="modal-deli-main" class="main-store-checkbox" data-store="delidosu">
-                            <span class="main-checkbox-text">メイン</span>
+
+                <!-- 店舗情報セクション -->
+                <div class="modal-section">
+                    <h3 class="modal-section-title">🏪 店舗情報 <span class="required">*メイン店舗必須</span></h3>
+                    <div class="form-group">
+                        <label class="label-with-checkbox">
+                            <span>でりどす名</span>
+                            <label class="main-checkbox-label">
+                                <input type="checkbox" id="modal-deli-main" class="main-store-checkbox" data-store="delidosu">
+                                <span class="main-checkbox-text">メイン</span>
+                            </label>
                         </label>
-                    </label>
-                    <input type="text" id="modal-deli-name" placeholder="例: うい">
-                </div>
-                <div class="form-group">
-                    <label>でりどすURL</label>
-                    <input type="url" id="modal-deli-url" placeholder="https://...">
-                </div>
-                <div class="form-group">
-                    <label class="label-with-checkbox">
-                        <span>アネキャン名</span>
-                        <label class="main-checkbox-label">
-                            <input type="checkbox" id="modal-ane-main" class="main-store-checkbox" data-store="anecan">
-                            <span class="main-checkbox-text">メイン</span>
+                        <input type="text" id="modal-deli-name" placeholder="例: うい">
+                    </div>
+                    <div class="form-group">
+                        <label>でりどすURL</label>
+                        <input type="url" id="modal-deli-url" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label class="label-with-checkbox">
+                            <span>アネキャン名</span>
+                            <label class="main-checkbox-label">
+                                <input type="checkbox" id="modal-ane-main" class="main-store-checkbox" data-store="anecan">
+                                <span class="main-checkbox-text">メイン</span>
+                            </label>
                         </label>
-                    </label>
-                    <input type="text" id="modal-ane-name" placeholder="例: すず">
-                </div>
-                <div class="form-group">
-                    <label>アネキャンURL</label>
-                    <input type="url" id="modal-ane-url" placeholder="https://...">
-                </div>
-                <div class="form-group">
-                    <label class="label-with-checkbox">
-                        <span>愛のしずく名</span>
-                        <label class="main-checkbox-label">
-                            <input type="checkbox" id="modal-aino-main" class="main-store-checkbox" data-store="ainoshizuku">
-                            <span class="main-checkbox-text">メイン</span>
+                        <input type="text" id="modal-ane-name" placeholder="例: すず">
+                    </div>
+                    <div class="form-group">
+                        <label>アネキャンURL</label>
+                        <input type="url" id="modal-ane-url" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label class="label-with-checkbox">
+                            <span>愛のしずく名</span>
+                            <label class="main-checkbox-label">
+                                <input type="checkbox" id="modal-aino-main" class="main-store-checkbox" data-store="ainoshizuku">
+                                <span class="main-checkbox-text">メイン</span>
+                            </label>
                         </label>
-                    </label>
-                    <input type="text" id="modal-aino-name" placeholder="例: まり">
+                        <input type="text" id="modal-aino-name" placeholder="例: まり">
+                    </div>
+                    <div class="form-group">
+                        <label>愛のしずくURL</label>
+                        <input type="url" id="modal-aino-url" placeholder="https://...">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>愛のしずくURL</label>
-                    <input type="url" id="modal-aino-url" placeholder="https://...">
+
+                <!-- 面談・撮影情報セクション -->
+                <div class="modal-section">
+                    <h3 class="modal-section-title">📝 面談・撮影情報</h3>
+                    <div class="form-group">
+                        <label>最終出勤日</label>
+                        <input type="text" id="modal-last-work-date" placeholder="自動更新" disabled class="form-input-disabled">
+                    </div>
+                    <div class="form-group">
+                        <label>最終面談日</label>
+                        <input type="date" id="modal-last-interview-date">
+                    </div>
+                    <div class="form-group">
+                        <label>面談スタッフ</label>
+                        <input type="text" id="modal-interview-staff" placeholder="例: 山田">
+                    </div>
+                    <div class="form-group">
+                        <label>面談コメント</label>
+                        <textarea id="modal-interview-comment" class="form-textarea" rows="3" placeholder="面談の内容やメモを入力..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>最終撮影日</label>
+                        <input type="date" id="modal-last-photo-date">
+                    </div>
+                    <div class="form-group">
+                        <label>動画更新日</label>
+                        <input type="date" id="modal-last-video-date">
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
