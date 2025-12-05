@@ -1,2051 +1,1494 @@
-/**
- * キテネマスター v5.0 - JavaScript
- */
+/* ===============================
+   キテネマスター v5.0 - スタイルシート
+   =============================== */
 
-// Google Apps Script API URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbzuZppKM-9ZQCm5YITAN0zmLNMEAmvj6FaRXy-45ygjuz2HqLHGiCOTF8lcFMOx6QnA/exec';
+/* ===== 基本設定 ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-// グローバル変数
-let shiftData = [];
-let urlData = [];
-let currentEditName = null;
-let currentDeleteName = null;
-let currentShiftDate = '';
-let currentStoreFilter = 'all'; // 現在の店舗フィルター
-let autoRefreshInterval = null;  // 自動リロードのインターバルID
-let autoRefreshSeconds = 15;     // 自動リロードの間隔（秒）
+:root {
+    /* カラーパレット - スタイリッシュな配色 */
+    --primary-color: #6366f1;      /* インディゴ */
+    --primary-dark: #4f46e5;
+    --secondary-color: #10b981;    /* エメラルド */
+    --danger-color: #ef4444;       /* レッド */
+    --bg-color: #0f172a;           /* ダークブルー */
+    --bg-secondary: #1e293b;
+    --card-bg: #1e293b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --hover-bg: #2d3748;
+    
+    /* シャドウ */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    
+    /* ボーダー半径 */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+}
 
-// ===============================
-// 初期化
-// ===============================
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 
+                 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 
+                 'Meiryo', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('=== キテネマスター 初期化開始 ===');
-    console.log('API URL:', API_URL);
-    console.log('XLSXライブラリ:', typeof XLSX !== 'undefined' ? '読み込み済み' : '未読み込み');
-    
-    // Excelアップロードイベント
-    document.getElementById('excel-upload').addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            handleExcelUpload(file);
-        }
-        // ファイル入力をリセット
-        event.target.value = '';
-    });
-    
-    // ★★★ メイン店舗チェックボックスの排他制御を追加 ★★★
-    document.querySelectorAll('.main-store-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                // 他のチェックボックスを外す
-                document.querySelectorAll('.main-store-checkbox').forEach(cb => {
-                    if (cb !== e.target) {
-                        cb.checked = false;
-                    }
-                });
-            }
-        });
-    });
-    
-    // データの読み込み
-    console.log('初期データをロード中...');
-    loadAllData();
-    
-    // ★★★ デフォルトで自動更新を開始 ★★★
-    startAutoRefresh();
-    document.querySelector('.auto-refresh').classList.add('active');
-    
-    // トップに戻るボタンのスクロール監視
-    window.addEventListener('scroll', handleScroll);
-});
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
-// ===============================
-// ビュー切り替え
-// ===============================
+/* ===== ヘッダー ===== */
+.header {
+    text-align: center;
+    padding: 30px 0;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
 
-function showView(viewName) {
-    // 全てのビューを非表示
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-    });
-    
-    // 全てのナビボタンを非アクティブ
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // 指定のビューを表示
-    if (viewName === 'shift') {
-        document.getElementById('shift-view').classList.add('active');
-        document.querySelector('.nav-btn:nth-child(1)').classList.add('active');
-        renderShiftList();
-    } else if (viewName === 'all') {
-        document.getElementById('all-view').classList.add('active');
-        document.querySelector('.nav-btn:nth-child(2)').classList.add('active');
-        renderAllCastList();
-        updateJumpButtons('all');
-    } else if (viewName === 'interview') {
-        document.getElementById('interview-view').classList.add('active');
-        document.querySelector('.nav-btn:nth-child(3)').classList.add('active');
-        renderInterviewList();
-        updateJumpButtons('interview');
-    } else if (viewName === 'url') {
-        document.getElementById('url-view').classList.add('active');
-        document.querySelector('.nav-btn:nth-child(4)').classList.add('active');
-        renderUrlList();
-        updateJumpButtons('url');
+.logo {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: #c7d2fe;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ===== ナビゲーション ===== */
+.nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    background: var(--card-bg);
+    padding: 8px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.nav-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+}
+
+.nav-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== 店舗フィルター ===== */
+.store-filter {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.filter-btn:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* 店舗別のアクティブカラー */
+.filter-btn.active[data-store="delidosu"] {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    border-color: #f97316;
+}
+
+.filter-btn.active[data-store="anecan"] {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    border-color: #ec4899;
+}
+
+.filter-btn.active[data-store="ainoshizuku"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-color: #3b82f6;
+}
+
+/* ===== 更新コントロール ===== */
+.refresh-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.refresh-btn {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.refresh-btn:active {
+    transform: translateY(0);
+}
+
+.refresh-btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.auto-refresh {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auto-refresh-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.auto-refresh-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--secondary-color);
+    cursor: pointer;
+}
+
+.auto-refresh-label span {
+    font-weight: 600;
+}
+
+.auto-refresh select {
+    padding: 6px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.auto-refresh select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* 自動更新中の表示 */
+.auto-refresh.active .auto-refresh-label span {
+    color: var(--secondary-color);
+}
+
+.auto-refresh.active .auto-refresh-label span::after {
+    content: ' (ON)';
+}
+
+/* 最終更新時刻 */
+.last-updated {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: 10px;
+}
+
+/* ===== ビュー切り替え ===== */
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-// ===============================
-// データ読み込み
-// ===============================
-
-async function loadAllData() {
-    console.log('loadAllData: 全データロード開始');
-    await loadShiftDate();  // ★★★ 日付を読み込み ★★★
-    await loadShiftData();
-    await loadUrlData();
-    console.log('loadAllData: 全データロード完了');
+/* ===== アップロードエリア ===== */
+.upload-area {
+    text-align: center;
+    margin-bottom: 25px;
 }
 
-async function loadShiftData() {
-    try {
-        console.log('loadShiftData: シフトデータ取得中...');
-        const response = await fetch(`${API_URL}?action=getShiftData`);
-        console.log('loadShiftData: レスポンス受信', response.status);
-        
-        const result = await response.json();
-        console.log('loadShiftData: レスポンス:', result);
-        
-        if (result.success) {
-            // ★★★ 時刻データをformatTimeで変換 ★★★
-            shiftData = result.data.map(shift => ({
-                ...shift,
-                time: formatTime(shift.time)
-            }));
-            console.log('loadShiftData: データ件数', shiftData.length);
-            console.log('loadShiftData: 時刻変換後の最初のデータ:', shiftData[0]);
-            renderShiftList();
-        } else {
-            console.error('loadShiftData: エラー:', result.error);
-        }
-    } catch (error) {
-        console.error('loadShiftData: 例外:', error);
+.upload-label {
+    display: inline-block;
+    padding: 15px 30px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.upload-label:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.upload-hint {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* ===== 日付表示（改善版） ===== */
+.date-display {
+    text-align: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #60a5fa;
+    box-shadow: var(--shadow-md);
+    border: 1px solid #3b82f6;
+}
+
+.date-display.has-date {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    color: #6ee7b7;
+    border-color: #10b981;
+}
+
+/* ===== ローディング ===== */
+.loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 15px;
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== シフトリスト ===== */
+.shift-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.shift-item {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary-color);
+}
+
+.shift-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.shift-item.checked {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    border-left-color: var(--secondary-color);
+    opacity: 0.8;
+}
+
+.shift-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.shift-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.shift-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.shift-time {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.shift-checkbox {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    accent-color: var(--secondary-color);
+}
+
+.shift-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.btn-link {
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+.btn-delidosu {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.btn-anecan {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    color: white;
+}
+
+.btn-ainoshizuku {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-link:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-link:disabled {
+    background: var(--border-color);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ===== 検索バー ===== */
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-bar input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ===== ボタン ===== */
+.btn-primary {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    padding: 12px 24px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--hover-bg);
+    border-color: var(--text-secondary);
+}
+
+.btn-danger {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ===== URLリスト ===== */
+.url-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.url-item {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.url-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.url-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.url-item-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.url-item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-edit, .btn-delete {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-delete {
+    background: var(--danger-color);
+    color: white;
+}
+
+.url-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.url-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.url-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.url-value {
+    color: var(--text-primary);
+    word-break: break-all;
+    font-size: 0.9rem;
+}
+
+.url-value.empty {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* ===== モーダル ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+.modal-small {
+    max-width: 400px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
-}
-
-async function loadUrlData() {
-    try {
-        console.log('loadUrlData: URL管理データ取得中...');
-        const response = await fetch(`${API_URL}?action=getUrlData`);
-        console.log('loadUrlData: レスポンス受信', response.status);
-        
-        const result = await response.json();
-        console.log('loadUrlData: レスポンス:', result);
-        
-        if (result.success) {
-            urlData = result.data;
-            console.log('loadUrlData: データ件数', urlData.length);
-            renderUrlList();
-            return result.data; // 戻り値を追加
-        } else {
-            console.error('loadUrlData: エラー:', result.error);
-            return []; // エラー時は空配列を返す
-        }
-    } catch (error) {
-        console.error('loadUrlData: 例外:', error);
-        return []; // 例外時も空配列を返す
-    }
-}
-
-// ===============================
-// Excelアップロード
-// ===============================
-
-async function handleExcelUpload(file) {
-    try {
-        console.log('=== デバッグ: Excelアップロード開始 ===');
-        console.log('ファイル名:', file.name);
-        console.log('ファイルサイズ:', file.size, 'bytes');
-        
-        showLoading();
-        
-        // ステップ1: Excelファイルを読み込み
-        console.log('ステップ1: Excelファイルを読み込み中...');
-        const shiftData = await readExcelFile(file);
-        console.log('ステップ1完了: データ件数', shiftData.length);
-        console.log('読み込んだデータ:', shiftData);
-        
-        if (!shiftData || shiftData.length === 0) {
-            throw new Error('出勤予定のデータが見つかりませんでした');
-        }
-        
-        // 日付を抽出
-        const dateMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
-        if (dateMatch) {
-            const [, year, month, day] = dateMatch;
-            console.log('日付抽出:', year, month, day);
-            currentShiftDate = `${year}年${month}月${day}日`;
-            
-            // ★★★ 日付表示を更新 ★★★
-            const dateDisplay = document.getElementById('date-display');
-            dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
-            dateDisplay.classList.add('has-date');
-            
-            // ★★★ 日付をスプレッドシートに保存 ★★★
-            await saveShiftDate(currentShiftDate);
-        }
-        
-        // ★★★ チェックを全リセット ★★★
-        console.log('チェック状態をリセット中...');
-        await resetAllChecks();
-        console.log('チェック状態リセット完了');
-        
-        // ★★★ ステップ2: URL管理データを取得（追加） ★★★
-        console.log('ステップ2: URL管理データを取得中...');
-        const urlData = await loadUrlData();
-        console.log('ステップ2完了: URL管理データ取得完了', urlData.length, '件');
-        
-        // ★★★ ステップ3: URL照合（追加） ★★★
-        console.log('ステップ3: URL照合中...');
-        const dataWithUrls = shiftData.map(employee => {
-            // 源氏名で照合
-            const urlInfo = urlData.find(u => u.name === employee.name);
-            
-            if (urlInfo) {
-                console.log(`URL照合成功: ${employee.name} → でりどす: ${urlInfo.delidosuUrl ? 'あり' : 'なし'}, アネキャン: ${urlInfo.anecanUrl ? 'あり' : 'なし'}, 愛のしずく: ${urlInfo.ainoshizukuUrl ? 'あり' : 'なし'}`);
-            } else {
-                console.log(`URL照合失敗: ${employee.name} → URL管理に未登録`);
-            }
-            
-            return {
-                ...employee,
-                delidosuUrl: urlInfo?.delidosuUrl || '',
-                anecanUrl: urlInfo?.anecanUrl || '',
-                ainoshizukuUrl: urlInfo?.ainoshizukuUrl || ''
-            };
-        });
-        console.log('ステップ3完了: URL照合完了');
-        console.log('URL付きデータ:', dataWithUrls);
-        
-        // ステップ4: Googleスプレッドシートにアップロード（URL情報も含む）
-        console.log('ステップ4: Googleスプレッドシートにアップロード中...');
-        console.log('API URL:', API_URL);
-        await uploadShiftData(dataWithUrls);
-        console.log('ステップ4完了: アップロード成功');
-        
-        // ★★★ ステップ4.5: 最終出勤日を自動更新 ★★★
-        console.log('ステップ4.5: 最終出勤日を更新中...');
-        const shiftNames = dataWithUrls.map(d => d.name);
-        if (currentShiftDate && shiftNames.length > 0) {
-            await updateLastWorkDate(shiftNames, currentShiftDate);
-            console.log('ステップ4.5完了: 最終出勤日を更新しました');
-        }
-        
-        // ステップ5: データをリロード
-        await loadShiftData();
-        
-        hideLoading();
-        console.log('=== デバッグ: アップロード完了 ===');
-        
-    } catch (error) {
-        console.error('Excelアップロードエラー:', error);
-        hideLoading();
-        alert(`エラーが発生しました: ${error.message}`);
-    }
-}
-
-function readExcelFile(file) {
-    return new Promise((resolve, reject) => {
-        console.log('readExcelFile: ファイル読み込み開始');
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-            try {
-                console.log('readExcelFile: FileReader onload実行');
-                const data = new Uint8Array(e.target.result);
-                console.log('readExcelFile: データサイズ', data.length);
-                
-                const workbook = XLSX.read(data, { type: 'array', cellDates: false });
-                console.log('readExcelFile: ワークブック読み込み完了（シリアル値モード）');
-                console.log('シート名:', workbook.SheetNames);
-                
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                console.log('readExcelFile: JSON変換完了、行数:', jsonData.length);
-                console.log('最初の3行:', jsonData.slice(0, 3));
-                
-                // 「出勤予」と「出勤確」のデータを抽出
-                const filteredData = jsonData
-                    .filter(row => {
-                        const status = row['シフト状態'];
-                        const isMatch = status === '出勤予' || status === '出勤確';
-                        if (!isMatch) {
-                            console.log('❌ フィルタアウト:', {
-                                name: row['源氏名'],
-                                time: row['出勤時間'],
-                                status: status,
-                                statusType: typeof status
-                            });
-                        } else {
-                            console.log('✅ OK:', {
-                                name: row['源氏名'],
-                                time: row['出勤時間'],
-                                status: status
-                            });
-                        }
-                        return isMatch;
-                    })
-                    .map(row => ({
-                        name: row['源氏名'] || '',
-                        time: formatTime(row['出勤時間']),
-                        status: row['シフト状態'] || '',
-                        delidosuName: row['でりどす'] || '',
-                        anecanName: row['アネキャン'] || '',
-                        ainoshizukuName: row['人妻本舗愛のしずく'] || ''
-                    }))
-                    .sort((a, b) => {
-                        // 時間順にソート
-                        const timeA = parseTime(a.time);
-                        const timeB = parseTime(b.time);
-                        return timeA - timeB;
-                    });
-                
-                console.log('readExcelFile: フィルタ後の件数', filteredData.length);
-                console.log('フィルタ後のデータ:', filteredData);
-                resolve(filteredData);
-            } catch (error) {
-                console.error('readExcelFile: エラー', error);
-                reject(error);
-            }
-        };
-        
-        reader.onerror = () => {
-            console.error('readExcelFile: FileReaderエラー');
-            reject(new Error('ファイル読み込みエラー'));
-        };
-        
-        reader.readAsArrayBuffer(file);
-    });
-}
-
-function formatTime(timeValue) {
-    if (!timeValue) return '';
-    
-    console.log('formatTime: 入力値 =', timeValue, '型 =', typeof timeValue);
-    
-    // 既に "HH:MM" 形式の場合はそのまま返す
-    if (typeof timeValue === 'string' && /^\d{1,2}:\d{2}$/.test(timeValue)) {
-        return timeValue;
-    }
-    
-    // ★★★ ISO 8601形式の場合 - JSTとして取得 ★★★
-    if (typeof timeValue === 'string' && timeValue.includes('T')) {
-        try {
-            const date = new Date(timeValue);
-            // getHours()でローカル時刻（JST）として取得
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            const result = `${hours}:${minutes}`;
-            console.log('formatTime: ISO形式 → JST変換 =', result);
-            return result;
-        } catch (e) {
-            console.error('formatTime: ISO形式の変換エラー', e);
-        }
-    }
-    
-    // Excelシリアルナンバーの場合（最も確実）
-    if (typeof timeValue === 'number') {
-        const totalMinutes = Math.round(timeValue * 24 * 60);
-        const hours = Math.floor(totalMinutes / 60) % 24;
-        const minutes = totalMinutes % 60;
-        const result = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        console.log('formatTime: シリアル値変換 =', result);
-        return result;
-    }
-    
-    // それ以外は文字列化
-    console.log('formatTime: 文字列化 =', String(timeValue));
-    return String(timeValue);
-}
-
-function parseTime(timeStr) {
-    if (!timeStr) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    
-    // ★★★ 深夜営業ルール: 0:00～9:59は翌日深夜として扱う ★★★
-    // 10:00～23:59 → そのまま
-    // 0:00～9:59 → +24時間（翌日深夜）
-    let adjustedHours = hours;
-    if (hours >= 0 && hours < 10) {
-        adjustedHours = hours + 24;  // 翌日深夜として扱う
-    }
-    
-    const totalMinutes = adjustedHours * 60 + minutes;
-    console.log(`parseTime: ${timeStr} → ${adjustedHours}:${minutes} (${totalMinutes}分)`);
-    return totalMinutes;
-}
-
-/**
- * メイン店舗バッジのHTMLを取得
- */
-function getMainStoreBadge(name) {
-    const person = urlData.find(u => u.name === name);
-    if (!person || !person.mainStore) return '';
-    
-    const storeNames = {
-        'delidosu': 'でりどす',
-        'anecan': 'アネキャン',
-        'ainoshizuku': 'しずく'
-    };
-    
-    const storeName = storeNames[person.mainStore] || '';
-    if (!storeName) return '';
-    
-    return `<span class="main-store-badge ${person.mainStore}">${storeName}</span>`;
-}
-
-/**
- * URL管理用のメイン店舗バッジを取得
- */
-function getMainStoreBadgeForUrl(url) {
-    if (!url.mainStore) return '';
-    
-    const storeNames = {
-        'delidosu': 'でりどす',
-        'anecan': 'アネキャン',
-        'ainoshizuku': 'しずく'
-    };
-    
-    const storeName = storeNames[url.mainStore] || '';
-    if (!storeName) return '';
-    
-    return `<span class="main-store-badge ${url.mainStore}">${storeName}</span>`;
-}
-
-// ===============================
-// 店舗フィルター機能
-// ===============================
-
-/**
- * 店舗フィルターを切り替え
- */
-function filterByStore(store) {
-    console.log('filterByStore:', store);
-    currentStoreFilter = store;
-    
-    // フィルターボタンのアクティブ状態を更新
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.store === store) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    // 現在表示中のタブに応じて再描画
-    if (document.getElementById('shift-view').classList.contains('active')) {
-        renderShiftList();
-    } else if (document.getElementById('all-view').classList.contains('active')) {
-        renderAllCastList();
-        updateJumpButtons('all');
-    } else if (document.getElementById('interview-view').classList.contains('active')) {
-        renderInterviewList();
-        updateJumpButtons('interview');
-    } else if (document.getElementById('url-view').classList.contains('active')) {
-        renderUrlList();
-        updateJumpButtons('url');
-    }
-}
-
-/**
- * 店舗フィルターでデータを絞り込み
- */
-function filterDataByStore(data, store) {
-    if (store === 'all') {
-        return data;
-    }
-    
-    return data.filter(item => {
-        // urlDataからメイン店舗を取得
-        const person = urlData.find(u => u.name === item.name);
-        return person && person.mainStore === store;
-    });
-}
-
-/**
- * 店舗フィルターでurlDataを絞り込み（在籍・管理タブ用）
- */
-function filterUrlDataByStore(data, store) {
-    if (store === 'all') {
-        return data;
-    }
-    
-    return data.filter(item => item.mainStore === store);
-}
-
-// ===============================
-// あいうえお順グループ化
-// ===============================
-
-const KANA_GROUPS = {
-    'あ': ['あ', 'い', 'う', 'え', 'お'],
-    'か': ['か', 'き', 'く', 'け', 'こ', 'が', 'ぎ', 'ぐ', 'げ', 'ご'],
-    'さ': ['さ', 'し', 'す', 'せ', 'そ', 'ざ', 'じ', 'ず', 'ぜ', 'ぞ'],
-    'た': ['た', 'ち', 'つ', 'て', 'と', 'だ', 'ぢ', 'づ', 'で', 'ど'],
-    'な': ['な', 'に', 'ぬ', 'ね', 'の'],
-    'は': ['は', 'ひ', 'ふ', 'へ', 'ほ', 'ば', 'び', 'ぶ', 'べ', 'ぼ', 'ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'],
-    'ま': ['ま', 'み', 'む', 'め', 'も'],
-    'や': ['や', 'ゆ', 'よ'],
-    'ら': ['ら', 'り', 'る', 'れ', 'ろ'],
-    'わ': ['わ', 'を', 'ん']
-};
-
-function getKanaGroup(name) {
-    if (!name) return 'その他';
-    const firstChar = name.charAt(0);
-    
-    for (const [group, chars] of Object.entries(KANA_GROUPS)) {
-        if (chars.includes(firstChar)) {
-            return group;
-        }
-    }
-    
-    return 'その他';
-}
-
-
-async function uploadShiftData(data) {
-    try {
-        console.log('uploadShiftData: リクエスト送信中...');
-        console.log('送信データ件数:', data.length);
-        
-        // シンプルリクエストにするため、Content-Type: text/plain を使用
-        const response = await fetch(`${API_URL}?action=updateShiftData`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({ data: data })
-        });
-        
-        console.log('uploadShiftData: レスポンス受信');
-        console.log('ステータスコード:', response.status);
-        
-        const resultText = await response.text();
-        console.log('レスポンステキスト:', resultText);
-        
-        const result = JSON.parse(resultText);
-        console.log('パース済みレスポンス:', result);
-        
-        if (result.success) {
-            console.log('uploadShiftData: 成功');
-            await loadShiftData();
-        } else {
-            console.error('uploadShiftData: APIエラー', result.error);
-            throw new Error(result.error);
-        }
-    } catch (error) {
-        console.error('uploadShiftData: 例外発生', error);
-        throw error;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-// ===============================
-// シフトリスト表示
-// ===============================
-
-function renderShiftList() {
-    console.log('renderShiftList: シフトリスト描画開始');
-    console.log('シフトデータ件数:', shiftData.length);
-    
-    const listElement = document.getElementById('shift-list');
-    const emptyElement = document.getElementById('empty-state');
-    
-    if (!listElement) {
-        console.error('shift-list要素が見つかりません');
-        return;
-    }
-    
-    // ★★★ 店舗フィルターを適用 ★★★
-    const filteredData = filterDataByStore(shiftData, currentStoreFilter);
-    console.log('フィルター後のデータ件数:', filteredData.length, '(フィルター:', currentStoreFilter, ')');
-    
-    if (filteredData.length === 0) {
-        listElement.style.display = 'none';
-        emptyElement.style.display = 'block';
-        return;
-    }
-    
-    listElement.style.display = 'flex';
-    emptyElement.style.display = 'none';
-    
-    // ★★★ URL管理データを取得してチェック状態を反映 ★★★
-    const mergedData = filteredData.map(shift => {
-        const urlInfo = urlData.find(u => u.name === shift.name);
-        return {
-            ...shift,
-            checked: urlInfo?.checked || '',
-            mainStore: urlInfo?.mainStore || ''
-        };
-    });
-    
-    // ★★★ 出勤時間順にソート（深夜営業対応） ★★★
-    mergedData.sort((a, b) => {
-        const timeA = parseTime(a.time);
-        const timeB = parseTime(b.time);
-        if (timeA !== timeB) return timeA - timeB;
-        return a.name.localeCompare(b.name, 'ja');
-    });
-    
-    listElement.innerHTML = mergedData.map(shift => {
-        // ★★★ 時刻を適切にフォーマット ★★★
-        const formattedTime = formatTime(shift.time);
-        
-        // ★★★ メイン店舗バッジの生成 ★★★
-        let mainBadge = '';
-        if (shift.mainStore) {
-            const storeNames = {
-                'delidosu': 'でりどす',
-                'anecan': 'アネキャン',
-                'ainoshizuku': 'しずく'
-            };
-            const storeName = storeNames[shift.mainStore] || '';
-            if (storeName) {
-                mainBadge = `<span class="main-store-badge ${shift.mainStore}">${storeName}</span>`;
-            }
-        }
-        
-        return `
-            <div class="shift-item" data-name="${shift.name}">
-                <div class="shift-header">
-                    <div class="shift-info">
-                        <span class="shift-name">${shift.name}</span>
-                        <span class="shift-time">${formattedTime}</span>
-                        ${getMainStoreBadge(shift.name)}
-                    </div>
-                </div>
-                <div class="check-buttons">
-                    <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'delidosu') ? 'checked' : ''}">
-                        <input type="checkbox" 
-                               class="store-checkbox" 
-                               data-name="${shift.name}" 
-                               data-store="delidosu"
-                               ${getCheckStatus(shift.name, 'delidosu') ? 'checked' : ''}
-                               onchange="toggleStoreCheck('${shift.name}', 'delidosu', this.checked)"
-                               ${!shift.delidosuUrl ? 'disabled' : ''}>
-                        <button class="btn-link btn-delidosu" 
-                                onclick="window.open('${shift.delidosuUrl}', '_blank')"
-                                ${!shift.delidosuUrl ? 'disabled' : ''}>
-                            ${shift.delidosuUrl ? 'でりどす' : '未登録'}
-                        </button>
-                    </div>
-                    <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}">
-                        <input type="checkbox" 
-                               class="store-checkbox" 
-                               data-name="${shift.name}" 
-                               data-store="anecan"
-                               ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}
-                               onchange="toggleStoreCheck('${shift.name}', 'anecan', this.checked)"
-                               ${!shift.anecanUrl ? 'disabled' : ''}>
-                        <button class="btn-link btn-anecan" 
-                                onclick="window.open('${shift.anecanUrl}', '_blank')"
-                                ${!shift.anecanUrl ? 'disabled' : ''}>
-                            ${shift.anecanUrl ? 'アネキャン' : '未登録'}
-                        </button>
-                    </div>
-                    <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}">
-                        <input type="checkbox" 
-                               class="store-checkbox" 
-                               data-name="${shift.name}" 
-                               data-store="ainoshizuku"
-                               ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}
-                               onchange="toggleStoreCheck('${shift.name}', 'ainoshizuku', this.checked)"
-                               ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
-                        <button class="btn-link btn-ainoshizuku" 
-                                onclick="window.open('${shift.ainoshizukuUrl}', '_blank')"
-                                ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
-                            ${shift.ainoshizukuUrl ? '愛のしずく' : '未登録'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    // 日付表示（handleExcelUpload関数で設定済みなので、ここでは何もしない）
-    
-    console.log('renderShiftList: 描画完了');
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 2px solid var(--border-color);
 }
 
-// ===============================
-// 全キャストリスト表示
-// ===============================
-
-function renderAllCastList() {
-    console.log('renderAllCastList: 全キャストリスト描画開始');
-    console.log('URLデータ件数:', urlData.length);
-    
-    const listElement = document.getElementById('all-cast-list');
-    const emptyElement = document.getElementById('all-empty-state');
-    
-    if (!listElement) {
-        console.error('all-cast-list要素が見つかりません');
-        return;
-    }
-    
-    // ★★★ 店舗フィルターを適用 ★★★
-    const filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);
-    console.log('フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
-    
-    if (filteredUrlData.length === 0) {
-        listElement.style.display = 'none';
-        if (emptyElement) emptyElement.style.display = 'block';
-        return;
-    }
-    
-    listElement.style.display = 'flex';
-    if (emptyElement) emptyElement.style.display = 'none';
-    
-    // ★★★ クラス別にグループ化（姫デコ → 新人 → 通常）※スタッフは非表示 ★★★
-    const classGroups = {
-        '姫デコ': [],
-        '新人': [],
-        '通常': []
-    };
-    
-    filteredUrlData.forEach(cast => {
-        const castClass = cast.class || '通常';
-        // スタッフは在籍タブに表示しない
-        if (castClass === 'スタッフ') return;
-        
-        if (classGroups[castClass]) {
-            classGroups[castClass].push(cast);
-        } else {
-            classGroups['通常'].push(cast);
-        }
-    });
-    
-    // 各クラス内で名前順にソート
-    Object.values(classGroups).forEach(group => {
-        group.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-    });
-    
-    let html = '';
-    
-    // ★★★ 姫デコ ★★★
-    if (classGroups['姫デコ'].length > 0) {
-        html += '<div class="class-header himede"><h3>👑 姫デコ</h3></div>';
-        classGroups['姫デコ'].forEach(cast => {
-            html += renderCastCard(cast);
-        });
-    }
-    
-    // ★★★ 新人 ★★★
-    if (classGroups['新人'].length > 0) {
-        html += '<div class="class-header newbie"><h3>🆕 新人</h3></div>';
-        classGroups['新人'].forEach(cast => {
-            html += renderCastCard(cast);
-        });
-    }
-    
-    // ★★★ 通常（あいうえお順でグループ化） ★★★
-    if (classGroups['通常'].length > 0) {
-        const kanaGroups = {};
-        classGroups['通常'].forEach(cast => {
-            const group = getKanaGroup(cast.name);
-            if (!kanaGroups[group]) {
-                kanaGroups[group] = [];
-            }
-            kanaGroups[group].push(cast);
-        });
-        
-        const groupOrder = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ', 'その他'];
-        groupOrder.forEach(group => {
-            if (kanaGroups[group] && kanaGroups[group].length > 0) {
-                html += `<div class="class-header kana"><h3>📋 ${group}行</h3></div>`;
-                kanaGroups[group].forEach(cast => {
-                    html += renderCastCard(cast);
-                });
-            }
-        });
-    }
-    
-    listElement.innerHTML = html;
-    console.log('renderAllCastList: 描画完了');
+.modal-header h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
-/**
- * キャストカードを生成（シフト一覧と同じレイアウト）
- */
-function renderCastCard(cast) {
-    // メイン店舗バッジ
-    let mainBadge = '';
-    if (cast.mainStore) {
-        const storeNames = {
-            'delidosu': 'でりどす',
-            'anecan': 'アネキャン',
-            'ainoshizuku': 'しずく'
-        };
-        const storeName = storeNames[cast.mainStore] || '';
-        if (storeName) {
-            mainBadge = `<span class="main-store-badge ${cast.mainStore}">${storeName}</span>`;
-        }
-    }
-    
-    return `
-        <div class="shift-item" data-name="${cast.name}">
-            <div class="shift-header">
-                <div class="shift-info">
-                    <span class="shift-name">${cast.name}</span>
-                    ${mainBadge}
-                </div>
-            </div>
-            <div class="check-buttons">
-                <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'delidosu') ? 'checked' : ''}">
-                    <input type="checkbox" 
-                           class="store-checkbox" 
-                           data-name="${cast.name}" 
-                           data-store="delidosu"
-                           ${getCheckStatus(cast.name, 'delidosu') ? 'checked' : ''}
-                           onchange="toggleStoreCheck('${cast.name}', 'delidosu', this.checked)"
-                           ${!cast.delidosuUrl ? 'disabled' : ''}>
-                    <button class="btn-link btn-delidosu" 
-                            onclick="window.open('${cast.delidosuUrl}', '_blank')"
-                            ${!cast.delidosuUrl ? 'disabled' : ''}>
-                        ${cast.delidosuUrl ? 'でりどす' : '未登録'}
-                    </button>
-                </div>
-                <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'anecan') ? 'checked' : ''}">
-                    <input type="checkbox" 
-                           class="store-checkbox" 
-                           data-name="${cast.name}" 
-                           data-store="anecan"
-                           ${getCheckStatus(cast.name, 'anecan') ? 'checked' : ''}
-                           onchange="toggleStoreCheck('${cast.name}', 'anecan', this.checked)"
-                           ${!cast.anecanUrl ? 'disabled' : ''}>
-                    <button class="btn-link btn-anecan" 
-                            onclick="window.open('${cast.anecanUrl}', '_blank')"
-                            ${!cast.anecanUrl ? 'disabled' : ''}>
-                        ${cast.anecanUrl ? 'アネキャン' : '未登録'}
-                    </button>
-                </div>
-                <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'ainoshizuku') ? 'checked' : ''}">
-                    <input type="checkbox" 
-                           class="store-checkbox" 
-                           data-name="${cast.name}" 
-                           data-store="ainoshizuku"
-                           ${getCheckStatus(cast.name, 'ainoshizuku') ? 'checked' : ''}
-                           onchange="toggleStoreCheck('${cast.name}', 'ainoshizuku', this.checked)"
-                           ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
-                    <button class="btn-link btn-ainoshizuku" 
-                            onclick="window.open('${cast.ainoshizukuUrl}', '_blank')"
-                            ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
-                        ${cast.ainoshizukuUrl ? '愛のしずく' : '未登録'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    line-height: 1;
 }
 
-
-function filterAllCastList() {
-    const searchText = document.getElementById('all-search-input').value.toLowerCase();
-    const items = document.querySelectorAll('#all-cast-list .shift-item');
-    
-    items.forEach(item => {
-        const name = item.dataset.name.toLowerCase();
-        if (name.includes(searchText)) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
-    });
+.modal-close:hover {
+    color: var(--text-primary);
+    transform: rotate(90deg);
 }
 
-// ===============================
-// 3チェック機能
-// ===============================
-
-/**
- * チェック状態を取得
- */
-function getCheckStatus(name, store) {
-    const person = urlData.find(u => u.name === name);
-    if (!person) return false;
-    
-    switch(store) {
-        case 'delidosu':
-            return person.checkedDelidosu === '済';
-        case 'anecan':
-            return person.checkedAnecan === '済';
-        case 'ainoshizuku':
-            return person.checkedAinoshizuku === '済';
-        default:
-            return false;
-    }
+.modal-body {
+    padding: 25px;
 }
 
-/**
- * シフト日付を保存（API呼び出し）
- */
-async function saveShiftDate(date) {
-    try {
-        const response = await fetch(`${API_URL}?action=saveShiftDate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({ date: date })
-        });
-        
-        const result = await response.json();
-        console.log('saveShiftDate: 結果', result);
-        return result;
-    } catch (error) {
-        console.error('saveShiftDate: 例外', error);
-        return { success: false, error: error.message };
-    }
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px 25px;
+    border-top: 2px solid var(--border-color);
 }
 
-/**
- * シフト日付を取得（API呼び出し）
- */
-async function loadShiftDate() {
-    try {
-        const response = await fetch(`${API_URL}?action=getShiftDate`);
-        const result = await response.json();
-        console.log('loadShiftDate: 結果', result);
-        
-        if (result.success && result.date) {
-            // ★★★ 日付をフォーマット ★★★
-            currentShiftDate = formatShiftDate(result.date);
-            const dateDisplay = document.getElementById('date-display');
-            dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
-            dateDisplay.classList.add('has-date');
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('loadShiftDate: 例外', error);
-        return { success: false, error: error.message };
-    }
+/* ===== フォーム ===== */
+.form-group {
+    margin-bottom: 20px;
 }
 
-/**
- * シフト日付をフォーマット
- * ISO形式やDate型を「YYYY年MM月DD日」形式に変換
- */
-function formatShiftDate(dateValue) {
-    // 既に「YYYY年MM月DD日」形式ならそのまま返す
-    if (typeof dateValue === 'string' && dateValue.includes('年')) {
-        return dateValue;
-    }
-    
-    // ISO形式やDate型の場合は変換
-    try {
-        const date = new Date(dateValue);
-        if (!isNaN(date.getTime())) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}年${month}月${day}日`;
-        }
-    } catch (e) {
-        console.error('formatShiftDate: 変換エラー', e);
-    }
-    
-    // 変換できない場合はそのまま返す
-    return dateValue;
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
 }
 
-/**
- * 全チェック状態をリセット（API呼び出し）
- */
-async function resetAllChecks() {
-    try {
-        const response = await fetch(`${API_URL}?action=resetAllChecks`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({})
-        });
-        
-        const result = await response.json();
-        console.log('resetAllChecks: 結果', result);
-        
-        if (result.success) {
-            // メモリ上のurlDataもリセット
-            urlData.forEach(person => {
-                person.checkedDelidosu = '';
-                person.checkedAnecan = '';
-                person.checkedAinoshizuku = '';
-            });
-            showToast('チェックをリセットしました', 'success');
-        } else {
-            console.error('resetAllChecks: エラー', result.error);
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('resetAllChecks: 例外', error);
-        return { success: false, error: error.message };
-    }
+.required {
+    color: var(--danger-color);
 }
 
-/**
- * 店舗別チェック状態を切り替え
- */
-async function toggleStoreCheck(name, store, isChecked) {
-    console.log('toggleStoreCheck:', name, store, isChecked);
-    
-    // メモリ上のurlDataを更新
-    const person = urlData.find(p => p.name === name);
-    if (person) {
-        switch(store) {
-            case 'delidosu':
-                person.checkedDelidosu = isChecked ? '済' : '';
-                break;
-            case 'anecan':
-                person.checkedAnecan = isChecked ? '済' : '';
-                break;
-            case 'ainoshizuku':
-                person.checkedAinoshizuku = isChecked ? '済' : '';
-                break;
-        }
-    }
-    
-    // DOM上のすべての該当チェックボックスとラッパーを更新（タブ間連動）
-    document.querySelectorAll(`.store-checkbox[data-name="${name}"][data-store="${store}"]`).forEach(checkbox => {
-        checkbox.checked = isChecked;
-        const wrapper = checkbox.closest('.check-btn-wrapper');
-        if (wrapper) {
-            if (isChecked) {
-                wrapper.classList.add('checked');
-            } else {
-                wrapper.classList.remove('checked');
-            }
-        }
-    });
-    
-    // スプレッドシートに保存
-    try {
-        const response = await fetch(`${API_URL}?action=updateCheckStatus`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({ 
-                name: name, 
-                store: store,
-                checked: isChecked 
-            })
-        });
-        
-        const result = await response.json();
-        console.log('toggleStoreCheck: 保存結果', result);
-        
-        if (!result.success) {
-            console.error('toggleStoreCheck: 保存失敗', result.error);
-        }
-    } catch (error) {
-        console.error('toggleStoreCheck: 例外', error);
-    }
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
 }
 
-
-// ===============================
-// URLリスト表示
-// ===============================
-
-function renderUrlList() {
-    const listElement = document.getElementById('url-list');
-    const emptyElement = document.getElementById('url-empty-state');
-    
-    // ★★★ 店舗フィルターを適用 ★★★
-    const filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);
-    console.log('renderUrlList: フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
-    
-    if (filteredUrlData.length === 0) {
-        listElement.style.display = 'none';
-        emptyElement.style.display = 'block';
-        return;
-    }
-    
-    listElement.style.display = 'flex';
-    emptyElement.style.display = 'none';
-    
-    // ★★★ スタッフと通常キャストを分離 ★★★
-    const normalCasts = filteredUrlData.filter(cast => cast.class !== 'スタッフ');
-    const staffCasts = filteredUrlData.filter(cast => cast.class === 'スタッフ');
-    
-    // ★★★ クラス別にグループ化（姫デコ → 新人 → 通常）★★★
-    const classGroups = {
-        '姫デコ': [],
-        '新人': [],
-        '通常': []
-    };
-    
-    normalCasts.forEach(cast => {
-        const castClass = cast.class || '通常';
-        if (classGroups[castClass]) {
-            classGroups[castClass].push(cast);
-        } else {
-            classGroups['通常'].push(cast);
-        }
-    });
-    
-    // 各クラス内で名前順にソート
-    Object.values(classGroups).forEach(group => {
-        group.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-    });
-    
-    // スタッフを名前順にソート
-    staffCasts.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-    
-    let html = '';
-    
-    // ★★★ 姫デコ ★★★
-    if (classGroups['姫デコ'].length > 0) {
-        html += '<div class="class-header himede" id="url-group-himede"><h3>👑 姫デコ</h3></div>';
-        classGroups['姫デコ'].forEach(cast => {
-            html += renderUrlCard(cast);
-        });
-    }
-    
-    // ★★★ 新人 ★★★
-    if (classGroups['新人'].length > 0) {
-        html += '<div class="class-header newbie" id="url-group-newbie"><h3>🆕 新人</h3></div>';
-        classGroups['新人'].forEach(cast => {
-            html += renderUrlCard(cast);
-        });
-    }
-    
-    // ★★★ 通常（あいうえお順でグループ化）★★★
-    if (classGroups['通常'].length > 0) {
-        const kanaGroups = {};
-        classGroups['通常'].forEach(cast => {
-            const group = getKanaGroup(cast.name);
-            if (!kanaGroups[group]) {
-                kanaGroups[group] = [];
-            }
-            kanaGroups[group].push(cast);
-        });
-        
-        const groupOrder = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ', 'その他'];
-        groupOrder.forEach(group => {
-            if (kanaGroups[group] && kanaGroups[group].length > 0) {
-                html += `<div class="class-header kana" id="url-group-${group}"><h3>📋 ${group}行</h3></div>`;
-                kanaGroups[group].forEach(cast => {
-                    html += renderUrlCard(cast);
-                });
-            }
-        });
-    }
-    
-    // ★★★ スタッフを一番下に表示 ★★★
-    if (staffCasts.length > 0) {
-        html += '<div class="class-header staff" id="url-group-staff"><h3>👥 スタッフ</h3></div>';
-        staffCasts.forEach(cast => {
-            html += renderUrlCard(cast);
-        });
-    }
-    
-    listElement.innerHTML = html;
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-/**
- * URL管理カード1件を生成
- */
-function renderUrlCard(url) {
-    return `
-        <div class="url-item url-item-compact" data-name="${url.name}">
-            <div class="url-item-header">
-                <div class="url-item-info">
-                    <h3 class="url-item-name">${url.name}</h3>
-                    ${getMainStoreBadgeForUrl(url)}
-                </div>
-                <div class="url-item-actions">
-                    <button class="btn-edit" onclick="showEditModal('${url.name}')">編集</button>
-                    <button class="btn-delete" onclick="showDeleteModal('${url.name}')">削除</button>
-                </div>
-            </div>
-        </div>
-    `;
+.warning-text {
+    color: var(--danger-color);
+    font-size: 0.9rem;
+    margin-top: 10px;
 }
 
-// ===============================
-// URL検索
-// ===============================
-
-function filterUrlList() {
-    const searchText = document.getElementById('search-input').value.toLowerCase();
-    const items = document.querySelectorAll('.url-item');
-    
-    items.forEach(item => {
-        const name = item.dataset.name.toLowerCase();
-        if (name.includes(searchText)) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
-    });
+/* セレクトボックス */
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-// ===============================
-// モーダル管理
-// ===============================
-
-function showAddModal() {
-    currentEditName = null;
-    document.getElementById('modal-title').textContent = 'URL情報を追加';
-    document.getElementById('modal-name').value = '';
-    document.getElementById('modal-name').disabled = false;
-    
-    // ★★★ クラスを初期値に設定 ★★★
-    document.getElementById('modal-class').value = '通常';
-    
-    // ★★★ 各店舗の情報をクリア ★★★
-    document.getElementById('modal-deli-name').value = '';
-    document.getElementById('modal-deli-url').value = '';
-    document.getElementById('modal-ane-name').value = '';
-    document.getElementById('modal-ane-url').value = '';
-    document.getElementById('modal-aino-name').value = '';
-    document.getElementById('modal-aino-url').value = '';
-    
-    // ★★★ メイン店舗チェックボックスをクリア ★★★
-    document.getElementById('modal-deli-main').checked = false;
-    document.getElementById('modal-ane-main').checked = false;
-    document.getElementById('modal-aino-main').checked = false;
-    
-    // ★★★ 面談情報をクリア ★★★
-    document.getElementById('modal-last-work-date').value = '';
-    document.getElementById('modal-last-interview-date').value = '';
-    document.getElementById('modal-interview-staff').value = '';
-    document.getElementById('modal-last-photo-date').value = '';
-    document.getElementById('modal-last-video-date').value = '';
-    document.getElementById('modal-interview-comment').value = '';
-    
-    // 面談スタッフのドロップダウンを更新
-    updateStaffDropdown('');
-    
-    document.getElementById('url-modal').classList.add('active');
+.form-select:hover {
+    border-color: var(--primary-color);
 }
 
-function showEditModal(name) {
-    currentEditName = name;
-    const urlInfo = urlData.find(u => u.name === name);
-    
-    if (!urlInfo) return;
-    
-    document.getElementById('modal-title').textContent = 'URL情報を編集';
-    document.getElementById('modal-name').value = urlInfo.name;
-    document.getElementById('modal-name').disabled = true;
-    
-    // ★★★ クラスを設定 ★★★
-    document.getElementById('modal-class').value = urlInfo.class || '通常';
-    
-    // ★★★ 各店舗の情報を設定 ★★★
-    document.getElementById('modal-deli-name').value = urlInfo.delidosuName || '';
-    document.getElementById('modal-deli-url').value = urlInfo.delidosuUrl || '';
-    document.getElementById('modal-ane-name').value = urlInfo.anecanName || '';
-    document.getElementById('modal-ane-url').value = urlInfo.anecanUrl || '';
-    document.getElementById('modal-aino-name').value = urlInfo.ainoshizukuName || '';
-    document.getElementById('modal-aino-url').value = urlInfo.ainoshizukuUrl || '';
-    
-    // ★★★ メイン店舗チェックボックスを設定 ★★★
-    document.getElementById('modal-deli-main').checked = (urlInfo.mainStore === 'delidosu');
-    document.getElementById('modal-ane-main').checked = (urlInfo.mainStore === 'anecan');
-    document.getElementById('modal-aino-main').checked = (urlInfo.mainStore === 'ainoshizuku');
-    
-    // ★★★ 面談情報を設定 ★★★
-    document.getElementById('modal-last-work-date').value = urlInfo.lastWorkDate || '';
-    document.getElementById('modal-last-interview-date').value = formatDateForInput(urlInfo.lastInterviewDate);
-    // 面談スタッフのドロップダウンを更新
-    updateStaffDropdown(urlInfo.interviewStaff || '');
-    document.getElementById('modal-last-photo-date').value = formatDateForInput(urlInfo.lastPhotoDate);
-    document.getElementById('modal-last-video-date').value = formatDateForInput(urlInfo.lastVideoDate);
-    document.getElementById('modal-interview-comment').value = urlInfo.interviewComment || '';
-    
-    document.getElementById('url-modal').classList.add('active');
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-function closeModal() {
-    document.getElementById('url-modal').classList.remove('active');
+/* ラベルとチェックボックスの横並び */
+.label-with-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
-function showDeleteModal(name) {
-    currentDeleteName = name;
-    document.getElementById('delete-name').textContent = name;
-    document.getElementById('delete-modal').classList.add('active');
+.label-with-checkbox > span {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.95rem;
 }
 
-function closeDeleteModal() {
-    document.getElementById('delete-modal').classList.remove('active');
+/* メイン店舗チェックボックス */
+.main-checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 10px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
 }
 
-// ===============================
-// URL保存
-// ===============================
+.main-checkbox-label:hover {
+    background: rgba(99, 102, 241, 0.2);
+}
 
-async function saveUrlData() {
-    const name = document.getElementById('modal-name').value.trim();
-    
-    if (!name) {
-        showToast('源氏名を入力してください', 'error');
-        return;
+.main-store-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.main-checkbox-text {
+    margin-left: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* ===== 空状態 ===== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state p:first-child {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    opacity: 0.3;
+}
+
+.empty-state p:nth-child(2) {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+/* ===== トースト通知 ===== */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 15px 25px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    font-weight: 600;
+    z-index: 2000;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-left: 4px solid var(--secondary-color);
+}
+
+.toast.error {
+    border-left: 4px solid var(--danger-color);
+}
+
+/* ===== 3チェック機能 ===== */
+.check-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.check-btn-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.store-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--secondary-color);
+}
+
+.check-btn-wrapper.checked .btn-link {
+    box-shadow: 0 0 0 2px var(--secondary-color);
+}
+
+.check-btn-wrapper .btn-link {
+    flex: 1;
+}
+
+/* チェック済みボタンのスタイル */
+.check-btn-wrapper.checked .btn-delidosu {
+    box-shadow: 0 0 0 3px #22c55e;
+}
+
+.check-btn-wrapper.checked .btn-anecan {
+    box-shadow: 0 0 0 3px #22c55e;
+}
+
+.check-btn-wrapper.checked .btn-ainoshizuku {
+    box-shadow: 0 0 0 3px #22c55e;
+}
+
+/* ===== メイン店舗バッジ ===== */
+.main-store-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.main-store-badge.delidosu {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #fff;
+}
+
+.main-store-badge.anecan {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    color: #fff;
+}
+
+.main-store-badge.ainoshizuku {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: #fff;
+}
+
+/* ===== クラスヘッダー（全キャストタブ用） ===== */
+.class-header {
+    background: var(--card-bg);
+    padding: 15px 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 15px;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+.class-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* 姫デコヘッダー */
+.class-header.himede {
+    border-left-color: #fbbf24;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.15) 100%);
+}
+
+.class-header.himede h3 {
+    color: #fcd34d;
+}
+
+/* 新人ヘッダー */
+.class-header.newbie {
+    border-left-color: #34d399;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(16, 185, 129, 0.15) 100%);
+}
+
+.class-header.newbie h3 {
+    color: #6ee7b7;
+}
+
+/* あいうえお順ヘッダー */
+.class-header.kana {
+    border-left-color: #60a5fa;
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.35) 0%, rgba(59, 130, 246, 0.25) 100%);
+}
+
+.class-header.kana h3 {
+    color: #93c5fd;
+}
+
+/* ===== ジャンプボタン ===== */
+.jump-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.jump-btn {
+    padding: 8px 12px;
+    min-width: 40px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.jump-btn:hover:not(.disabled) {
+    background: var(--hover-bg);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+}
+
+.jump-btn:active:not(.disabled) {
+    transform: scale(0.95);
+}
+
+.jump-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--bg-color);
+}
+
+.jump-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* ===== 面談カード ===== */
+.interview-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary-color);
+}
+
+.interview-card:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.interview-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.interview-card-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.interview-card-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.interview-card-body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.interview-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.interview-info-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.interview-info-value {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.interview-info-value.empty {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* 面談コメント（全幅） */
+.interview-comment {
+    grid-column: 1 / -1;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary-color);
+}
+
+.interview-comment-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.interview-card-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ===== アラート表示（日付警告） ===== */
+/* 赤アラート: 最終出勤から30日以上 */
+.interview-card.alert-red {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
+}
+
+.interview-card.alert-red .interview-card-name {
+    color: #fca5a5;
+}
+
+.alert-badge-red {
+    display: inline-block;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+/* 黄アラート: 最終面談から60日以上 */
+.interview-card.alert-yellow {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+}
+
+.interview-card.alert-yellow .interview-card-name {
+    color: #fcd34d;
+}
+
+.alert-badge-yellow {
+    display: inline-block;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+/* ===== モーダルセクション ===== */
+.modal-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.modal-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-color);
+    display: inline-block;
+}
+
+.modal-section-title .required {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* ===== テキストエリア ===== */
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.3s ease;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+/* ===== 無効化された入力フィールド ===== */
+.form-input-disabled {
+    background: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ===== 日付入力フィールド ===== */
+.form-group input[type="date"] {
+    width: 100%;
+    height: 48px;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Chromeの日付ピッカーアイコンをスタイリング */
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+    cursor: pointer;
+}
+
+/* ===== スタッフクラスヘッダー ===== */
+.class-header.staff {
+    border-left-color: #6b7280;
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.25) 0%, rgba(75, 85, 99, 0.15) 100%);
+}
+
+.class-header.staff h3 {
+    color: #9ca3af;
+}
+
+/* ===== 管理タブ コンパクト表示 ===== */
+/* ===== 管理タブ コンパクト表示 ===== */
+.url-item-compact {
+    padding: 12px 16px !important;
+}
+
+.url-item-compact .url-item-header {
+    margin-bottom: 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.url-item-compact .url-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.url-item-compact .url-item-name {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.url-item-compact .url-item-content {
+    display: none !important;
+}
+
+.url-item-compact .url-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.url-item-compact .btn-edit,
+.url-item-compact .btn-delete {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+/* ===== レスポンシブ ===== */
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
     }
     
-    // ★★★ メイン店舗の判定 ★★★
-    let mainStore = '';
-    const deliChecked = document.getElementById('modal-deli-main').checked;
-    const aneChecked = document.getElementById('modal-ane-main').checked;
-    const ainoChecked = document.getElementById('modal-aino-main').checked;
-    
-    if (deliChecked) {
-        mainStore = 'delidosu';
-    } else if (aneChecked) {
-        mainStore = 'anecan';
-    } else if (ainoChecked) {
-        mainStore = 'ainoshizuku';
+    .logo {
+        font-size: 1.5rem;
     }
     
-    // ★★★ バリデーション: メイン店舗が選択されている場合、該当店舗のURLが必須 ★★★
-    if (mainStore) {
-        const deliUrl = document.getElementById('modal-deli-url').value.trim();
-        const aneUrl = document.getElementById('modal-ane-url').value.trim();
-        const ainoUrl = document.getElementById('modal-aino-url').value.trim();
-        
-        if (mainStore === 'delidosu' && !deliUrl) {
-            showToast('メイン店舗に設定する場合、でりどすのURLを入力してください', 'error');
-            return;
-        }
-        if (mainStore === 'anecan' && !aneUrl) {
-            showToast('メイン店舗に設定する場合、アネキャンのURLを入力してください', 'error');
-            return;
-        }
-        if (mainStore === 'ainoshizuku' && !ainoUrl) {
-            showToast('メイン店舗に設定する場合、愛のしずくのURLを入力してください', 'error');
-            return;
-        }
+    .shift-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
     
-    // スタッフクラス以外はメイン店舗必須
-    const selectedClass = document.getElementById('modal-class').value;
-    if (selectedClass !== 'スタッフ' && !mainStore) {
-        showToast('メイン店舗を選択してください', 'error');
-        return;
+    .shift-info {
+        width: 100%;
     }
     
-    const data = {
-        name: name,
-        class: document.getElementById('modal-class').value,
-        delidosuName: document.getElementById('modal-deli-name').value.trim(),
-        delidosuUrl: document.getElementById('modal-deli-url').value.trim(),
-        anecanName: document.getElementById('modal-ane-name').value.trim(),
-        anecanUrl: document.getElementById('modal-ane-url').value.trim(),
-        ainoshizukuName: document.getElementById('modal-aino-name').value.trim(),
-        ainoshizukuUrl: document.getElementById('modal-aino-url').value.trim(),
-        mainStore: mainStore,
-        // ★★★ 面談情報を追加 ★★★
-        lastWorkDate: document.getElementById('modal-last-work-date').value.trim(),
-        lastInterviewDate: document.getElementById('modal-last-interview-date').value.trim(),
-        interviewStaff: document.getElementById('modal-interview-staff').value.trim(),
-        lastPhotoDate: document.getElementById('modal-last-photo-date').value.trim(),
-        lastVideoDate: document.getElementById('modal-last-video-date').value.trim(),
-        interviewComment: document.getElementById('modal-interview-comment').value.trim()
-    };
+    .shift-buttons {
+        grid-template-columns: 1fr;
+    }
     
-    try {
-        const action = currentEditName ? 'updateUrlData' : 'addUrlData';
-        
-        const response = await fetch(`${API_URL}?action=${action}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            closeModal();
-            await loadUrlData();
-            await loadShiftData();
-            showToast(result.message, 'success');
-        } else {
-            showToast(result.error, 'error');
-        }
-    } catch (error) {
-        console.error('URL保存エラー:', error);
-        showToast('URL情報の保存に失敗しました', 'error');
+    .url-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .modal-content {
+        width: 95%;
+    }
+    
+    /* メイン店舗バッジ */
+    .main-store-badge {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        margin-left: 5px;
+    }
+    
+    /* クラスヘッダー */
+    .class-header {
+        font-size: 1rem;
+        padding: 8px 12px;
+    }
+    
+    /* ナビゲーション（4タブ対応） */
+    .nav {
+        gap: 4px;
+        flex-wrap: nowrap;
+    }
+    
+    .nav-btn {
+        font-size: 0.7rem;
+        padding: 8px 6px;
+        white-space: nowrap;
+    }
+    
+    /* 店舗フィルター */
+    .store-filter {
+        gap: 5px;
+        padding: 8px;
+    }
+    
+    .filter-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    /* 更新コントロール */
+    .refresh-control {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .refresh-btn {
+        width: 100%;
+        padding: 10px;
+    }
+    
+    .auto-refresh {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* 3チェック機能 */
+    .check-buttons {
+        gap: 5px;
+    }
+    
+    .check-btn-wrapper {
+        flex: 1;
+        min-width: calc(33% - 5px);
+    }
+    
+    .store-checkbox {
+        width: 16px;
+        height: 16px;
+    }
+    
+    /* 管理タブ コンパクト表示 */
+    .url-item-compact {
+        padding: 10px 12px !important;
+    }
+    
+    .url-item-compact .url-item-name {
+        font-size: 1rem;
+    }
+    
+    .url-item-compact .btn-edit,
+    .url-item-compact .btn-delete {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+    
+    /* ジャンプボタン */
+    .jump-buttons {
+        gap: 4px;
+        padding: 8px;
+    }
+    
+    .jump-btn {
+        padding: 6px 8px;
+        min-width: 32px;
+        font-size: 0.8rem;
+    }
+    
+    /* 面談カード */
+    .interview-card-body {
+        grid-template-columns: 1fr;
+    }
+    
+    .interview-card-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .interview-card-name {
+        font-size: 1.1rem;
+    }
+    
+    /* モーダルセクション */
+    .modal-section-title {
+        font-size: 0.9rem;
     }
 }
 
-// ===============================
-// URL削除
-// ===============================
-
-async function confirmDelete() {
-    if (!currentDeleteName) return;
-    
-    try {
-        const response = await fetch(`${API_URL}?action=deleteUrlData`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({ name: currentDeleteName })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            closeDeleteModal();
-            await loadUrlData();
-            await loadShiftData();
-            showToast(result.message, 'success');
-        } else {
-            showToast(result.error, 'error');
-        }
-    } catch (error) {
-        console.error('URL削除エラー:', error);
-        showToast('URL情報の削除に失敗しました', 'error');
-    }
+/* ===== トップに戻るボタン ===== */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
 }
 
-// ===============================
-// UI制御
-// ===============================
-
-function showLoading(show) {
-    const loading = document.getElementById('loading');
-    const shiftList = document.getElementById('shift-list');
-    const emptyState = document.getElementById('empty-state');
-    
-    if (show === undefined || show === true) {
-        loading.style.display = 'block';
-        shiftList.style.display = 'none';
-        emptyState.style.display = 'none';
-    } else {
-        loading.style.display = 'none';
-    }
+.back-to-top:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.4);
 }
 
-function hideLoading() {
-    showLoading(false);
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
 }
 
-// ===============================
-// 更新・自動リロード
-// ===============================
-
-/**
- * データを手動更新
- */
-async function refreshData() {
-    const refreshBtn = document.querySelector('.refresh-btn');
-    
-    // ボタンを無効化
-    refreshBtn.classList.add('loading');
-    refreshBtn.textContent = '🔄 更新中...';
-    
-    try {
-        // データを再読み込み
-        await loadUrlData();
-        await loadShiftData();
-        
-        // 現在のタブに応じて再描画
-        if (document.getElementById('shift-view').classList.contains('active')) {
-            renderShiftList();
-        } else if (document.getElementById('all-view').classList.contains('active')) {
-            renderAllCastList();
-        } else if (document.getElementById('interview-view').classList.contains('active')) {
-            renderInterviewList();
-        } else if (document.getElementById('url-view').classList.contains('active')) {
-            renderUrlList();
-        }
-        
-        // 最終更新時刻を表示
-        updateLastRefreshTime();
-        
-        showToast('データを更新しました', 'success');
-    } catch (error) {
-        console.error('refreshData: エラー', error);
-        showToast('更新に失敗しました', 'error');
-    } finally {
-        // ボタンを有効化
-        refreshBtn.classList.remove('loading');
-        refreshBtn.textContent = '🔄 更新';
+/* レスポンシブ対応 */
+@media (max-width: 600px) {
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
     }
-}
-
-/**
- * 自動リロードのON/OFF切り替え
- */
-function toggleAutoRefresh() {
-    const checkbox = document.getElementById('auto-refresh-toggle');
-    const autoRefreshDiv = document.querySelector('.auto-refresh');
-    
-    if (checkbox.checked) {
-        // 自動リロードを開始
-        startAutoRefresh();
-        autoRefreshDiv.classList.add('active');
-        showToast(`自動更新を開始しました（${autoRefreshSeconds}秒間隔）`, 'success');
-    } else {
-        // 自動リロードを停止
-        stopAutoRefresh();
-        autoRefreshDiv.classList.remove('active');
-        showToast('自動更新を停止しました', 'success');
-    }
-}
-
-/**
- * 自動リロード間隔を変更
- */
-function updateAutoRefreshInterval() {
-    const select = document.getElementById('auto-refresh-interval');
-    autoRefreshSeconds = parseInt(select.value);
-    
-    // 自動リロードが有効なら再起動
-    if (document.getElementById('auto-refresh-toggle').checked) {
-        stopAutoRefresh();
-        startAutoRefresh();
-        showToast(`自動更新間隔を${autoRefreshSeconds}秒に変更しました`, 'success');
-    }
-}
-
-/**
- * 自動リロードを開始
- */
-function startAutoRefresh() {
-    // 既存のインターバルをクリア
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-    }
-    
-    // 新しいインターバルを設定
-    autoRefreshInterval = setInterval(async () => {
-        console.log('自動リロード実行:', new Date().toLocaleTimeString());
-        
-        try {
-            await loadUrlData();
-            await loadShiftData();
-            
-            // 現在のタブに応じて再描画
-            if (document.getElementById('shift-view').classList.contains('active')) {
-                renderShiftList();
-            } else if (document.getElementById('all-view').classList.contains('active')) {
-                renderAllCastList();
-            } else if (document.getElementById('interview-view').classList.contains('active')) {
-                renderInterviewList();
-            } else if (document.getElementById('url-view').classList.contains('active')) {
-                renderUrlList();
-            }
-            
-            updateLastRefreshTime();
-            
-            // ★★★ 自動更新時もトースト通知を表示 ★★★
-            showToast('データを更新しました', 'success');
-        } catch (error) {
-            console.error('自動リロードエラー:', error);
-            showToast('自動更新に失敗しました', 'error');
-        }
-    }, autoRefreshSeconds * 1000);
-    
-    console.log(`自動リロード開始: ${autoRefreshSeconds}秒間隔`);
-}
-
-/**
- * 自動リロードを停止
- */
-function stopAutoRefresh() {
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
-        console.log('自動リロード停止');
-    }
-}
-
-/**
- * 最終更新時刻を表示
- */
-function updateLastRefreshTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
-    
-    // 既存の最終更新表示を削除
-    const existing = document.querySelector('.last-updated');
-    if (existing) {
-        existing.remove();
-    }
-    
-    // 新しい最終更新表示を追加
-    const refreshBtn = document.querySelector('.refresh-btn');
-    const lastUpdated = document.createElement('span');
-    lastUpdated.className = 'last-updated';
-    lastUpdated.textContent = `最終更新: ${timeStr}`;
-    refreshBtn.parentNode.insertBefore(lastUpdated, refreshBtn.nextSibling);
-}
-
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type} show`;
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-// ===============================
-// 面談タブ
-// ===============================
-
-/**
- * 面談リストを描画
- */
-function renderInterviewList() {
-    console.log('renderInterviewList: 面談リスト描画開始');
-    console.log('URLデータ件数:', urlData.length);
-    
-    const listElement = document.getElementById('interview-list');
-    const emptyElement = document.getElementById('interview-empty-state');
-    
-    if (!listElement) {
-        console.error('interview-list要素が見つかりません');
-        return;
-    }
-    
-    // ★★★ 店舗フィルターを適用 ★★★
-    let filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);
-    
-    // ★★★ スタッフを除外 ★★★
-    filteredUrlData = filteredUrlData.filter(cast => cast.class !== 'スタッフ');
-    
-    console.log('フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
-    
-    if (filteredUrlData.length === 0) {
-        listElement.style.display = 'none';
-        if (emptyElement) emptyElement.style.display = 'block';
-        return;
-    }
-    
-    listElement.style.display = 'flex';
-    if (emptyElement) emptyElement.style.display = 'none';
-    
-    // ★★★ クラス別にグループ化（姫デコ → 新人 → 通常） ★★★
-    const classGroups = {
-        '姫デコ': [],
-        '新人': [],
-        '通常': []
-    };
-    
-    filteredUrlData.forEach(cast => {
-        const castClass = cast.class || '通常';
-        if (classGroups[castClass]) {
-            classGroups[castClass].push(cast);
-        } else {
-            classGroups['通常'].push(cast);
-        }
-    });
-    
-    // 各クラス内で名前順にソート
-    Object.values(classGroups).forEach(group => {
-        group.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
-    });
-    
-    let html = '';
-    
-    // ★★★ 姫デコ ★★★
-    if (classGroups['姫デコ'].length > 0) {
-        html += '<div class="class-header himede" id="interview-group-himede"><h3>👑 姫デコ</h3></div>';
-        classGroups['姫デコ'].forEach(cast => {
-            html += renderInterviewCard(cast);
-        });
-    }
-    
-    // ★★★ 新人 ★★★
-    if (classGroups['新人'].length > 0) {
-        html += '<div class="class-header newbie" id="interview-group-newbie"><h3>🆕 新人</h3></div>';
-        classGroups['新人'].forEach(cast => {
-            html += renderInterviewCard(cast);
-        });
-    }
-    
-    // ★★★ 通常（あいうえお順でグループ化）★★★
-    if (classGroups['通常'].length > 0) {
-        const kanaGroups = {};
-        classGroups['通常'].forEach(cast => {
-            const group = getKanaGroup(cast.name);
-            if (!kanaGroups[group]) {
-                kanaGroups[group] = [];
-            }
-            kanaGroups[group].push(cast);
-        });
-        
-        const groupOrder = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ', 'その他'];
-        groupOrder.forEach(group => {
-            if (kanaGroups[group] && kanaGroups[group].length > 0) {
-                html += `<div class="class-header kana" id="interview-group-${group}"><h3>📋 ${group}行</h3></div>`;
-                kanaGroups[group].forEach(cast => {
-                    html += renderInterviewCard(cast);
-                });
-            }
-        });
-    }
-    
-    listElement.innerHTML = html;
-    console.log('renderInterviewList: 描画完了');
-}
-
-/**
- * 面談カード1件を生成
- */
-function renderInterviewCard(cast) {
-    // メイン店舗バッジ
-    let mainBadge = '';
-    if (cast.mainStore) {
-        const storeNames = {
-            'delidosu': 'でりどす',
-            'anecan': 'アネキャン',
-            'ainoshizuku': 'しずく'
-        };
-        const storeName = storeNames[cast.mainStore] || '';
-        if (storeName) {
-            mainBadge = `<span class="main-store-badge ${cast.mainStore}">${storeName}</span>`;
-        }
-    }
-    
-    // アラート状態
-    const alertStatus = calculateAlertStatus(cast);
-    let alertBadge = '';
-    if (alertStatus === 'red') {
-        alertBadge = '<span class="alert-badge alert-red">⚠️ 出勤30日以上なし</span>';
-    } else if (alertStatus === 'yellow') {
-        alertBadge = '<span class="alert-badge alert-yellow">⏰ 面談60日以上なし</span>';
-    }
-    
-    // 日付表示
-    const lastWorkDisplay = cast.lastWorkDate ? formatDisplayDate(cast.lastWorkDate) : '未登録';
-    const lastInterviewDisplay = cast.lastInterviewDate ? formatDisplayDate(cast.lastInterviewDate) : '未登録';
-    const lastPhotoDisplay = cast.lastPhotoDate ? formatDisplayDate(cast.lastPhotoDate) : '未登録';
-    const lastVideoDisplay = cast.lastVideoDate ? formatDisplayDate(cast.lastVideoDate) : '未登録';
-    
-    // スタッフ表示
-    const staffDisplay = cast.interviewStaff ? ` (担当: ${escapeHtml(cast.interviewStaff)})` : '';
-    
-    // コメント表示
-    let commentHtml = '';
-    if (cast.interviewComment) {
-        commentHtml = `
-            <div class="interview-info-item interview-comment">
-                <span class="interview-info-label">💭 コメント</span>
-                <span class="interview-info-value">${escapeHtml(cast.interviewComment)}</span>
-            </div>
-        `;
-    }
-    
-    return `
-        <div class="interview-card" data-name="${cast.name}">
-            <div class="interview-card-header">
-                <div class="interview-card-title">
-                    <span class="interview-card-name">${cast.name}</span>
-                    ${mainBadge}
-                    ${alertBadge}
-                </div>
-                <div class="interview-card-actions">
-                    <button class="btn-edit" onclick="showEditModal('${cast.name}')">編集</button>
-                </div>
-            </div>
-            <div class="interview-card-body">
-                <div class="interview-info-item">
-                    <span class="interview-info-label">📅 最終出勤</span>
-                    <span class="interview-info-value ${!cast.lastWorkDate ? 'empty' : ''}">${lastWorkDisplay}</span>
-                </div>
-                <div class="interview-info-item">
-                    <span class="interview-info-label">💬 最終面談</span>
-                    <span class="interview-info-value ${!cast.lastInterviewDate ? 'empty' : ''}">${lastInterviewDisplay}${staffDisplay}</span>
-                </div>
-                <div class="interview-info-item">
-                    <span class="interview-info-label">📷 最終撮影</span>
-                    <span class="interview-info-value ${!cast.lastPhotoDate ? 'empty' : ''}">${lastPhotoDisplay}</span>
-                </div>
-                <div class="interview-info-item">
-                    <span class="interview-info-label">🎬 動画更新</span>
-                    <span class="interview-info-value ${!cast.lastVideoDate ? 'empty' : ''}">${lastVideoDisplay}</span>
-                </div>
-                ${commentHtml}
-            </div>
-        </div>
-    `;
-}
-
-/**
- * アラート状態を計算
- * @returns 'red' | 'yellow' | null
- */
-function calculateAlertStatus(cast) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // 出勤30日以上なし → 赤（優先）
-    if (cast.lastWorkDate) {
-        const lastWork = new Date(cast.lastWorkDate);
-        lastWork.setHours(0, 0, 0, 0);
-        const diffDays = Math.floor((today - lastWork) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 30) {
-            return 'red';
-        }
-    }
-    
-    // 面談60日以上なし → 黄
-    if (cast.lastInterviewDate) {
-        const lastInterview = new Date(cast.lastInterviewDate);
-        lastInterview.setHours(0, 0, 0, 0);
-        const diffDays = Math.floor((today - lastInterview) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 60) {
-            return 'yellow';
-        }
-    }
-    
-    return null;
-}
-
-/**
- * 日付を表示用にフォーマット（YYYY/MM/DD）
- */
-function formatDisplayDate(dateValue) {
-    if (!dateValue) return '';
-    
-    try {
-        const date = new Date(dateValue);
-        if (!isNaN(date.getTime())) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}/${month}/${day}`;
-        }
-    } catch (e) {
-        console.error('formatDisplayDate: エラー', e);
-    }
-    
-    return dateValue;
-}
-
-/**
- * 日付をinput type="date"用にフォーマット（YYYY-MM-DD形式）
- */
-function formatDateForInput(dateValue) {
-    if (!dateValue) return '';
-    try {
-        const date = new Date(dateValue);
-        if (isNaN(date.getTime())) return '';
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    } catch (e) {
-        return '';
-    }
-}
-
-/**
- * 面談スタッフのドロップダウンを更新
- */
-function updateStaffDropdown(selectedValue = '') {
-    const select = document.getElementById('modal-interview-staff');
-    if (!select) return;
-    
-    // スタッフクラスの人を取得
-    const staffList = urlData.filter(u => u.class === 'スタッフ');
-    
-    // 選択肢を生成
-    let options = '<option value="">選択してください</option>';
-    staffList.forEach(staff => {
-        const selected = staff.name === selectedValue ? 'selected' : '';
-        options += `<option value="${staff.name}" ${selected}>${staff.name}</option>`;
-    });
-    
-    select.innerHTML = options;
-}
-
-/**
- * HTMLエスケープ
- */
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-/**
- * 面談タブの検索
- */
-function filterInterviewList() {
-    const searchText = document.getElementById('interview-search-input').value.toLowerCase();
-    const items = document.querySelectorAll('#interview-list .interview-card');
-    
-    items.forEach(item => {
-        const name = item.dataset.name.toLowerCase();
-        if (name.includes(searchText)) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-
-// ===============================
-// ジャンプ機能
-// ===============================
-
-/**
- * ジャンプボタンの状態を更新
- */
-function updateJumpButtons(tabName) {
-    const jumpContainer = document.getElementById(`${tabName}-jump-buttons`);
-    if (!jumpContainer) return;
-    
-    // 店舗フィルターを適用したデータを取得
-    let filteredData = filterUrlDataByStore(urlData, currentStoreFilter);
-    
-    // 面談・在籍タブではスタッフを除外
-    if (tabName === 'interview' || tabName === 'all') {
-        filteredData = filteredData.filter(cast => cast.class !== 'スタッフ');
-    }
-    
-    // 通常クラスのみを対象にかな行を集計
-    const normalCasts = filteredData.filter(cast => {
-        const castClass = cast.class || '通常';
-        return castClass === '通常';
-    });
-    
-    const existingGroups = new Set();
-    normalCasts.forEach(cast => {
-        const group = getKanaGroup(cast.name);
-        existingGroups.add(group);
-    });
-    
-    // 管理タブではスタッフも確認
-    if (tabName === 'url') {
-        const hasStaff = filteredData.some(cast => cast.class === 'スタッフ');
-        if (hasStaff) {
-            existingGroups.add('スタッフ');
-        }
-    }
-    
-    // 姫デコ・新人の存在確認
-    const hasHimede = filteredData.some(cast => cast.class === '姫デコ');
-    const hasNewbie = filteredData.some(cast => cast.class === '新人');
-    
-    // ボタンの有効/無効を更新
-    const buttons = jumpContainer.querySelectorAll('.jump-btn');
-    buttons.forEach(btn => {
-        const group = btn.dataset.group;
-        let isEnabled = false;
-        
-        if (group === 'himede') {
-            isEnabled = hasHimede;
-        } else if (group === 'newbie') {
-            isEnabled = hasNewbie;
-        } else if (group === 'staff') {
-            isEnabled = existingGroups.has('スタッフ');
-        } else if (group === 'その他') {
-            isEnabled = existingGroups.has('その他') || existingGroups.has('スタッフ');
-        } else {
-            isEnabled = existingGroups.has(group);
-        }
-        
-        if (isEnabled) {
-            btn.classList.remove('disabled');
-        } else {
-            btn.classList.add('disabled');
-        }
-    });
-}
-
-/**
- * 指定のグループにジャンプ
- */
-function jumpToGroup(tabName, group) {
-    let targetId = '';
-    
-    if (group === 'himede') {
-        targetId = `${tabName}-group-himede`;
-    } else if (group === 'newbie') {
-        targetId = `${tabName}-group-newbie`;
-    } else if (group === 'staff') {
-        targetId = `${tabName}-group-staff`;
-    } else {
-        targetId = `${tabName}-group-${group}`;
-    }
-    
-    const target = document.getElementById(targetId);
-    if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-}
-
-// ===============================
-// 最終出勤日更新API
-// ===============================
-
-/**
- * 最終出勤日を更新（API呼び出し）
- */
-async function updateLastWorkDate(names, date) {
-    try {
-        const response = await fetch(`${API_URL}?action=updateLastWorkDate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({ 
-                names: names, 
-                date: date 
-            })
-        });
-        
-        const result = await response.json();
-        console.log('updateLastWorkDate: 結果', result);
-        return result;
-    } catch (error) {
-        console.error('updateLastWorkDate: 例外', error);
-        return { success: false, error: error.message };
-    }
-}
-
-// ===============================
-// トップに戻るボタン
-// ===============================
-
-/**
- * スクロール時の処理
- */
-function handleScroll() {
-    const backToTopBtn = document.getElementById('back-to-top');
-    if (!backToTopBtn) return;
-    
-    // 200px以上スクロールしたら表示
-    if (window.scrollY > 200) {
-        backToTopBtn.classList.add('show');
-    } else {
-        backToTopBtn.classList.remove('show');
-    }
-}
-
-/**
- * トップにスクロール
- */
-function scrollToTop() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
 }
