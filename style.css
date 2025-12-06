@@ -1122,47 +1122,61 @@ body {
     justify-content: flex-end;
 }
 
-/* ===== アラート表示（日付警告） ===== */
-/* 赤アラート: 最終出勤から30日以上 */
-.interview-card.alert-red {
-    border-left-color: #ef4444;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%);
-}
+/* ===== アラートバッジ（出勤・面談警告） ===== */
 
-.interview-card.alert-red .interview-card-name {
-    color: #fca5a5;
-}
-
-.alert-badge-red {
+/* 共通スタイル */
+.alert-badge {
     display: inline-block;
-    padding: 2px 8px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* 🔴 赤アラート: 30日以上出勤なし（危険） */
+.alert-badge.alert-red {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    margin-left: 8px;
+    border: 2px solid #fca5a5;
 }
 
-/* 黄アラート: 最終面談から60日以上 */
-.interview-card.alert-yellow {
-    border-left-color: #f59e0b;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
-}
-
-.interview-card.alert-yellow .interview-card-name {
-    color: #fcd34d;
-}
-
-.alert-badge-yellow {
-    display: inline-block;
-    padding: 2px 8px;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+/* 🟠 オレンジアラート: 20日以上出勤なし（警告） */
+.alert-badge.alert-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
     color: white;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    margin-left: 8px;
+    border: 2px solid #fdba74;
+}
+
+/* 🔵 青アラート: 10日以上出勤なし（注意） */
+.alert-badge.alert-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: 2px solid #93c5fd;
+}
+
+/* 🟡 黄アラート: 60日以上面談なし */
+.alert-badge.alert-yellow {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+    color: #1e293b;
+    border: 2px solid #fde047;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 600px) {
+    .alert-badge {
+        padding: 2px 8px;
+        font-size: 0.7rem;
+        margin-left: 4px;
+    }
 }
 
 /* ===== モーダルセクション ===== */
