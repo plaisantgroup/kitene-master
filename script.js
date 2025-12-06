@@ -1766,7 +1766,7 @@ function renderInterviewCard(cast) {
                 <div class="interview-card-title">
                     <span class="interview-card-name">${cast.name}</span>
                     ${mainBadge}
-                    ${alertBadge}
+                    ${alertBadges}
                 </div>
                 <div class="interview-card-actions">
                     <button class="btn-edit" onclick="showEditModal('${cast.name}')">編集</button>
