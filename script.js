@@ -1722,13 +1722,22 @@ function renderInterviewCard(cast) {
         }
     }
     
-    // アラート状態
+    // アラート状態（複数対応）
     const alertStatus = calculateAlertStatus(cast);
-    let alertBadge = '';
-    if (alertStatus === 'red') {
-        alertBadge = '<span class="alert-badge alert-red">⚠️ 出勤30日以上なし</span>';
-    } else if (alertStatus === 'yellow') {
-        alertBadge = '<span class="alert-badge alert-yellow">⏰ 面談60日以上なし</span>';
+    let alertBadges = '';
+    
+    // 出勤アラート（3段階）
+    if (alertStatus.work === 'red') {
+        alertBadges += '<span class="alert-badge alert-red">🔴 30日以上</span>';
+    } else if (alertStatus.work === 'orange') {
+        alertBadges += '<span class="alert-badge alert-orange">🟠 20日以上</span>';
+    } else if (alertStatus.work === 'blue') {
+        alertBadges += '<span class="alert-badge alert-blue">🔵 10日以上</span>';
+    }
+    
+    // 面談アラート
+    if (alertStatus.interview === 'yellow') {
+        alertBadges += '<span class="alert-badge alert-yellow">🟡 面談60日↑</span>';
     }
     
     // 日付表示
@@ -1787,34 +1796,45 @@ function renderInterviewCard(cast) {
 }
 
 /**
- * アラート状態を計算
- * @returns 'red' | 'yellow' | null
+ * アラート状態を計算（複数アラート対応）
+ * @returns { work: 'red'|'orange'|'blue'|null, interview: 'yellow'|null }
  */
 function calculateAlertStatus(cast) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // 出勤30日以上なし → 赤（優先）
+    const result = {
+        work: null,
+        interview: null
+    };
+    
+    // 出勤アラート（3段階）
     if (cast.lastWorkDate) {
         const lastWork = new Date(cast.lastWorkDate);
         lastWork.setHours(0, 0, 0, 0);
         const diffDays = Math.floor((today - lastWork) / (1000 * 60 * 60 * 24));
+        
         if (diffDays >= 30) {
-            return 'red';
+            result.work = 'red';       // 🔴 30日以上
+        } else if (diffDays >= 20) {
+            result.work = 'orange';    // 🟠 20日以上
+        } else if (diffDays >= 10) {
+            result.work = 'blue';      // 🔵 10日以上
         }
     }
     
-    // 面談60日以上なし → 黄
+    // 面談アラート
     if (cast.lastInterviewDate) {
         const lastInterview = new Date(cast.lastInterviewDate);
         lastInterview.setHours(0, 0, 0, 0);
         const diffDays = Math.floor((today - lastInterview) / (1000 * 60 * 60 * 24));
+        
         if (diffDays >= 60) {
-            return 'yellow';
+            result.interview = 'yellow';  // 🟡 60日以上
         }
     }
     
-    return null;
+    return result;
 }
 
 /**
