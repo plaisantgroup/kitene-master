@@ -737,7 +737,7 @@ function renderAllCastList() {
     
     // ★★★ 姫デコ ★★★
     if (classGroups['姫デコ'].length > 0) {
-        html += '<div class="class-header himede"><h3>👑 姫デコ</h3></div>';
+        html += '<div class="class-header himede" id="all-group-himede"><h3>👑 姫デコ</h3></div>';
         classGroups['姫デコ'].forEach(cast => {
             html += renderCastCard(cast);
         });
@@ -745,7 +745,7 @@ function renderAllCastList() {
     
     // ★★★ 新人 ★★★
     if (classGroups['新人'].length > 0) {
-        html += '<div class="class-header newbie"><h3>🆕 新人</h3></div>';
+        html += '<div class="class-header newbie" id="all-group-newbie"><h3>🆕 新人</h3></div>';
         classGroups['新人'].forEach(cast => {
             html += renderCastCard(cast);
         });
@@ -765,7 +765,7 @@ function renderAllCastList() {
         const groupOrder = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ', 'その他'];
         groupOrder.forEach(group => {
             if (kanaGroups[group] && kanaGroups[group].length > 0) {
-                html += `<div class="class-header kana"><h3>📋 ${group}行</h3></div>`;
+                html += `<div class="class-header kana" id="all-group-${group}"><h3>📋 ${group}行</h3></div>`;
                 kanaGroups[group].forEach(cast => {
                     html += renderCastCard(cast);
                 });
