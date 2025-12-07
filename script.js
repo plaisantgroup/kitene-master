@@ -2633,7 +2633,16 @@ async function loadAllLatestComments() {
                     staff: item.staff,
                     comment: item.comment,
                     createdAt: item.createdAt
-                }));
+                })).sort((a, b) => {
+                    // 日付で降順ソート（新しい順）
+                    const dateA = new Date(a.date || 0);
+                    const dateB = new Date(b.date || 0);
+                    if (dateB - dateA !== 0) {
+                        return dateB - dateA;
+                    }
+                    // 同じ日付ならrowIndexで降順（大きい方が新しい）
+                    return b.rowIndex - a.rowIndex;
+                });
             }
         }
     } catch (error) {
