@@ -1746,20 +1746,6 @@ body {
     -webkit-line-clamp: unset;
 }
 
-.comment-text.collapsed::after {
-    content: ' [タップで全文表示]';
-    color: var(--primary-color);
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.comment-text.expanded::after {
-    content: ' [タップで折りたたむ]';
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
 .comment-text:hover {
     background: rgba(99, 102, 241, 0.1);
     border-radius: var(--radius-sm);
