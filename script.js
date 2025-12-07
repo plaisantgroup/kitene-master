@@ -2726,12 +2726,12 @@ async function saveComment() {
         
         if (rowIndex) {
             // 更新
-            action = 'updateComment';
-            body = { name, rowIndex: parseInt(rowIndex), date, staff, comment };
+            action = 'updateInterviewHistory';
+            body = { rowIndex: parseInt(rowIndex), interviewDate: date, staff, comment };
         } else {
             // 追加
-            action = 'addComment';
-            body = { name, date, staff, comment };
+            action = 'addInterviewHistory';
+            body = { name, interviewDate: date, staff, comment };
         }
         
         const response = await fetch(`${API_URL}?action=${action}`, {
@@ -2772,10 +2772,10 @@ async function confirmDeleteComment() {
     const rowIndex = document.getElementById('delete-comment-row-index').value;
     
     try {
-        const response = await fetch(`${API_URL}?action=deleteComment`, {
+        const response = await fetch(`${API_URL}?action=deleteInterviewHistory`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ name, rowIndex: parseInt(rowIndex) })
+            body: JSON.stringify({ rowIndex: parseInt(rowIndex) })
         });
         
         const result = await response.json();
@@ -2783,18 +2783,21 @@ async function confirmDeleteComment() {
         if (result.success) {
             closeCommentDeleteModal();
             
-            // コメントキャッシュを更新
-            await loadCommentHistory(name);
+            // コメントキャッシュをクリア
+            delete commentCache[name];
+            
+            // データ再取得
+            await loadUrlData();
             
             // 面談カードを再描画
             renderInterviewList();
             
-            showToast(result.message, 'success');
+            showToast('コメントを削除しました', 'success');
         } else {
-            showToast(result.error, 'error');
+            showToast(result.error || '削除に失敗しました', 'error');
         }
     } catch (error) {
         console.error('confirmDeleteComment: エラー', error);
-        showToast('コメントの削除に失敗しました', 'error');
+        showToast('削除中にエラーが発生しました', 'error');
     }
 }
