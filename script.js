@@ -19,6 +19,7 @@ let historyCache = {};      // 履歴キャッシュ
 let openedCardNames = [];   // ★開いているアコーディオンの源氏名リスト
 let commentCache = {};           // コメントキャッシュ { 源氏名: [コメント配列] }
 let openAccordions = new Set();  // 開いているアコーディオンの源氏名
+let expandedComments = new Set(); // 展開中のコメントを記録
 let currentCommentName = null;   // コメント編集中の源氏名
 let currentCommentRowIndex = null; // コメント編集中の行番号
 
@@ -2837,6 +2838,7 @@ async function confirmDeleteComment() {
 function toggleCommentExpand(wrapper) {
     const element = wrapper.querySelector('.comment-text');
     const hint = wrapper.querySelector('.expand-hint');
+    const name = wrapper.closest('.interview-card')?.dataset.name || '';
     
     if (element.classList.contains('collapsed')) {
         element.classList.remove('collapsed');
@@ -2844,12 +2846,14 @@ function toggleCommentExpand(wrapper) {
         if (hint && hint.classList.contains('has-overflow')) {
             hint.textContent = ' [折りたたむ]';
         }
+        if (name) expandedComments.add(name);
     } else {
         element.classList.remove('expanded');
         element.classList.add('collapsed');
         if (hint && hint.classList.contains('has-overflow')) {
             hint.textContent = ' [続きを表示]';
         }
+        if (name) expandedComments.delete(name);
     }
 }
 
@@ -2860,11 +2864,22 @@ function checkCommentOverflow() {
     const comments = document.querySelectorAll('.comment-text.collapsed');
     comments.forEach(el => {
         const hint = el.nextElementSibling;
+        const wrapper = el.closest('.comment-wrapper');
+        const name = wrapper?.closest('.interview-card')?.dataset.name || '';
+        
         if (hint && hint.classList.contains('expand-hint')) {
             // scrollHeight > clientHeight なら省略されている
             if (el.scrollHeight > el.clientHeight) {
                 hint.classList.add('has-overflow');
-                hint.textContent = ' [続きを表示]';
+                
+                // 以前展開していた場合は展開状態を復元
+                if (name && expandedComments.has(name)) {
+                    el.classList.remove('collapsed');
+                    el.classList.add('expanded');
+                    hint.textContent = ' [折りたたむ]';
+                } else {
+                    hint.textContent = ' [続きを表示]';
+                }
             } else {
                 hint.classList.remove('has-overflow');
                 hint.textContent = '';
