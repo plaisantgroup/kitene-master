@@ -1726,7 +1726,7 @@ function renderInterviewCard(cast) {
     const alertStatus = calculateAlertStatus(cast);
     let alertBadges = '';
     
-    // 出勤アラート（3段階）
+    // 出勤アラート
     if (alertStatus.work === 'red') {
         alertBadges += '<span class="alert-badge alert-red">🔴 30日以上</span>';
     } else if (alertStatus.work === 'orange') {
@@ -1749,16 +1749,8 @@ function renderInterviewCard(cast) {
     // スタッフ表示
     const staffDisplay = cast.interviewStaff ? ` (担当: ${escapeHtml(cast.interviewStaff)})` : '';
     
-    // コメント表示
-    let commentHtml = '';
-    if (cast.interviewComment) {
-        commentHtml = `
-            <div class="interview-info-item interview-comment">
-                <span class="interview-info-label">💭 コメント</span>
-                <span class="interview-info-value">${escapeHtml(cast.interviewComment)}</span>
-            </div>
-        `;
-    }
+    // 一意のID
+    const cardId = `interview-${cast.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
     
     return `
         <div class="interview-card" data-name="${cast.name}">
@@ -1789,7 +1781,23 @@ function renderInterviewCard(cast) {
                     <span class="interview-info-label">🎬 動画更新</span>
                     <span class="interview-info-value ${!cast.lastVideoDate ? 'empty' : ''}">${lastVideoDisplay}</span>
                 </div>
-                ${commentHtml}
+            </div>
+            
+            <!-- 面談履歴セクション -->
+            <div class="history-section">
+                <div class="history-header" onclick="toggleHistory('${cardId}')">
+                    <div class="history-title">
+                        📝 面談履歴
+                        <span class="history-count" id="${cardId}-count">(読込中...)</span>
+                    </div>
+                    <div class="history-toggle">
+                        <button class="history-add-btn" onclick="event.stopPropagation(); showHistoryModal('${cast.name}')">＋追加</button>
+                        <span class="history-toggle-icon" id="${cardId}-icon">▼</span>
+                    </div>
+                </div>
+                <div class="history-list collapsed" id="${cardId}-list">
+                    <div class="history-empty">読み込み中...</div>
+                </div>
             </div>
         </div>
     `;
@@ -2068,4 +2076,178 @@ function scrollToTop() {
         top: 0,
         behavior: 'smooth'
     });
+}
+
+// ===============================
+// 面談履歴機能
+// ===============================
+
+/**
+ * 履歴アコーディオンの開閉
+ */
+function toggleHistory(cardId) {
+    const list = document.getElementById(`${cardId}-list`);
+    const icon = document.getElementById(`${cardId}-icon`);
+    
+    if (list.classList.contains('collapsed')) {
+        // 開く
+        list.classList.remove('collapsed');
+        list.classList.add('expanded');
+        icon.textContent = '▲';
+        
+        // 初回のみデータ取得
+        if (list.querySelector('.history-empty')) {
+            loadHistoryForCard(cardId);
+        }
+    } else {
+        // 閉じる
+        list.classList.remove('expanded');
+        list.classList.add('collapsed');
+        icon.textContent = '▼';
+    }
+}
+
+/**
+ * カードの履歴を読み込み
+ */
+async function loadHistoryForCard(cardId) {
+    // cardIdから源氏名を取得（interview-xxx_xxx形式）
+    const card = document.querySelector(`#${cardId}-list`).closest('.interview-card');
+    const name = card.dataset.name;
+    
+    try {
+        const response = await fetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
+        const result = await response.json();
+        
+        const list = document.getElementById(`${cardId}-list`);
+        const count = document.getElementById(`${cardId}-count`);
+        
+        if (result.success && result.data.length > 0) {
+            count.textContent = `(${result.data.length}件)`;
+            
+            let html = '';
+            result.data.forEach((item, index) => {
+                const dateDisplay = formatDisplayDate(item.date);
+                html += `
+                    <div class="history-item">
+                        <div class="history-item-header">
+                            <span class="history-item-date">${dateDisplay}</span>
+                            <span class="history-item-staff">${escapeHtml(item.staff || '不明')}</span>
+                        </div>
+                        <div class="history-item-comment">${escapeHtml(item.comment || '').replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            });
+            
+            list.innerHTML = html;
+        } else {
+            count.textContent = '(0件)';
+            list.innerHTML = '<div class="history-empty">履歴がありません</div>';
+        }
+    } catch (error) {
+        console.error('履歴取得エラー:', error);
+        document.getElementById(`${cardId}-list`).innerHTML = '<div class="history-empty">読み込みエラー</div>';
+        document.getElementById(`${cardId}-count`).textContent = '(エラー)';
+    }
+}
+
+/**
+ * 履歴追加モーダルを表示
+ */
+function showHistoryModal(name) {
+    document.getElementById('history-cast-name').value = name;
+    document.getElementById('history-modal-title').textContent = `${name} の面談履歴を追加`;
+    
+    // 今日の日付をデフォルト設定
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    document.getElementById('history-date').value = dateStr;
+    
+    // スタッフドロップダウンを更新
+    updateHistoryStaffDropdown();
+    
+    // コメントをクリア
+    document.getElementById('history-comment').value = '';
+    
+    document.getElementById('history-modal').classList.add('active');
+}
+
+/**
+ * 履歴モーダルを閉じる
+ */
+function closeHistoryModal() {
+    document.getElementById('history-modal').classList.remove('active');
+}
+
+/**
+ * 履歴用スタッフドロップダウンを更新
+ */
+function updateHistoryStaffDropdown() {
+    const select = document.getElementById('history-staff');
+    if (!select) return;
+    
+    // スタッフクラスの人を取得
+    const staffList = urlData.filter(u => u.class === 'スタッフ');
+    
+    let options = '<option value="">選択してください</option>';
+    staffList.forEach(staff => {
+        options += `<option value="${staff.name}">${staff.name}</option>`;
+    });
+    
+    select.innerHTML = options;
+}
+
+/**
+ * 面談履歴を保存
+ */
+async function saveInterviewHistory() {
+    const name = document.getElementById('history-cast-name').value;
+    const date = document.getElementById('history-date').value;
+    const staff = document.getElementById('history-staff').value;
+    const comment = document.getElementById('history-comment').value.trim();
+    
+    // バリデーション
+    if (!date) {
+        showToast('面談日を入力してください', 'error');
+        return;
+    }
+    if (!staff) {
+        showToast('担当スタッフを選択してください', 'error');
+        return;
+    }
+    if (!comment) {
+        showToast('コメントを入力してください', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}?action=addInterviewHistory`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: JSON.stringify({
+                name: name,
+                date: date,
+                staff: staff,
+                comment: comment
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeHistoryModal();
+            showToast('面談履歴を追加しました', 'success');
+            
+            // データを再読み込み
+            await loadUrlData();
+            renderInterviewList();
+        } else {
+            showToast(result.error || '保存に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('履歴保存エラー:', error);
+        showToast('保存に失敗しました', 'error');
+    }
 }
