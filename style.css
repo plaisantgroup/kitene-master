@@ -1746,7 +1746,12 @@ body {
     -webkit-line-clamp: unset;
 }
 
-.comment-text:hover {
+/* コメントラッパー */
+.comment-wrapper {
+    cursor: pointer;
+}
+
+.comment-wrapper:hover {
     background: rgba(99, 102, 241, 0.1);
     border-radius: var(--radius-sm);
 }
