@@ -116,6 +116,7 @@ async function loadAllData() {
     await loadShiftDate();  // ★★★ 日付を読み込み ★★★
     await loadShiftData();
     await loadUrlData();
+    await loadAllLatestComments();  // ★★★ コメント一括取得 ★★★
     console.log('loadAllData: 全データロード完了');
 }
 
