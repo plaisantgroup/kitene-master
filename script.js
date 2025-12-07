@@ -1723,7 +1723,7 @@ function renderInterviewList() {
             }
         });
         // 省略判定を実行
-        setTimeout(checkCommentOverflow, 100);
+        setTimeout(checkCommentOverflow, 500);
     });
     
     console.log('renderInterviewList: 描画完了');
