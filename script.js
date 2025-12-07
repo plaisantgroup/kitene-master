@@ -2596,15 +2596,30 @@ async function loadCommentHistory(name) {
 }
 
 /**
- * 全キャストの最新コメントを読み込み
+ * 全キャストの最新コメントを読み込み（一括取得）
  */
 async function loadAllLatestComments() {
-    // urlDataの全キャストについてコメントを取得
-    const promises = urlData
-        .filter(u => u.class !== 'スタッフ')
-        .map(u => loadCommentHistory(u.name));
-    
-    await Promise.all(promises);
+    try {
+        // 一括取得APIを使用（CORSエラー対策）
+        const response = await fetch(`${API_URL}?action=getAllInterviewHistory`);
+        const result = await response.json();
+        
+        if (result.success) {
+            // キャストごとのデータをキャッシュに格納
+            for (const name in result.data) {
+                commentCache[name] = result.data[name].map(item => ({
+                    rowIndex: item.rowIndex,
+                    name: item.name,
+                    date: item.interviewDate || item.date,
+                    staff: item.staff,
+                    comment: item.comment,
+                    createdAt: item.createdAt
+                }));
+            }
+        }
+    } catch (error) {
+        console.error('loadAllLatestComments: エラー', error);
+    }
 }
 
 /**
