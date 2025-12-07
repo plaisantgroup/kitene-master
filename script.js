@@ -2828,8 +2828,9 @@ async function confirmDeleteComment() {
 /**
  * コメントの展開/折りたたみを切り替え
  */
-function toggleCommentExpand(element) {
-    const hint = element.querySelector('.expand-hint');
+function toggleCommentExpand(wrapper) {
+    const element = wrapper.querySelector('.comment-text');
+    const hint = wrapper.querySelector('.expand-hint');
     
     if (element.classList.contains('collapsed')) {
         element.classList.remove('collapsed');
