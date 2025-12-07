@@ -2573,14 +2573,24 @@ function toggleCommentHistory(name) {
  */
 async function loadCommentHistory(name) {
     try {
-        const response = await fetch(`${API_URL}?action=getCommentHistory&name=${encodeURIComponent(name)}`);
+        const response = await fetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
         const result = await response.json();
         
         if (result.success) {
-            commentCache[name] = result.data || [];
+            commentCache[name] = result.data.map(item => ({
+                rowIndex: item.rowIndex,
+                name: item.name,
+                date: item.interviewDate || item.date,
+                staff: item.staff,
+                comment: item.comment,
+                createdAt: item.createdAt
+            }));
+            return commentCache[name];
         }
+        return [];
     } catch (error) {
-        console.error('loadCommentHistory error:', error);
+        console.error('loadCommentHistory: エラー', error);
+        return [];
     }
 }
 
