@@ -2499,7 +2499,7 @@ function renderCommentSection(name) {
                         <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${latestComment.rowIndex})">削除</button>
                     </div>
                 </div>
-                <div class="comment-text">${escapeHtml(latestComment.comment || '')}</div>
+                <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(latestComment.comment || '')}</div>
             </div>
         `;
     } else {
@@ -2523,7 +2523,7 @@ function renderCommentSection(name) {
                             <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${c.rowIndex})">削除</button>
                         </div>
                     </div>
-                    <div class="comment-text">${escapeHtml(c.comment || '')}</div>
+                    <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(c.comment || '')}</div>
                 </div>
             `;
         }).join('');
@@ -2816,5 +2816,22 @@ async function confirmDeleteComment() {
     } catch (error) {
         console.error('confirmDeleteComment: エラー', error);
         showToast('削除中にエラーが発生しました', 'error');
+    }
+}
+
+// ===============================
+// コメント展開切り替え
+// ===============================
+
+/**
+ * コメントの展開/折りたたみを切り替え
+ */
+function toggleCommentExpand(element) {
+    if (element.classList.contains('collapsed')) {
+        element.classList.remove('collapsed');
+        element.classList.add('expanded');
+    } else {
+        element.classList.remove('expanded');
+        element.classList.add('collapsed');
     }
 }
