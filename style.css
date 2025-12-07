@@ -1171,7 +1171,9 @@ body {
     }
 }
 
-/* ===== コメントセクション ===== */
+/* ===== v5.1 コメント履歴機能（JavaScript準拠・統合版） ===== */
+
+/* コメントセクション */
 .comment-section {
     margin-top: 15px;
     padding-top: 15px;
@@ -1187,154 +1189,177 @@ body {
 
 .comment-title {
     font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-/* 最新コメント表示エリア */
-.comment-latest {
-    min-height: 40px;
-}
-
-.comment-none {
+    font-weight: 600;
     color: var(--text-secondary);
-    font-style: italic;
-    font-size: 0.9rem;
-    padding: 10px 0;
 }
 
-.comment-loading {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+.btn-add-comment {
+    padding: 4px 12px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-/* 最新コメントアイテム */
-.comment-item {
-    background: rgba(0, 0, 0, 0.2);
+.btn-add-comment:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* 最新コメント表示 */
+.latest-comment {
+    background: rgba(99, 102, 241, 0.1);
     border-radius: var(--radius-sm);
     padding: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     border-left: 3px solid var(--primary-color);
 }
 
-.comment-item-header {
+.comment-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 6px;
-}
-
-.comment-item-meta {
-    display: flex;
-    gap: 15px;
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
 
-.comment-item-actions {
-    display: flex;
-    gap: 5px;
+.comment-date-staff {
+    font-weight: 600;
 }
 
-.comment-item-text {
+.comment-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-comment-edit,
+.btn-comment-delete {
+    padding: 2px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-comment-edit {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-comment-edit:hover {
+    background: var(--primary-dark);
+}
+
+.btn-comment-delete {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-comment-delete:hover {
+    background: #dc2626;
+}
+
+.comment-text {
     font-size: 0.9rem;
     color: var(--text-primary);
-    white-space: pre-wrap;
     line-height: 1.5;
-    /* 3行まで表示 */
+    white-space: pre-wrap;
+    /* 3行まで表示（改善版から継承） */
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* 編集・削除ボタン */
-.btn-history-edit,
-.btn-history-delete {
-    padding: 3px 8px;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-history-edit {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-history-edit:hover {
-    background: var(--primary-dark);
-}
-
-.btn-history-delete {
-    background: var(--danger-color);
-    color: white;
-}
-
-.btn-history-delete:hover {
-    background: #dc2626;
-}
-
-/* 過去の履歴ボタン */
-.comment-history-btn {
+/* コメントなし表示 */
+.no-comment {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.85rem;
+    padding: 10px;
     text-align: center;
-    margin-top: 10px;
 }
 
-.history-toggle-btn {
+/* ローディング表示 */
+.comment-loading {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: 10px;
+    text-align: center;
+}
+
+/* 履歴アコーディオン */
+.comment-history-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: 8px 20px;
     border-radius: var(--radius-sm);
+    color: var(--text-secondary);
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.2s;
     width: 100%;
+    text-align: left;
 }
 
-.history-toggle-btn:hover {
+.comment-history-toggle:hover {
     background: var(--hover-bg);
     color: var(--text-primary);
     border-color: var(--primary-color);
 }
 
-/* 過去履歴リスト（アコーディオン） */
-.history-list {
-    overflow: hidden;
-    transition: max-height 0.3s ease;
+.comment-history-toggle .toggle-icon {
+    transition: transform 0.3s ease;
 }
 
-.history-list.collapsed {
-    max-height: 0;
+.comment-history-toggle.open .toggle-icon {
+    transform: rotate(180deg);
 }
 
-.history-list.expanded {
-    max-height: 2000px;
+/* 履歴リスト */
+.comment-history-list {
+    display: none;
     margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border-color);
+    padding-left: 10px;
+    border-left: 2px solid var(--border-color);
 }
 
-/* 履歴追加ボタン */
-.history-add-btn {
-    background: var(--secondary-color);
-    color: white;
-    border: none;
-    padding: 4px 12px;
+.comment-history-list.open {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.history-comment {
+    background: rgba(0, 0, 0, 0.2);
     border-radius: var(--radius-sm);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--primary-color);
 }
 
-.history-add-btn:hover {
-    background: #059669;
-    transform: translateY(-1px);
+.history-comment:last-child {
+    margin-bottom: 0;
 }
 
 /* ===== モーダルセクション ===== */
@@ -1635,20 +1660,27 @@ body {
         font-size: 0.9rem;
     }
     
-    /* コメントセクション */
-    .comment-item-header {
+    /* コメントセクション（JavaScript準拠） */
+    .comment-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
     
-    .comment-item-actions {
-        align-self: flex-end;
+    .btn-add-comment {
+        width: 100%;
+        text-align: center;
     }
     
-    .comment-item-meta {
-        flex-wrap: wrap;
-        gap: 10px;
+    .comment-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .comment-actions {
+        width: 100%;
+        justify-content: flex-end;
     }
 }
 
