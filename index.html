@@ -334,25 +334,46 @@
                 <button class="modal-close" onclick="closeHistoryModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="history-cast-name">
+                <input type="hidden" id="history-modal-name">
+                <input type="hidden" id="history-modal-row-index">
                 <div class="form-group">
                     <label>面談日 <span class="required">*</span></label>
-                    <input type="date" id="history-date">
+                    <input type="date" id="history-modal-date">
                 </div>
                 <div class="form-group">
-                    <label>担当スタッフ <span class="required">*</span></label>
-                    <select id="history-staff" class="form-select">
+                    <label>担当スタッフ</label>
+                    <select id="history-modal-staff" class="form-select">
                         <option value="">選択してください</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>コメント <span class="required">*</span></label>
-                    <textarea id="history-comment" class="form-textarea" rows="4" placeholder="面談内容を入力..."></textarea>
+                    <textarea id="history-modal-comment" class="form-textarea" rows="4" placeholder="面談内容を入力..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeHistoryModal()">キャンセル</button>
                 <button class="btn-primary" onclick="saveInterviewHistory()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 履歴削除確認モーダル -->
+    <div id="history-delete-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>削除の確認</h2>
+                <button class="modal-close" onclick="closeHistoryDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="history-delete-row-index">
+                <input type="hidden" id="history-delete-card-id">
+                <p>この面談履歴を削除しますか？</p>
+                <p class="warning-text">この操作は取り消せません。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeHistoryDeleteModal()">キャンセル</button>
+                <button class="btn-danger" onclick="confirmHistoryDelete()">削除</button>
             </div>
         </div>
     </div>
