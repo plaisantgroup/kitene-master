@@ -2501,7 +2501,10 @@ function renderCommentSection(name) {
                         <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${latestComment.rowIndex})">削除</button>
                     </div>
                 </div>
-                <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(latestComment.comment || '')}<span class="expand-hint"></span></div>
+                <div class="comment-wrapper" onclick="toggleCommentExpand(this)">
+                    <div class="comment-text collapsed">${escapeHtml(latestComment.comment || '')}</div>
+                    <span class="expand-hint"></span>
+                </div>
             </div>
         `;
     } else {
@@ -2525,7 +2528,10 @@ function renderCommentSection(name) {
                             <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${c.rowIndex})">削除</button>
                         </div>
                     </div>
-                    <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(c.comment || '')}<span class="expand-hint"></span></div>
+                    <div class="comment-wrapper" onclick="toggleCommentExpand(this)">
+                        <div class="comment-text collapsed">${escapeHtml(c.comment || '')}</div>
+                        <span class="expand-hint"></span>
+                    </div>
                 </div>
             `;
         }).join('');
