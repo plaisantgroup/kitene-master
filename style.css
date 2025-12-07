@@ -1725,3 +1725,42 @@ body {
         font-size: 1rem;
     }
 }
+
+/* コメント展開機能 */
+.comment-text {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.comment-text.collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.comment-text.expanded {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+}
+
+.comment-text.collapsed::after {
+    content: ' [タップで全文表示]';
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.comment-text.expanded::after {
+    content: ' [タップで折りたたむ]';
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.comment-text:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: var(--radius-sm);
+}
