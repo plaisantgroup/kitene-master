@@ -17,6 +17,10 @@ let autoRefreshSeconds = 15;     // 自動リロードの間隔（秒）
 let cardIdCounter = 0;      // カードID用カウンター
 let historyCache = {};      // 履歴キャッシュ
 let openedCardNames = [];   // ★開いているアコーディオンの源氏名リスト
+let commentCache = {};           // コメントキャッシュ { 源氏名: [コメント配列] }
+let openAccordions = new Set();  // 開いているアコーディオンの源氏名
+let currentCommentName = null;   // コメント編集中の源氏名
+let currentCommentRowIndex = null; // コメント編集中の行番号
 
 // ===============================
 // 初期化
@@ -1233,7 +1237,6 @@ function showAddModal() {
     document.getElementById('modal-interview-staff').value = '';
     document.getElementById('modal-last-photo-date').value = '';
     document.getElementById('modal-last-video-date').value = '';
-    document.getElementById('modal-interview-comment').value = '';
     
     // 面談スタッフのドロップダウンを更新
     updateStaffDropdown('');
@@ -1274,7 +1277,6 @@ function showEditModal(name) {
     updateStaffDropdown(urlInfo.interviewStaff || '');
     document.getElementById('modal-last-photo-date').value = formatDateForInput(urlInfo.lastPhotoDate);
     document.getElementById('modal-last-video-date').value = formatDateForInput(urlInfo.lastVideoDate);
-    document.getElementById('modal-interview-comment').value = urlInfo.interviewComment || '';
     
     document.getElementById('url-modal').classList.add('active');
 }
@@ -1361,8 +1363,7 @@ async function saveUrlData() {
         lastInterviewDate: document.getElementById('modal-last-interview-date').value.trim(),
         interviewStaff: document.getElementById('modal-interview-staff').value.trim(),
         lastPhotoDate: document.getElementById('modal-last-photo-date').value.trim(),
-        lastVideoDate: document.getElementById('modal-last-video-date').value.trim(),
-        interviewComment: document.getElementById('modal-interview-comment').value.trim()
+        lastVideoDate: document.getElementById('modal-last-video-date').value.trim()
     };
     
     try {
@@ -1708,6 +1709,20 @@ function renderInterviewList() {
     }
     
     listElement.innerHTML = html;
+    
+    // コメントを非同期で読み込み
+    loadAllLatestComments().then(() => {
+        // コメント部分を更新
+        const cards = listElement.querySelectorAll('.interview-card');
+        cards.forEach(card => {
+            const name = card.dataset.name;
+            const section = card.querySelector('.comment-section');
+            if (section && commentCache[name]) {
+                section.outerHTML = renderCommentSection(name);
+            }
+        });
+    });
+    
     console.log('renderInterviewList: 描画完了');
 }
 
@@ -1717,11 +1732,10 @@ function renderInterviewList() {
 /**
  * 面談カード1件を生成
  */
+/**
+ * 面談カード1件を生成
+ */
 function renderInterviewCard(cast) {
-    // 一意のカードID（カウンターベース）
-    cardIdCounter++;
-    const cardId = `card-${cardIdCounter}`;
-    
     // メイン店舗バッジ
     let mainBadge = '';
     if (cast.mainStore) {
@@ -1736,20 +1750,13 @@ function renderInterviewCard(cast) {
         }
     }
     
-    // アラート状態（複数対応）
+    // アラート状態
     const alertStatus = calculateAlertStatus(cast);
-    let alertBadges = '';
-    
-    if (alertStatus.work === 'red') {
-        alertBadges += '<span class="alert-badge alert-red">🔴 30日以上</span>';
-    } else if (alertStatus.work === 'orange') {
-        alertBadges += '<span class="alert-badge alert-orange">🟠 20日以上</span>';
-    } else if (alertStatus.work === 'blue') {
-        alertBadges += '<span class="alert-badge alert-blue">🔵 10日以上</span>';
-    }
-    
-    if (alertStatus.interview === 'yellow') {
-        alertBadges += '<span class="alert-badge alert-yellow">🟡 面談60日↑</span>';
+    let alertBadge = '';
+    if (alertStatus === 'red') {
+        alertBadge = '<span class="alert-badge alert-red">⚠️ 出勤30日以上なし</span>';
+    } else if (alertStatus === 'yellow') {
+        alertBadge = '<span class="alert-badge alert-yellow">⏰ 面談60日以上なし</span>';
     }
     
     // 日付表示
@@ -1758,15 +1765,19 @@ function renderInterviewCard(cast) {
     const lastPhotoDisplay = cast.lastPhotoDate ? formatDisplayDate(cast.lastPhotoDate) : '未登録';
     const lastVideoDisplay = cast.lastVideoDate ? formatDisplayDate(cast.lastVideoDate) : '未登録';
     
+    // スタッフ表示
     const staffDisplay = cast.interviewStaff ? ` (担当: ${escapeHtml(cast.interviewStaff)})` : '';
     
+    // コメントセクションHTML
+    const commentSectionHtml = renderCommentSection(cast.name);
+    
     return `
-        <div class="interview-card" data-name="${cast.name}" data-card-id="${cardId}">
+        <div class="interview-card" data-name="${cast.name}">
             <div class="interview-card-header">
                 <div class="interview-card-title">
                     <span class="interview-card-name">${cast.name}</span>
                     ${mainBadge}
-                    ${alertBadges}
+                    ${alertBadge}
                 </div>
                 <div class="interview-card-actions">
                     <button class="btn-edit" onclick="showEditModal('${cast.name}')">編集</button>
@@ -1790,23 +1801,7 @@ function renderInterviewCard(cast) {
                     <span class="interview-info-value ${!cast.lastVideoDate ? 'empty' : ''}">${lastVideoDisplay}</span>
                 </div>
             </div>
-            
-            <!-- コメントセクション -->
-            <div class="comment-section" id="${cardId}-section">
-                <div class="comment-header">
-                    <span class="comment-title">💬 コメント</span>
-                    <button class="history-add-btn" onclick="showHistoryModal('${cast.name}', '${cardId}')">＋追加</button>
-                </div>
-                <div class="comment-latest" id="${cardId}-latest">
-                    <div class="comment-loading">読み込み中...</div>
-                </div>
-                <div class="comment-history-btn" id="${cardId}-history-btn" style="display:none;">
-                    <button class="history-toggle-btn" onclick="toggleHistory('${cardId}', '${cast.name}')">
-                        <span id="${cardId}-toggle-text">▼ 過去の履歴を見る</span>
-                    </button>
-                </div>
-                <div class="history-list collapsed" id="${cardId}-history-list"></div>
-            </div>
+            ${commentSectionHtml}
         </div>
     `;
 }
@@ -2468,5 +2463,328 @@ async function confirmHistoryDelete() {
     } catch (error) {
         console.error('confirmHistoryDelete error:', error);
         showToast('削除に失敗しました', 'error');
+    }
+}
+
+// ===============================
+// コメント履歴機能（v5.1）
+// ===============================
+
+/**
+ * コメントセクションのHTMLを生成
+ */
+function renderCommentSection(name) {
+    const comments = commentCache[name] || [];
+    const isOpen = openAccordions.has(name);
+    
+    // 最新コメント
+    const latestComment = comments.length > 0 ? comments[0] : null;
+    
+    // 過去のコメント（2件目以降）
+    const pastComments = comments.slice(1);
+    
+    let latestHtml = '';
+    if (latestComment) {
+        const dateStr = latestComment.date ? formatDisplayDate(latestComment.date) : '';
+        const staffStr = latestComment.staff || '';
+        const metaStr = [dateStr, staffStr].filter(s => s).join(' ');
+        
+        latestHtml = `
+            <div class="latest-comment">
+                <div class="comment-meta">
+                    <span class="comment-date-staff">${metaStr}</span>
+                    <div class="comment-actions">
+                        <button class="btn-comment-edit" onclick="showEditCommentModal('${name}', ${latestComment.rowIndex})">編集</button>
+                        <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${latestComment.rowIndex})">削除</button>
+                    </div>
+                </div>
+                <div class="comment-text">${escapeHtml(latestComment.comment || '')}</div>
+            </div>
+        `;
+    } else {
+        latestHtml = '<div class="no-comment">コメントなし</div>';
+    }
+    
+    // 過去の履歴
+    let historyHtml = '';
+    if (pastComments.length > 0) {
+        const historyItems = pastComments.map(c => {
+            const dateStr = c.date ? formatDisplayDate(c.date) : '';
+            const staffStr = c.staff || '';
+            const metaStr = [dateStr, staffStr].filter(s => s).join(' ');
+            
+            return `
+                <div class="history-comment">
+                    <div class="comment-meta">
+                        <span class="comment-date-staff">${metaStr}</span>
+                        <div class="comment-actions">
+                            <button class="btn-comment-edit" onclick="showEditCommentModal('${name}', ${c.rowIndex})">編集</button>
+                            <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${c.rowIndex})">削除</button>
+                        </div>
+                    </div>
+                    <div class="comment-text">${escapeHtml(c.comment || '')}</div>
+                </div>
+            `;
+        }).join('');
+        
+        historyHtml = `
+            <button class="comment-history-toggle ${isOpen ? 'open' : ''}" onclick="toggleCommentHistory('${name}')">
+                <span class="toggle-icon">▼</span>
+                過去の履歴を見る (${pastComments.length}件)
+            </button>
+            <div class="comment-history-list ${isOpen ? 'open' : ''}" id="history-${name}">
+                ${historyItems}
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="comment-section">
+            <div class="comment-header">
+                <span class="comment-title">💬 コメント</span>
+                <button class="btn-add-comment" onclick="showAddCommentModal('${name}')">+追加</button>
+            </div>
+            ${latestHtml}
+            ${historyHtml}
+        </div>
+    `;
+}
+
+/**
+ * コメント履歴のアコーディオン切り替え
+ */
+function toggleCommentHistory(name) {
+    const historyList = document.getElementById(`history-${name}`);
+    const toggle = historyList?.previousElementSibling;
+    
+    if (openAccordions.has(name)) {
+        openAccordions.delete(name);
+        historyList?.classList.remove('open');
+        toggle?.classList.remove('open');
+    } else {
+        openAccordions.add(name);
+        historyList?.classList.add('open');
+        toggle?.classList.add('open');
+    }
+}
+
+/**
+ * 指定キャストのコメント履歴を読み込み
+ */
+async function loadCommentHistory(name) {
+    try {
+        const response = await fetch(`${API_URL}?action=getCommentHistory&name=${encodeURIComponent(name)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            commentCache[name] = result.data || [];
+        }
+    } catch (error) {
+        console.error('loadCommentHistory error:', error);
+    }
+}
+
+/**
+ * 全キャストの最新コメントを読み込み
+ */
+async function loadAllLatestComments() {
+    // urlDataの全キャストについてコメントを取得
+    const promises = urlData
+        .filter(u => u.class !== 'スタッフ')
+        .map(u => loadCommentHistory(u.name));
+    
+    await Promise.all(promises);
+}
+
+/**
+ * コメント追加モーダルを表示
+ */
+function showAddCommentModal(name) {
+    currentCommentName = name;
+    currentCommentRowIndex = null;
+    
+    document.getElementById('comment-modal-title').textContent = 'コメントを追加';
+    document.getElementById('comment-cast-name').value = name;
+    document.getElementById('comment-row-index').value = '';
+    
+    // 今日の日付をデフォルトに
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('comment-date').value = today;
+    
+    // スタッフドロップダウンを更新
+    updateCommentStaffDropdown('');
+    
+    document.getElementById('comment-text').value = '';
+    
+    document.getElementById('comment-modal').classList.add('active');
+}
+
+/**
+ * コメント編集モーダルを表示
+ */
+async function showEditCommentModal(name, rowIndex) {
+    currentCommentName = name;
+    currentCommentRowIndex = rowIndex;
+    
+    // キャッシュからコメントを取得
+    const comments = commentCache[name] || [];
+    const comment = comments.find(c => c.rowIndex === rowIndex);
+    
+    if (!comment) {
+        showToast('コメントが見つかりません', 'error');
+        return;
+    }
+    
+    document.getElementById('comment-modal-title').textContent = 'コメントを編集';
+    document.getElementById('comment-cast-name').value = name;
+    document.getElementById('comment-row-index').value = rowIndex;
+    document.getElementById('comment-date').value = formatDateForInput(comment.date);
+    updateCommentStaffDropdown(comment.staff || '');
+    document.getElementById('comment-text').value = comment.comment || '';
+    
+    document.getElementById('comment-modal').classList.add('active');
+}
+
+/**
+ * コメントモーダルを閉じる
+ */
+function closeCommentModal() {
+    document.getElementById('comment-modal').classList.remove('active');
+    currentCommentName = null;
+    currentCommentRowIndex = null;
+}
+
+/**
+ * コメント削除確認モーダルを表示
+ */
+function showDeleteCommentModal(name, rowIndex) {
+    document.getElementById('delete-comment-name').value = name;
+    document.getElementById('delete-comment-row-index').value = rowIndex;
+    document.getElementById('comment-delete-modal').classList.add('active');
+}
+
+/**
+ * コメント削除確認モーダルを閉じる
+ */
+function closeCommentDeleteModal() {
+    document.getElementById('comment-delete-modal').classList.remove('active');
+}
+
+/**
+ * コメント用スタッフドロップダウンを更新
+ */
+function updateCommentStaffDropdown(selectedValue = '') {
+    const select = document.getElementById('comment-staff');
+    if (!select) return;
+    
+    const staffList = urlData.filter(u => u.class === 'スタッフ');
+    
+    let options = '<option value="">選択してください</option>';
+    staffList.forEach(staff => {
+        const selected = staff.name === selectedValue ? 'selected' : '';
+        options += `<option value="${staff.name}" ${selected}>${staff.name}</option>`;
+    });
+    
+    select.innerHTML = options;
+}
+
+/**
+ * コメントを保存
+ */
+async function saveComment() {
+    const name = document.getElementById('comment-cast-name').value;
+    const rowIndex = document.getElementById('comment-row-index').value;
+    const date = document.getElementById('comment-date').value;
+    const staff = document.getElementById('comment-staff').value;
+    const comment = document.getElementById('comment-text').value.trim();
+    
+    if (!date) {
+        showToast('日付を入力してください', 'error');
+        return;
+    }
+    if (!staff) {
+        showToast('スタッフを選択してください', 'error');
+        return;
+    }
+    if (!comment) {
+        showToast('コメントを入力してください', 'error');
+        return;
+    }
+    
+    try {
+        let action, body;
+        
+        if (rowIndex) {
+            // 更新
+            action = 'updateComment';
+            body = { name, rowIndex: parseInt(rowIndex), date, staff, comment };
+        } else {
+            // 追加
+            action = 'addComment';
+            body = { name, date, staff, comment };
+        }
+        
+        const response = await fetch(`${API_URL}?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(body)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeCommentModal();
+            
+            // コメントキャッシュを更新
+            await loadCommentHistory(name);
+            
+            // URLデータも再読み込み（最終面談日が更新されるため）
+            await loadUrlData();
+            
+            // 面談カードを再描画
+            renderInterviewList();
+            
+            showToast(result.message, 'success');
+        } else {
+            showToast(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('saveComment: エラー', error);
+        showToast('コメントの保存に失敗しました', 'error');
+    }
+}
+
+/**
+ * コメントを削除
+ */
+async function confirmDeleteComment() {
+    const name = document.getElementById('delete-comment-name').value;
+    const rowIndex = document.getElementById('delete-comment-row-index').value;
+    
+    try {
+        const response = await fetch(`${API_URL}?action=deleteComment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ name, rowIndex: parseInt(rowIndex) })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeCommentDeleteModal();
+            
+            // コメントキャッシュを更新
+            await loadCommentHistory(name);
+            
+            // 面談カードを再描画
+            renderInterviewList();
+            
+            showToast(result.message, 'success');
+        } else {
+            showToast(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('confirmDeleteComment: エラー', error);
+        showToast('コメントの削除に失敗しました', 'error');
     }
 }
