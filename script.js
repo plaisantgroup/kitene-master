@@ -2503,7 +2503,7 @@ function renderCommentSection(name) {
                     </div>
                 </div>
                 <div class="comment-wrapper" onclick="toggleCommentExpand(this)">
-                    <div class="comment-text collapsed">${escapeHtml(latestComment.comment || '')}</div>
+                    <div class="comment-text ${expandedComments.has(name) ? 'expanded' : 'collapsed'}">${escapeHtml(latestComment.comment || '')}</div>
                     <span class="expand-hint"></span>
                 </div>
             </div>
@@ -2530,7 +2530,7 @@ function renderCommentSection(name) {
                         </div>
                     </div>
                     <div class="comment-wrapper" onclick="toggleCommentExpand(this)">
-                        <div class="comment-text collapsed">${escapeHtml(c.comment || '')}</div>
+                        <div class="comment-text ${expandedComments.has(name) ? 'expanded' : 'collapsed'}">${escapeHtml(c.comment || '')}</div>
                         <span class="expand-hint"></span>
                     </div>
                 </div>
