@@ -2573,12 +2573,8 @@ function toggleCommentHistory(name) {
  */
 async function loadCommentHistory(name) {
     try {
-        // ★ POSTリクエストに変更（CORS対策）
-        const response = await fetch(`${API_URL}?action=getInterviewHistory`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ name: name })
-        });
+        // ★ GETリクエストで取得
+        const response = await fetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
         const result = await response.json();
         
         if (result.success) {
