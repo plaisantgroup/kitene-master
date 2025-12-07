@@ -14,6 +14,9 @@ let currentShiftDate = '';
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
 let autoRefreshInterval = null;  // 自動リロードのインターバルID
 let autoRefreshSeconds = 15;     // 自動リロードの間隔（秒）
+let cardIdCounter = 0;      // カードID用カウンター
+let historyCache = {};      // 履歴キャッシュ
+let openedCardNames = [];   // ★開いているアコーディオンの源氏名リスト
 
 // ===============================
 // 初期化
@@ -90,6 +93,8 @@ function showView(viewName) {
         document.querySelector('.nav-btn:nth-child(3)').classList.add('active');
         renderInterviewList();
         updateJumpButtons('interview');
+        // 全カードの最新コメントを読み込む（アコーディオン状態も復元）
+        setTimeout(() => loadAllLatestComments(), 100);
     } else if (viewName === 'url') {
         document.getElementById('url-view').classList.add('active');
         document.querySelector('.nav-btn:nth-child(4)').classList.add('active');
@@ -1612,6 +1617,8 @@ function showToast(message, type = 'success') {
  */
 function renderInterviewList() {
     console.log('renderInterviewList: 面談リスト描画開始');
+    cardIdCounter = 0;  // カウンターリセット
+    // ★注意: historyCacheとopenedCardNamesはクリアしない（自動更新で状態保持）
     console.log('URLデータ件数:', urlData.length);
     
     const listElement = document.getElementById('interview-list');
@@ -1707,7 +1714,14 @@ function renderInterviewList() {
 /**
  * 面談カード1件を生成
  */
+/**
+ * 面談カード1件を生成
+ */
 function renderInterviewCard(cast) {
+    // 一意のカードID（カウンターベース）
+    cardIdCounter++;
+    const cardId = `card-${cardIdCounter}`;
+    
     // メイン店舗バッジ
     let mainBadge = '';
     if (cast.mainStore) {
@@ -1726,7 +1740,6 @@ function renderInterviewCard(cast) {
     const alertStatus = calculateAlertStatus(cast);
     let alertBadges = '';
     
-    // 出勤アラート
     if (alertStatus.work === 'red') {
         alertBadges += '<span class="alert-badge alert-red">🔴 30日以上</span>';
     } else if (alertStatus.work === 'orange') {
@@ -1735,7 +1748,6 @@ function renderInterviewCard(cast) {
         alertBadges += '<span class="alert-badge alert-blue">🔵 10日以上</span>';
     }
     
-    // 面談アラート
     if (alertStatus.interview === 'yellow') {
         alertBadges += '<span class="alert-badge alert-yellow">🟡 面談60日↑</span>';
     }
@@ -1746,14 +1758,10 @@ function renderInterviewCard(cast) {
     const lastPhotoDisplay = cast.lastPhotoDate ? formatDisplayDate(cast.lastPhotoDate) : '未登録';
     const lastVideoDisplay = cast.lastVideoDate ? formatDisplayDate(cast.lastVideoDate) : '未登録';
     
-    // スタッフ表示
     const staffDisplay = cast.interviewStaff ? ` (担当: ${escapeHtml(cast.interviewStaff)})` : '';
     
-    // 一意のID
-    const cardId = `interview-${cast.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    
     return `
-        <div class="interview-card" data-name="${cast.name}">
+        <div class="interview-card" data-name="${cast.name}" data-card-id="${cardId}">
             <div class="interview-card-header">
                 <div class="interview-card-title">
                     <span class="interview-card-name">${cast.name}</span>
@@ -1783,21 +1791,21 @@ function renderInterviewCard(cast) {
                 </div>
             </div>
             
-            <!-- 面談履歴セクション -->
-            <div class="history-section">
-                <div class="history-header" onclick="toggleHistory('${cardId}')">
-                    <div class="history-title">
-                        📝 面談履歴
-                        <span class="history-count" id="${cardId}-count">(読込中...)</span>
-                    </div>
-                    <div class="history-toggle">
-                        <button class="history-add-btn" onclick="event.stopPropagation(); showHistoryModal('${cast.name}')">＋追加</button>
-                        <span class="history-toggle-icon" id="${cardId}-icon">▼</span>
-                    </div>
+            <!-- コメントセクション -->
+            <div class="comment-section" id="${cardId}-section">
+                <div class="comment-header">
+                    <span class="comment-title">💬 コメント</span>
+                    <button class="history-add-btn" onclick="showHistoryModal('${cast.name}', '${cardId}')">＋追加</button>
                 </div>
-                <div class="history-list collapsed" id="${cardId}-list">
-                    <div class="history-empty">読み込み中...</div>
+                <div class="comment-latest" id="${cardId}-latest">
+                    <div class="comment-loading">読み込み中...</div>
                 </div>
+                <div class="comment-history-btn" id="${cardId}-history-btn" style="display:none;">
+                    <button class="history-toggle-btn" onclick="toggleHistory('${cardId}', '${cast.name}')">
+                        <span id="${cardId}-toggle-text">▼ 過去の履歴を見る</span>
+                    </button>
+                </div>
+                <div class="history-list collapsed" id="${cardId}-history-list"></div>
             </div>
         </div>
     `;
@@ -2078,97 +2086,235 @@ function scrollToTop() {
     });
 }
 
+
 // ===============================
-// 面談履歴機能
+// 面談履歴機能 v5.1完全版
 // ===============================
 
 /**
- * 履歴アコーディオンの開閉
+ * 全カードの最新コメントを読み込み
  */
-function toggleHistory(cardId) {
-    const list = document.getElementById(`${cardId}-list`);
-    const icon = document.getElementById(`${cardId}-icon`);
+async function loadAllLatestComments() {
+    const cards = document.querySelectorAll('.interview-card');
     
-    if (list.classList.contains('collapsed')) {
-        // 開く
-        list.classList.remove('collapsed');
-        list.classList.add('expanded');
-        icon.textContent = '▲';
+    for (const card of cards) {
+        const cardId = card.dataset.cardId;
+        const name = card.dataset.name;
         
-        // 初回のみデータ取得
-        if (list.querySelector('.history-empty')) {
-            loadHistoryForCard(cardId);
+        if (cardId && name) {
+            await loadLatestComment(cardId, name);
         }
-    } else {
-        // 閉じる
-        list.classList.remove('expanded');
-        list.classList.add('collapsed');
-        icon.textContent = '▼';
     }
+    
+    // アコーディオン状態を復元
+    restoreOpenedAccordions();
 }
 
 /**
- * カードの履歴を読み込み
+ * 自動更新後にアコーディオンの開閉状態を復元
  */
-async function loadHistoryForCard(cardId) {
-    // cardIdから源氏名を取得（interview-xxx_xxx形式）
-    const card = document.querySelector(`#${cardId}-list`).closest('.interview-card');
-    const name = card.dataset.name;
+function restoreOpenedAccordions() {
+    if (openedCardNames.length === 0) return;
+    
+    openedCardNames.forEach(name => {
+        // 該当する名前のカードを探す
+        const cards = document.querySelectorAll('.interview-card');
+        for (const card of cards) {
+            if (card.dataset.name === name) {
+                const cardId = card.dataset.cardId;
+                const historyList = document.getElementById(`${cardId}-history-list`);
+                const toggleText = document.getElementById(`${cardId}-toggle-text`);
+                
+                if (historyList && !historyList.classList.contains('expanded')) {
+                    // アコーディオンを開く
+                    historyList.classList.remove('collapsed');
+                    historyList.classList.add('expanded');
+                    
+                    if (toggleText) {
+                        const cache = historyCache[cardId];
+                        const count = cache ? cache.data.length - 1 : 0;
+                        toggleText.textContent = `▲ 過去の履歴を閉じる (${count}件)`;
+                    }
+                }
+                break;
+            }
+        }
+    });
+}
+
+/**
+ * カードの最新コメントを読み込み
+ */
+async function loadLatestComment(cardId, name) {
+    const latestDiv = document.getElementById(`${cardId}-latest`);
+    const historyBtn = document.getElementById(`${cardId}-history-btn`);
+    const historyList = document.getElementById(`${cardId}-history-list`);
+    
+    if (!latestDiv) return;
     
     try {
         const response = await fetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
         const result = await response.json();
         
-        const list = document.getElementById(`${cardId}-list`);
-        const count = document.getElementById(`${cardId}-count`);
-        
-        if (result.success && result.data.length > 0) {
-            count.textContent = `(${result.data.length}件)`;
+        if (result.success && result.data && result.data.length > 0) {
+            // キャッシュに保存
+            historyCache[cardId] = {
+                name: name,
+                data: result.data
+            };
             
-            let html = '';
-            result.data.forEach((item, index) => {
-                const dateDisplay = formatDisplayDate(item.date);
-                html += `
-                    <div class="history-item">
-                        <div class="history-item-header">
-                            <span class="history-item-date">${dateDisplay}</span>
-                            <span class="history-item-staff">${escapeHtml(item.staff || '不明')}</span>
-                        </div>
-                        <div class="history-item-comment">${escapeHtml(item.comment || '').replace(/\n/g, '<br>')}</div>
-                    </div>
-                `;
-            });
+            const latest = result.data[0];
             
-            list.innerHTML = html;
+            // 最新コメントを表示
+            latestDiv.innerHTML = renderCommentItem(latest, cardId);
+            
+            // 履歴が2件以上ある場合のみトグルボタンを表示
+            if (result.data.length > 1) {
+                historyBtn.style.display = 'block';
+                
+                const toggleText = document.getElementById(`${cardId}-toggle-text`);
+                if (toggleText) {
+                    const isExpanded = historyList && historyList.classList.contains('expanded');
+                    const count = result.data.length - 1;
+                    toggleText.textContent = isExpanded 
+                        ? `▲ 過去の履歴を閉じる (${count}件)` 
+                        : `▼ 過去の履歴を見る (${count}件)`;
+                }
+                
+                // 過去履歴をレンダリング（アコーディオンが開いている場合）
+                if (historyList && historyList.classList.contains('expanded')) {
+                    const pastHistory = result.data.slice(1);
+                    historyList.innerHTML = pastHistory.map(item => renderCommentItem(item, cardId)).join('');
+                }
+            } else {
+                historyBtn.style.display = 'none';
+                if (historyList) {
+                    historyList.innerHTML = '';
+                    historyList.classList.remove('expanded');
+                    historyList.classList.add('collapsed');
+                }
+            }
         } else {
-            count.textContent = '(0件)';
-            list.innerHTML = '<div class="history-empty">履歴がありません</div>';
+            // コメントなし
+            latestDiv.innerHTML = '<div class="comment-none">コメントなし</div>';
+            if (historyBtn) historyBtn.style.display = 'none';
+            if (historyList) {
+                historyList.innerHTML = '';
+                historyList.classList.remove('expanded');
+                historyList.classList.add('collapsed');
+            }
         }
     } catch (error) {
-        console.error('履歴取得エラー:', error);
-        document.getElementById(`${cardId}-list`).innerHTML = '<div class="history-empty">読み込みエラー</div>';
-        document.getElementById(`${cardId}-count`).textContent = '(エラー)';
+        console.error('最新コメント取得エラー:', error);
+        latestDiv.innerHTML = '<div class="comment-none">エラー</div>';
+    }
+}
+
+/**
+ * コメントアイテムのHTMLを生成
+ */
+function renderCommentItem(item, cardId) {
+    const dateDisplay = formatDisplayDate(item.interviewDate);
+    const staffDisplay = item.staff ? escapeHtml(item.staff) : '不明';
+    const commentText = escapeHtml(item.comment || '').replace(/\n/g, '<br>');
+    
+    return `
+        <div class="comment-item">
+            <div class="comment-item-header">
+                <span class="comment-date">${dateDisplay}</span>
+                <span class="comment-staff">${staffDisplay}</span>
+                <div class="comment-item-actions">
+                    <button class="btn-history-edit" onclick="editHistory(${item.rowIndex}, '${cardId}')">編集</button>
+                    <button class="btn-history-delete" onclick="showHistoryDeleteModal(${item.rowIndex}, '${cardId}')">削除</button>
+                </div>
+            </div>
+            <div class="comment-text">${commentText}</div>
+        </div>
+    `;
+}
+
+/**
+ * 履歴アコーディオンの開閉
+ */
+function toggleHistory(cardId, name) {
+    const historyList = document.getElementById(`${cardId}-history-list`);
+    const toggleText = document.getElementById(`${cardId}-toggle-text`);
+    
+    if (!historyList) return;
+    
+    if (historyList.classList.contains('collapsed')) {
+        // 開く
+        historyList.classList.remove('collapsed');
+        historyList.classList.add('expanded');
+        
+        // ★ 開いた状態を記録
+        if (!openedCardNames.includes(name)) {
+            openedCardNames.push(name);
+        }
+        
+        // キャッシュから過去履歴を表示
+        const cache = historyCache[cardId];
+        if (cache && cache.data.length > 1) {
+            const pastHistory = cache.data.slice(1);
+            historyList.innerHTML = pastHistory.map(item => renderCommentItem(item, cardId)).join('');
+        }
+        
+        if (toggleText) {
+            const count = cache ? cache.data.length - 1 : 0;
+            toggleText.textContent = `▲ 過去の履歴を閉じる (${count}件)`;
+        }
+    } else {
+        // 閉じる
+        historyList.classList.remove('expanded');
+        historyList.classList.add('collapsed');
+        
+        // ★ 閉じた状態を記録
+        openedCardNames = openedCardNames.filter(n => n !== name);
+        
+        if (toggleText) {
+            const cache = historyCache[cardId];
+            const count = cache ? cache.data.length - 1 : 0;
+            toggleText.textContent = `▼ 過去の履歴を見る (${count}件)`;
+        }
     }
 }
 
 /**
  * 履歴追加モーダルを表示
  */
-function showHistoryModal(name) {
-    document.getElementById('history-cast-name').value = name;
-    document.getElementById('history-modal-title').textContent = `${name} の面談履歴を追加`;
+function showHistoryModal(name, cardId) {
+    document.getElementById('history-modal-title').textContent = '面談履歴を追加';
+    document.getElementById('history-modal-name').value = name;
+    document.getElementById('history-modal-row-index').value = '';  // 新規追加
+    document.getElementById('history-modal-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('history-modal-comment').value = '';
     
-    // 今日の日付をデフォルト設定
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    document.getElementById('history-date').value = dateStr;
+    // 現在のカードIDを保存
+    document.getElementById('history-modal').dataset.cardId = cardId;
     
-    // スタッフドロップダウンを更新
-    updateHistoryStaffDropdown();
+    updateHistoryStaffDropdown('');
+    document.getElementById('history-modal').classList.add('active');
+}
+
+/**
+ * 履歴編集モーダルを表示
+ */
+function editHistory(rowIndex, cardId) {
+    const cache = historyCache[cardId];
+    if (!cache) return;
     
-    // コメントをクリア
-    document.getElementById('history-comment').value = '';
+    const item = cache.data.find(h => h.rowIndex === rowIndex);
+    if (!item) return;
     
+    document.getElementById('history-modal-title').textContent = '面談履歴を編集';
+    document.getElementById('history-modal-name').value = item.name;
+    document.getElementById('history-modal-row-index').value = rowIndex;
+    document.getElementById('history-modal-date').value = formatDateForInput(item.interviewDate);
+    document.getElementById('history-modal-comment').value = item.comment || '';
+    
+    document.getElementById('history-modal').dataset.cardId = cardId;
+    
+    updateHistoryStaffDropdown(item.staff || '');
     document.getElementById('history-modal').classList.add('active');
 }
 
@@ -2180,18 +2326,34 @@ function closeHistoryModal() {
 }
 
 /**
- * 履歴用スタッフドロップダウンを更新
+ * 履歴削除確認モーダルを表示
  */
-function updateHistoryStaffDropdown() {
-    const select = document.getElementById('history-staff');
+function showHistoryDeleteModal(rowIndex, cardId) {
+    document.getElementById('history-delete-row-index').value = rowIndex;
+    document.getElementById('history-delete-card-id').value = cardId;
+    document.getElementById('history-delete-modal').classList.add('active');
+}
+
+/**
+ * 履歴削除モーダルを閉じる
+ */
+function closeHistoryDeleteModal() {
+    document.getElementById('history-delete-modal').classList.remove('active');
+}
+
+/**
+ * 履歴スタッフドロップダウンを更新
+ */
+function updateHistoryStaffDropdown(selectedValue) {
+    const select = document.getElementById('history-modal-staff');
     if (!select) return;
     
-    // スタッフクラスの人を取得
     const staffList = urlData.filter(u => u.class === 'スタッフ');
     
     let options = '<option value="">選択してください</option>';
     staffList.forEach(staff => {
-        options += `<option value="${staff.name}">${staff.name}</option>`;
+        const selected = staff.name === selectedValue ? 'selected' : '';
+        options += `<option value="${staff.name}" ${selected}>${staff.name}</option>`;
     });
     
     select.innerHTML = options;
@@ -2201,53 +2363,110 @@ function updateHistoryStaffDropdown() {
  * 面談履歴を保存
  */
 async function saveInterviewHistory() {
-    const name = document.getElementById('history-cast-name').value;
-    const date = document.getElementById('history-date').value;
-    const staff = document.getElementById('history-staff').value;
-    const comment = document.getElementById('history-comment').value.trim();
+    const name = document.getElementById('history-modal-name').value;
+    const rowIndex = document.getElementById('history-modal-row-index').value;
+    const date = document.getElementById('history-modal-date').value;
+    const staff = document.getElementById('history-modal-staff').value;
+    const comment = document.getElementById('history-modal-comment').value.trim();
+    const cardId = document.getElementById('history-modal').dataset.cardId;
     
-    // バリデーション
     if (!date) {
         showToast('面談日を入力してください', 'error');
         return;
     }
-    if (!staff) {
-        showToast('担当スタッフを選択してください', 'error');
-        return;
-    }
+    
     if (!comment) {
         showToast('コメントを入力してください', 'error');
         return;
     }
     
     try {
-        const response = await fetch(`${API_URL}?action=addInterviewHistory`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-            body: JSON.stringify({
+        let action, body;
+        
+        if (rowIndex) {
+            // 更新
+            action = 'updateInterviewHistory';
+            body = {
+                rowIndex: parseInt(rowIndex),
                 name: name,
-                date: date,
+                interviewDate: date,
                 staff: staff,
                 comment: comment
-            })
+            };
+        } else {
+            // 新規追加
+            action = 'addInterviewHistory';
+            body = {
+                name: name,
+                interviewDate: date,
+                staff: staff,
+                comment: comment
+            };
+        }
+        
+        const response = await fetch(`${API_URL}?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(body)
         });
         
         const result = await response.json();
         
         if (result.success) {
             closeHistoryModal();
-            showToast('面談履歴を追加しました', 'success');
+            showToast(result.message, 'success');
             
-            // データを再読み込み
+            // URL管理データを再読み込み
             await loadUrlData();
-            renderInterviewList();
+            
+            // 該当カードの最新コメントを再読み込み
+            if (cardId) {
+                await loadLatestComment(cardId, name);
+            }
         } else {
             showToast(result.error || '保存に失敗しました', 'error');
         }
     } catch (error) {
-        console.error('履歴保存エラー:', error);
+        console.error('saveInterviewHistory error:', error);
         showToast('保存に失敗しました', 'error');
+    }
+}
+
+/**
+ * 履歴削除を実行
+ */
+async function confirmHistoryDelete() {
+    const rowIndex = document.getElementById('history-delete-row-index').value;
+    const cardId = document.getElementById('history-delete-card-id').value;
+    
+    if (!rowIndex) return;
+    
+    try {
+        const response = await fetch(`${API_URL}?action=deleteInterviewHistory`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ rowIndex: parseInt(rowIndex) })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeHistoryDeleteModal();
+            showToast('履歴を削除しました', 'success');
+            
+            // URL管理データを再読み込み
+            await loadUrlData();
+            
+            // 該当カードを更新
+            const cache = historyCache[cardId];
+            if (cache && cardId) {
+                await loadLatestComment(cardId, cache.name);
+            }
+        } else {
+            showToast(result.error || '削除に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('confirmHistoryDelete error:', error);
+        showToast('削除に失敗しました', 'error');
     }
 }
