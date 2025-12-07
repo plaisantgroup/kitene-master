@@ -1750,3 +1750,16 @@ body {
     background: rgba(99, 102, 241, 0.1);
     border-radius: var(--radius-sm);
 }
+
+/* 続きを表示ヒント（省略時のみ表示） */
+.expand-hint {
+    display: none;
+    margin-left: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.expand-hint.has-overflow {
+    display: inline;
+    color: var(--primary-color);
+}
