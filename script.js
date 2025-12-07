@@ -1757,10 +1757,19 @@ function renderInterviewCard(cast) {
     // アラート状態
     const alertStatus = calculateAlertStatus(cast);
     let alertBadge = '';
-    if (alertStatus === 'red') {
-        alertBadge = '<span class="alert-badge alert-red">⚠️ 出勤30日以上なし</span>';
-    } else if (alertStatus === 'yellow') {
-        alertBadge = '<span class="alert-badge alert-yellow">⏰ 面談60日以上なし</span>';
+    
+    // 出勤アラート（3段階）
+    if (alertStatus.work === 'red') {
+        alertBadge += '<span class="alert-badge alert-red">🔴 30日以上</span>';
+    } else if (alertStatus.work === 'orange') {
+        alertBadge += '<span class="alert-badge alert-orange">🟠 20日以上</span>';
+    } else if (alertStatus.work === 'blue') {
+        alertBadge += '<span class="alert-badge alert-blue">🔵 10日以上</span>';
+    }
+    
+    // 面談アラート
+    if (alertStatus.interview === 'yellow') {
+        alertBadge += '<span class="alert-badge alert-yellow">🟡 面談60日↑</span>';
     }
     
     // 日付表示
