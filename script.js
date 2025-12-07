@@ -2859,8 +2859,8 @@ function toggleCommentExpand(wrapper) {
 function checkCommentOverflow() {
     const comments = document.querySelectorAll('.comment-text.collapsed');
     comments.forEach(el => {
-        const hint = el.querySelector('.expand-hint');
-        if (hint) {
+        const hint = el.nextElementSibling;
+        if (hint && hint.classList.contains('expand-hint')) {
             // scrollHeight > clientHeight なら省略されている
             if (el.scrollHeight > el.clientHeight) {
                 hint.classList.add('has-overflow');
