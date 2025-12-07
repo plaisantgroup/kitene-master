@@ -1122,52 +1122,44 @@ body {
     justify-content: flex-end;
 }
 
-/* ===== アラートバッジ（出勤・面談警告） ===== */
-
-/* 共通スタイル */
+/* ===== アラートバッジ（4段階） ===== */
 .alert-badge {
     display: inline-block;
     padding: 3px 10px;
     border-radius: 12px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
     margin-left: 6px;
-    vertical-align: middle;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.8; }
+    50% { opacity: 0.7; }
 }
 
-/* 🔴 赤アラート: 30日以上出勤なし（危険） */
+/* 🔴 30日以上出勤なし */
 .alert-badge.alert-red {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: white;
-    border: 2px solid #fca5a5;
+    color: #fff;
 }
 
-/* 🟠 オレンジアラート: 20日以上出勤なし（警告） */
+/* 🟠 20日以上出勤なし */
 .alert-badge.alert-orange {
     background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    color: white;
-    border: 2px solid #fdba74;
+    color: #fff;
 }
 
-/* 🔵 青アラート: 10日以上出勤なし（注意） */
+/* 🔵 10日以上出勤なし */
 .alert-badge.alert-blue {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
-    border: 2px solid #93c5fd;
+    color: #fff;
 }
 
-/* 🟡 黄アラート: 60日以上面談なし */
+/* 🟡 面談60日以上なし */
 .alert-badge.alert-yellow {
-    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
-    color: #1e293b;
-    border: 2px solid #fde047;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1f2937;
 }
 
 /* レスポンシブ対応 */
@@ -1177,108 +1169,47 @@ body {
         font-size: 0.7rem;
         margin-left: 4px;
     }
-    
-    .history-header {
-        padding: 8px 10px;
-    }
-    
-    .history-item {
-        padding: 10px;
-    }
-    
-    .history-item-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-    }
 }
 
-/* ===== 面談履歴 ===== */
-
-/* 履歴セクション */
-.history-section {
+/* ===== コメントセクション ===== */
+.comment-section {
     margin-top: 15px;
-    border-top: 1px solid var(--border-color);
     padding-top: 15px;
+    border-top: 1px solid var(--border-color);
 }
 
-/* 履歴ヘッダー（アコーディオントリガー） */
-.history-header {
+.comment-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
-    padding: 10px 12px;
-    background: rgba(99, 102, 241, 0.1);
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
+    margin-bottom: 10px;
 }
 
-.history-header:hover {
-    background: rgba(99, 102, 241, 0.2);
-}
-
-.history-title {
+.comment-title {
     font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
 }
 
-.history-count {
-    font-size: 0.8rem;
+/* 最新コメント表示エリア */
+.comment-latest {
+    min-height: 40px;
+}
+
+.comment-none {
     color: var(--text-secondary);
-    margin-left: 8px;
+    font-style: italic;
+    font-size: 0.9rem;
+    padding: 10px 0;
 }
 
-.history-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.history-toggle-icon {
+.comment-loading {
+    color: var(--text-secondary);
     font-size: 0.85rem;
-    color: var(--primary-color);
-    transition: transform 0.3s ease;
 }
 
-.history-add-btn {
-    padding: 4px 12px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.history-add-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.05);
-}
-
-/* 履歴リスト（アコーディオン内容） */
-.history-list {
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.history-list.collapsed {
-    max-height: 0;
-    opacity: 0;
-    padding: 0;
-}
-
-.history-list.expanded {
-    max-height: 1000px;
-    opacity: 1;
-    padding-top: 10px;
-}
-
-/* 履歴アイテム */
-.history-item {
+/* 最新コメントアイテム */
+.comment-item {
     background: rgba(0, 0, 0, 0.2);
     border-radius: var(--radius-sm);
     padding: 12px;
@@ -1286,65 +1217,124 @@ body {
     border-left: 3px solid var(--primary-color);
 }
 
-.history-item:last-child {
-    margin-bottom: 0;
-}
-
-.history-item-header {
+.comment-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
-.history-item-date {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.history-item-staff {
+.comment-item-meta {
+    display: flex;
+    gap: 15px;
     font-size: 0.8rem;
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.1);
-    padding: 2px 8px;
-    border-radius: 10px;
 }
 
-.history-item-comment {
+.comment-item-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.comment-item-text {
     font-size: 0.9rem;
     color: var(--text-primary);
+    white-space: pre-wrap;
     line-height: 1.5;
+    /* 3行まで表示 */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-/* 履歴なし */
-.history-empty {
+/* 編集・削除ボタン */
+.btn-history-edit,
+.btn-history-delete {
+    padding: 3px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-history-edit {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-history-edit:hover {
+    background: var(--primary-dark);
+}
+
+.btn-history-delete {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-history-delete:hover {
+    background: #dc2626;
+}
+
+/* 過去の履歴ボタン */
+.comment-history-btn {
     text-align: center;
-    padding: 20px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    margin-top: 10px;
 }
 
-/* もっと見るボタン */
-.history-more {
-    text-align: center;
-    padding: 10px;
-}
-
-.history-more-btn {
-    background: none;
+.history-toggle-btn {
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    padding: 6px 16px;
+    padding: 8px 20px;
     border-radius: var(--radius-sm);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    width: 100%;
 }
 
-.history-more-btn:hover {
+.history-toggle-btn:hover {
     background: var(--hover-bg);
     color: var(--text-primary);
+    border-color: var(--primary-color);
+}
+
+/* 過去履歴リスト（アコーディオン） */
+.history-list {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.history-list.collapsed {
+    max-height: 0;
+}
+
+.history-list.expanded {
+    max-height: 2000px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-color);
+}
+
+/* 履歴追加ボタン */
+.history-add-btn {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-add-btn:hover {
+    background: #059669;
+    transform: translateY(-1px);
 }
 
 /* ===== モーダルセクション ===== */
@@ -1643,6 +1633,22 @@ body {
     /* モーダルセクション */
     .modal-section-title {
         font-size: 0.9rem;
+    }
+    
+    /* コメントセクション */
+    .comment-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .comment-item-actions {
+        align-self: flex-end;
+    }
+    
+    .comment-item-meta {
+        flex-wrap: wrap;
+        gap: 10px;
     }
 }
 
