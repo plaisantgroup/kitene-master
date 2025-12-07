@@ -1,5 +1,5 @@
 /* ===============================
-   キテネマスター v5.0 - スタイルシート
+   キテネマスター v5.1 - スタイルシート
    =============================== */
 
 /* ===== 基本設定 ===== */
@@ -1177,6 +1177,174 @@ body {
         font-size: 0.7rem;
         margin-left: 4px;
     }
+    
+    .history-header {
+        padding: 8px 10px;
+    }
+    
+    .history-item {
+        padding: 10px;
+    }
+    
+    .history-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+/* ===== 面談履歴 ===== */
+
+/* 履歴セクション */
+.history-section {
+    margin-top: 15px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}
+
+/* 履歴ヘッダー（アコーディオントリガー） */
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px 12px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.history-header:hover {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+.history-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.history-count {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
+.history-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-toggle-icon {
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    transition: transform 0.3s ease;
+}
+
+.history-add-btn {
+    padding: 4px 12px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-add-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+/* 履歴リスト（アコーディオン内容） */
+.history-list {
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.history-list.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+}
+
+.history-list.expanded {
+    max-height: 1000px;
+    opacity: 1;
+    padding-top: 10px;
+}
+
+/* 履歴アイテム */
+.history-item {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history-item-date {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.history-item-staff {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.history-item-comment {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* 履歴なし */
+.history-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+/* もっと見るボタン */
+.history-more {
+    text-align: center;
+    padding: 10px;
+}
+
+.history-more-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-more-btn:hover {
+    background: var(--hover-bg);
+    color: var(--text-primary);
 }
 
 /* ===== モーダルセクション ===== */
