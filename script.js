@@ -1722,6 +1722,8 @@ function renderInterviewList() {
                 section.outerHTML = renderCommentSection(name);
             }
         });
+        // 省略判定を実行
+        setTimeout(checkCommentOverflow, 100);
     });
     
     console.log('renderInterviewList: 描画完了');
@@ -2499,7 +2501,7 @@ function renderCommentSection(name) {
                         <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${latestComment.rowIndex})">削除</button>
                     </div>
                 </div>
-                <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(latestComment.comment || '')}</div>
+                <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(latestComment.comment || '')}<span class="expand-hint"></span></div>
             </div>
         `;
     } else {
@@ -2523,7 +2525,7 @@ function renderCommentSection(name) {
                             <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${c.rowIndex})">削除</button>
                         </div>
                     </div>
-                    <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(c.comment || '')}</div>
+                    <div class="comment-text collapsed" onclick="toggleCommentExpand(this)">${escapeHtml(c.comment || '')}<span class="expand-hint"></span></div>
                 </div>
             `;
         }).join('');
@@ -2827,11 +2829,39 @@ async function confirmDeleteComment() {
  * コメントの展開/折りたたみを切り替え
  */
 function toggleCommentExpand(element) {
+    const hint = element.querySelector('.expand-hint');
+    
     if (element.classList.contains('collapsed')) {
         element.classList.remove('collapsed');
         element.classList.add('expanded');
+        if (hint && hint.classList.contains('has-overflow')) {
+            hint.textContent = ' [折りたたむ]';
+        }
     } else {
         element.classList.remove('expanded');
         element.classList.add('collapsed');
+        if (hint && hint.classList.contains('has-overflow')) {
+            hint.textContent = ' [続きを表示]';
+        }
     }
+}
+
+/**
+ * 省略されているコメントを検出してヒントを表示
+ */
+function checkCommentOverflow() {
+    const comments = document.querySelectorAll('.comment-text.collapsed');
+    comments.forEach(el => {
+        const hint = el.querySelector('.expand-hint');
+        if (hint) {
+            // scrollHeight > clientHeight なら省略されている
+            if (el.scrollHeight > el.clientHeight) {
+                hint.classList.add('has-overflow');
+                hint.textContent = ' [続きを表示]';
+            } else {
+                hint.classList.remove('has-overflow');
+                hint.textContent = '';
+            }
+        }
+    });
 }
