@@ -3038,9 +3038,8 @@ function renderNewCommentBar() {
  */
 function scrollToInterview(name) {
     // 面談タブに切り替え
-    const interviewTab = document.querySelector('[data-view="interview-view"]');
-    if (interviewTab && !interviewTab.classList.contains('active')) {
-        interviewTab.click();
+    if (typeof showView === 'function') {
+        showView('interview');
     }
     
     // カードが表示されるまでリトライ
