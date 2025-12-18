@@ -2654,6 +2654,9 @@ async function loadAllLatestComments() {
     } catch (error) {
         console.error('loadAllLatestComments: エラー', error);
     }
+    
+    // 新着コメントバーを更新
+    setTimeout(renderNewCommentBar, 100);
 }
 
 /**
@@ -2956,6 +2959,41 @@ function getNewComments() {
 }
 
 /**
+ * 新着コメントを日付ごとに集計
+ * @returns {Object} { '2024-12-17': [{name, count}], '2024-12-18': [{name, count}] }
+ */
+function getNewCommentsByDate() {
+    const result = {};
+    
+    Object.keys(commentCache).forEach(name => {
+        const comments = commentCache[name] || [];
+        
+        comments.forEach(c => {
+            if (isNewComment(c.date)) {
+                const dateKey = new Date(c.date).toISOString().split('T')[0];
+                
+                if (!result[dateKey]) {
+                    result[dateKey] = {};
+                }
+                if (!result[dateKey][name]) {
+                    result[dateKey][name] = 0;
+                }
+                result[dateKey][name]++;
+            }
+        });
+    });
+    
+    // 各日付のキャストを配列に変換
+    Object.keys(result).forEach(dateKey => {
+        result[dateKey] = Object.entries(result[dateKey])
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+    });
+    
+    return result;
+}
+
+/**
  * 新着コメント通知バーを表示
  */
 function renderNewCommentBar() {
@@ -2967,23 +3005,30 @@ function renderNewCommentBar() {
         return;
     }
     
-    const newComments = getNewComments();
+    const newCommentsByDate = getNewCommentsByDate();
     
-    if (newComments.length === 0) {
+    if (Object.keys(newCommentsByDate).length === 0) {
         bar.style.display = 'none';
         return;
     }
     
-    // キャスト名リストを生成
-    const items = newComments.map(({ name, count }) => {
-        const countStr = count > 1 ? `②③④⑤⑥⑦⑧⑨⑩`.charAt(count - 2) || `(${count})` : '';
-        return `<span class="new-comment-item" onclick="scrollToInterview('${name}')">${name}${countStr}</span>`;
-    }).join('');
+    // 日付ごとにグループ化して表示
+    const dateGroups = Object.entries(newCommentsByDate)
+        .sort((a, b) => new Date(a[0]) - new Date(b[0])) // 日付昇順
+        .map(([dateStr, names]) => {
+            const date = new Date(dateStr);
+            const displayDate = `${date.getMonth() + 1}/${date.getDate()}`;
+            const nameItems = names.map(({ name, count }) => {
+                const countStr = count > 1 ? `②③④⑤⑥⑦⑧⑨⑩`.charAt(count - 2) || `(${count})` : '';
+                return `<span class="new-comment-item" onclick="scrollToInterview('${name}')">${name}${countStr}</span>`;
+            }).join(' ');
+            return `<span class="new-comment-date">${displayDate}</span>${nameItems}`;
+        }).join('<span class="new-comment-separator">|</span>');
     
-    listEl.innerHTML = items;
+    listEl.innerHTML = dateGroups;
     bar.style.display = 'flex';
     
-    console.log('renderNewCommentBar: 新着', newComments.length, '件表示');
+    console.log('renderNewCommentBar: 新着表示完了');
 }
 
 /**
