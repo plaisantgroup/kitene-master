@@ -1869,20 +1869,38 @@ body {
     }
 }
 
-/* モバイル対応 */
+/* モバイル対応 - 新着コメントバー */
 @media (max-width: 768px) {
     .new-comment-bar {
-        margin: 0 12px 12px 12px;
+        flex-direction: column;
+        align-items: flex-start;
         padding: 10px 12px;
-        flex-wrap: wrap;
+        margin: 0 12px 12px 12px;
+        gap: 6px;
     }
     
-    .new-comment-text {
+    .new-comment-bar > .new-comment-icon,
+    .new-comment-bar > .new-comment-text {
+        display: inline;
+    }
+    
+    .new-comment-list {
+        gap: 6px;
+        width: 100%;
+    }
+    
+    .new-comment-date-group {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .new-comment-date {
         font-size: 0.85rem;
+        margin-right: 4px;
     }
     
     .new-comment-item {
-        font-size: 0.8rem;
-        padding: 3px 10px;
+        font-size: 0.75rem;
+        padding: 2px 8px;
     }
 }
