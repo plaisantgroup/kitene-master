@@ -3043,7 +3043,7 @@ function scrollToInterview(name) {
         interviewTab.click();
     }
     
-    // 少し待ってからスクロール（タブ切り替え完了を待つ）
+    // 少し待ってからスクロール（タブ切り替え＋描画完了を待つ）
     setTimeout(() => {
         const card = document.querySelector(`.interview-card[data-name="${name}"]`);
         if (card) {
@@ -3058,5 +3058,5 @@ function scrollToInterview(name) {
         } else {
             console.log('scrollToInterview: カードが見つかりません', name);
         }
-    }, 100);
+    }, 800);
 }
