@@ -6,7 +6,7 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbzuZppKM-9ZQCm5YITAN0zmLNMEAmvj6FaRXy-45ygjuz2HqLHGiCOTF8lcFMOx6QnA/exec';
 
 // 新着コメントの日数設定（今日含めてこの日数以内を新着とする）
-const NEW_COMMENT_DAYS = 1;
+const NEW_COMMENT_DAYS = 2;
 
 // グローバル変数
 let shiftData = [];
@@ -2970,7 +2970,8 @@ function getNewCommentsByDate() {
         
         comments.forEach(c => {
             if (isNewComment(c.date)) {
-                const dateKey = new Date(c.date).toISOString().split('T')[0];
+                const d = new Date(c.date);
+                const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 
                 if (!result[dateKey]) {
                     result[dateKey] = {};
