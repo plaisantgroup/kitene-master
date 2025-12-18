@@ -3013,7 +3013,7 @@ function renderNewCommentBar() {
         return;
     }
     
-    // 日付ごとにグループ化して表示
+    // 日付ごとにグループ化して表示（段分け）
     const dateGroups = Object.entries(newCommentsByDate)
         .sort((a, b) => new Date(a[0]) - new Date(b[0])) // 日付昇順
         .map(([dateStr, names]) => {
@@ -3022,9 +3022,9 @@ function renderNewCommentBar() {
             const nameItems = names.map(({ name, count }) => {
                 const countStr = count > 1 ? `②③④⑤⑥⑦⑧⑨⑩`.charAt(count - 2) || `(${count})` : '';
                 return `<span class="new-comment-item" onclick="scrollToInterview('${name}')">${name}${countStr}</span>`;
-            }).join(' ');
-            return `<span class="new-comment-date">${displayDate}</span>${nameItems}`;
-        }).join('<span class="new-comment-separator">|</span>');
+            }).join('');
+            return `<div class="new-comment-date-group"><span class="new-comment-date">${displayDate}</span>${nameItems}</div>`;
+        }).join('');
     
     listEl.innerHTML = dateGroups;
     bar.style.display = 'flex';
