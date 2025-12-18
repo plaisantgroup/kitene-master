@@ -1879,9 +1879,10 @@ body {
         gap: 6px;
     }
     
-    .new-comment-bar > .new-comment-icon,
-    .new-comment-bar > .new-comment-text {
-        display: inline;
+    .new-comment-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
     
     .new-comment-list {
