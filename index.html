@@ -32,6 +32,13 @@
             </button>
         </nav>
 
+        <!-- 新着コメント通知バー -->
+        <div id="new-comment-bar" class="new-comment-bar" style="display: none;">
+            <span class="new-comment-icon">🔔</span>
+            <span class="new-comment-text">新着コメント: </span>
+            <span id="new-comment-list" class="new-comment-list"></span>
+        </div>
+
         <!-- 店舗フィルター -->
         <div class="store-filter">
             <button class="filter-btn active" data-store="all" onclick="filterByStore('all')">
