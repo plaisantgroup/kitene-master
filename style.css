@@ -1806,14 +1806,19 @@ body {
 .new-comment-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    flex: 1;
 }
 
 .new-comment-date-group {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
+}
+
+.new-comment-date-group .new-comment-date {
+    flex-shrink: 0;
 }
 
 .new-comment-date {
@@ -1823,8 +1828,7 @@ body {
 }
 
 .new-comment-separator {
-    margin: 0 12px;
-    color: rgba(255, 255, 255, 0.5);
+    display: none;
 }
 
 .new-comment-item {
