@@ -5,6 +5,9 @@
 // Google Apps Script API URL
 const API_URL = 'https://script.google.com/macros/s/AKfycbzuZppKM-9ZQCm5YITAN0zmLNMEAmvj6FaRXy-45ygjuz2HqLHGiCOTF8lcFMOx6QnA/exec';
 
+// 新着コメントの日数設定（今日含めてこの日数以内を新着とする）
+const NEW_COMMENT_DAYS = 2;
+
 // グローバル変数
 let shiftData = [];
 let urlData = [];
@@ -1725,6 +1728,9 @@ function renderInterviewList() {
         });
         // 省略判定を実行
         setTimeout(checkCommentOverflow, 500);
+        
+        // 新着コメントバーを更新
+        setTimeout(renderNewCommentBar, 600);
     });
     
     console.log('renderInterviewList: 描画完了');
@@ -2904,4 +2910,107 @@ function checkCommentOverflow() {
             }
         }
     });
+}
+
+/**
+ * コメントが新着かどうか判定
+ * @param {string} dateStr - コメントの日付
+ * @returns {boolean} 新着ならtrue
+ */
+function isNewComment(dateStr) {
+    if (!dateStr) return false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const commentDate = new Date(dateStr);
+    commentDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = today - commentDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // 今日を含めてNEW_COMMENT_DAYS日以内
+    return diffDays < NEW_COMMENT_DAYS;
+}
+
+/**
+ * 新着コメントを集計
+ * @returns {Array} [{name: 'キャスト名', count: 件数}, ...]
+ */
+function getNewComments() {
+    const newComments = {};
+    
+    Object.keys(commentCache).forEach(name => {
+        const comments = commentCache[name] || [];
+        const newCount = comments.filter(c => isNewComment(c.date)).length;
+        
+        if (newCount > 0) {
+            newComments[name] = newCount;
+        }
+    });
+    
+    // 件数が多い順にソート
+    return Object.entries(newComments)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+}
+
+/**
+ * 新着コメント通知バーを表示
+ */
+function renderNewCommentBar() {
+    const bar = document.getElementById('new-comment-bar');
+    const listEl = document.getElementById('new-comment-list');
+    
+    if (!bar || !listEl) {
+        console.log('renderNewCommentBar: バー要素が見つかりません');
+        return;
+    }
+    
+    const newComments = getNewComments();
+    
+    if (newComments.length === 0) {
+        bar.style.display = 'none';
+        return;
+    }
+    
+    // キャスト名リストを生成
+    const items = newComments.map(({ name, count }) => {
+        const countStr = count > 1 ? `②③④⑤⑥⑦⑧⑨⑩`.charAt(count - 2) || `(${count})` : '';
+        return `<span class="new-comment-item" onclick="scrollToInterview('${name}')">${name}${countStr}</span>`;
+    }).join('');
+    
+    listEl.innerHTML = items;
+    bar.style.display = 'flex';
+    
+    console.log('renderNewCommentBar: 新着', newComments.length, '件表示');
+}
+
+/**
+ * 指定キャストの面談カードにスクロール
+ * @param {string} name - キャスト名
+ */
+function scrollToInterview(name) {
+    // 面談タブに切り替え
+    const interviewTab = document.querySelector('[data-view="interview-view"]');
+    if (interviewTab && !interviewTab.classList.contains('active')) {
+        interviewTab.click();
+    }
+    
+    // 少し待ってからスクロール（タブ切り替え完了を待つ）
+    setTimeout(() => {
+        const card = document.querySelector(`.interview-card[data-name="${name}"]`);
+        if (card) {
+            // スクロール
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // ハイライト
+            card.classList.add('highlight');
+            setTimeout(() => {
+                card.classList.remove('highlight');
+            }, 2000);
+        } else {
+            console.log('scrollToInterview: カードが見つかりません', name);
+        }
+    }, 100);
 }
