@@ -1832,6 +1832,7 @@ body {
 }
 
 .new-comment-item {
+    display: inline-block;
     background: rgba(255, 255, 255, 0.2);
     padding: 4px 12px;
     border-radius: 20px;
@@ -1839,6 +1840,7 @@ body {
     transition: all 0.2s ease;
     font-size: 0.9rem;
     white-space: nowrap;
+    width: auto;
 }
 
 .new-comment-item:hover {
