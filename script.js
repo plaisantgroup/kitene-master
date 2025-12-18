@@ -3043,8 +3043,11 @@ function scrollToInterview(name) {
         interviewTab.click();
     }
     
-    // 少し待ってからスクロール（タブ切り替え＋描画完了を待つ）
-    setTimeout(() => {
+    // カードが表示されるまでリトライ
+    let retryCount = 0;
+    const maxRetries = 20;
+    
+    const tryScroll = () => {
         const card = document.querySelector(`.interview-card[data-name="${name}"]`);
         if (card) {
             // スクロール
@@ -3055,8 +3058,13 @@ function scrollToInterview(name) {
             setTimeout(() => {
                 card.classList.remove('highlight');
             }, 2000);
+        } else if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(tryScroll, 200);
         } else {
             console.log('scrollToInterview: カードが見つかりません', name);
         }
-    }, 800);
+    };
+    
+    setTimeout(tryScroll, 100);
 }
