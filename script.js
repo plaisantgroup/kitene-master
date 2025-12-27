@@ -6,7 +6,7 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbzuZppKM-9ZQCm5YITAN0zmLNMEAmvj6FaRXy-45ygjuz2HqLHGiCOTF8lcFMOx6QnA/exec';
 
 // 新着コメントの日数設定（今日含めてこの日数以内を新着とする）
-const NEW_COMMENT_DAYS = 5;
+const NEW_COMMENT_DAYS = 2;
 
 // グローバル変数
 let shiftData = [];
@@ -16,7 +16,7 @@ let currentDeleteName = null;
 let currentShiftDate = '';
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
 let autoRefreshInterval = null;  // 自動リロードのインターバルID
-let autoRefreshSeconds = 15;     // 自動リロードの間隔（秒）
+let autoRefreshSeconds = 60;     // 自動リロードの間隔（秒）
 let cardIdCounter = 0;      // カードID用カウンター
 let historyCache = {};      // 履歴キャッシュ
 let openedCardNames = [];   // ★開いているアコーディオンの源氏名リスト
