@@ -2755,6 +2755,14 @@ function updateCommentStaffDropdown(selectedValue = '') {
  * コメントを保存
  */
 async function saveComment() {
+    // 二重送信防止
+    const saveBtn = document.querySelector('#comment-modal .btn-primary, #comment-modal button[onclick*="saveComment"]');
+    if (saveBtn && saveBtn.disabled) return;
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '保存中...';
+    }
+    
     const name = document.getElementById('comment-cast-name').value;
     const rowIndex = document.getElementById('comment-row-index').value;
     const date = document.getElementById('comment-date').value;
@@ -2814,6 +2822,13 @@ async function saveComment() {
     } catch (error) {
         console.error('saveComment: エラー', error);
         showToast('コメントの保存に失敗しました', 'error');
+    } finally {
+        // ボタンを元に戻す
+        const saveBtn = document.querySelector('#comment-modal .btn-primary, #comment-modal button[onclick*="saveComment"]');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = '保存';
+        }
     }
 }
 
