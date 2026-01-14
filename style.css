@@ -1843,6 +1843,19 @@ body {
     width: auto;
 }
 
+/* 新着コメント - 店舗別カラー */
+.new-comment-item.delidosu {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.new-comment-item.anecan {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.new-comment-item.ainoshizuku {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+}
+
 .new-comment-item:hover {
     background: rgba(255, 255, 255, 0.4);
     transform: scale(1.05);
