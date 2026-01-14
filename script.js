@@ -3036,7 +3036,9 @@ function renderNewCommentBar() {
             const displayDate = `${date.getMonth() + 1}/${date.getDate()}`;
             const nameItems = names.map(({ name, count }) => {
                 const countStr = count > 1 ? `②③④⑤⑥⑦⑧⑨⑩`.charAt(count - 2) || `(${count})` : '';
-                return `<span class="new-comment-item" onclick="scrollToInterview('${name}')">${name}${countStr}</span>`;
+                const cast = urlData.find(c => c.name === name);
+                const storeClass = cast?.mainStore || '';
+                return `<span class="new-comment-item ${storeClass}" onclick="scrollToInterview('${name}')">${name}${countStr}</span>`;
             }).join('');
             return `<div class="new-comment-date-group"><span class="new-comment-date">${displayDate}</span>${nameItems}</div>`;
         }).join('');
