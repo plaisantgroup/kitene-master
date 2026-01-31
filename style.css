@@ -79,6 +79,11 @@ body {
     text-transform: uppercase;
 }
 
+.logo-icon {
+    -webkit-text-fill-color: initial;
+    background: none;
+}
+
 /* ===== ナビゲーション ===== */
 .nav {
     display: flex;
