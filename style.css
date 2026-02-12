@@ -172,15 +172,17 @@ body {
 
 /* 店舗別のアクティブカラー（黒金テーマ） */
 .filter-btn.active[data-store="delidosu"] {
-    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    background: linear-gradient(135deg, #f5f5f5 0%, #d4af37 100%);
     border-color: #d4af37;
     color: #0a0a0a;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
 }
 
 .filter-btn.active[data-store="anecan"] {
-    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
+    background: linear-gradient(135deg, #f5f5f5 0%, #b76e79 100%);
     border-color: #b76e79;
-    color: #fff;
+    color: #0a0a0a;
+    box-shadow: 0 0 15px rgba(183, 110, 121, 0.5);
 }
 
 .filter-btn.active[data-store="ainoshizuku"] {
@@ -466,13 +468,15 @@ body {
 }
 
 .btn-delidosu {
-    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    background: linear-gradient(135deg, #f5f5f5 0%, #d4af37 100%);
     color: #0a0a0a;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
 .btn-anecan {
-    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
-    color: white;
+    background: linear-gradient(135deg, #f5f5f5 0%, #b76e79 100%);
+    color: #0a0a0a;
+    box-shadow: 0 0 10px rgba(183, 110, 121, 0.4);
 }
 
 .btn-ainoshizuku {
@@ -957,13 +961,15 @@ body {
 }
 
 .main-store-badge.delidosu {
-    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    background: linear-gradient(135deg, #f5f5f5 0%, #d4af37 100%);
     color: #0a0a0a;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
 .main-store-badge.anecan {
-    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #f5f5f5 0%, #b76e79 100%);
+    color: #0a0a0a;
+    box-shadow: 0 0 10px rgba(183, 110, 121, 0.4);
 }
 
 .main-store-badge.ainoshizuku {
@@ -1876,13 +1882,13 @@ body {
 
 /* 新着コメント - 店舗別カラー（黒金テーマ） */
 .new-comment-item.delidosu {
-    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    background: linear-gradient(135deg, #f5f5f5 0%, #d4af37 100%);
     color: #0a0a0a;
 }
 
 .new-comment-item.anecan {
-    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #f5f5f5 0%, #b76e79 100%);
+    color: #0a0a0a;
 }
 
 .new-comment-item.ainoshizuku {
