@@ -10,23 +10,23 @@
 }
 
 :root {
-    /* カラーパレット - スタイリッシュな配色 */
-    --primary-color: #6366f1;      /* インディゴ */
-    --primary-dark: #4f46e5;
-    --secondary-color: #10b981;    /* エメラルド */
+    /* カラーパレット - サイバー黒金テーマ */
+    --primary-color: #d4af37;      /* ゴールド */
+    --primary-dark: #a67c00;       /* ダークゴールド */
+    --secondary-color: #d4af37;    /* ゴールド */
     --danger-color: #ef4444;       /* レッド */
-    --bg-color: #0f172a;           /* ダークブルー */
-    --bg-secondary: #1e293b;
-    --card-bg: #1e293b;
+    --bg-color: #0a0a0a;           /* 漆黒 */
+    --bg-secondary: #121212;       /* ダークグレー */
+    --card-bg: #1a1a1a;            /* カードの背景 */
     --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --border-color: #334155;
-    --hover-bg: #2d3748;
+    --text-secondary: #a0a0a0;
+    --border-color: rgba(212, 175, 55, 0.3);  /* 金色ボーダー */
+    --hover-bg: #252525;
     
-    /* シャドウ */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    /* シャドウ - 金色の光彩 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 0 10px rgba(212, 175, 55, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.2);
     
     /* ボーダー半径 */
     --radius-sm: 6px;
@@ -38,7 +38,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 
                  'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 
                  'Meiryo', sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
@@ -103,6 +103,7 @@ body {
     padding: 8px;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
 
 .nav-btn {
@@ -124,9 +125,10 @@ body {
 }
 
 .nav-btn.active {
-    background: var(--primary-color);
-    color: white;
-    box-shadow: var(--shadow-sm);
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    font-weight: 700;
 }
 
 /* ===== 店舗フィルター ===== */
@@ -139,6 +141,7 @@ body {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     overflow-x: auto;
+    border: 1px solid var(--border-color);
 }
 
 .filter-btn {
@@ -161,9 +164,10 @@ body {
 }
 
 .filter-btn.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
+    border-color: #d4af37;
+    font-weight: 700;
 }
 
 /* 店舗別のアクティブカラー */
@@ -193,18 +197,20 @@ body {
     background: var(--card-bg);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
 }
 
 .refresh-btn {
     padding: 8px 20px;
-    background: linear-gradient(135deg, var(--secondary-color) 0%, #059669 100%);
-    color: white;
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
     border: none;
     border-radius: var(--radius-sm);
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 .refresh-btn:hover {
@@ -308,13 +314,13 @@ body {
 .upload-label {
     display: inline-block;
     padding: 15px 30px;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
     border-radius: var(--radius-md);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
     transition: all 0.3s ease;
 }
 
@@ -333,20 +339,21 @@ body {
 .date-display {
     text-align: center;
     padding: 15px 20px;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+    background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
     border-radius: var(--radius-md);
     margin-bottom: 20px;
     font-weight: 700;
     font-size: 1.2rem;
-    color: #60a5fa;
+    color: #d4af37;
     box-shadow: var(--shadow-md);
-    border: 1px solid #3b82f6;
+    border: 1px solid rgba(212, 175, 55, 0.5);
 }
 
 .date-display.has-date {
-    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-    color: #6ee7b7;
-    border-color: #10b981;
+    background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+    color: #f5d77a;
+    border-color: #d4af37;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
 }
 
 /* ===== ローディング ===== */
@@ -359,8 +366,8 @@ body {
     width: 50px;
     height: 50px;
     margin: 0 auto 15px;
-    border: 4px solid var(--border-color);
-    border-top: 4px solid var(--primary-color);
+    border: 4px solid rgba(212, 175, 55, 0.2);
+    border-top: 4px solid #d4af37;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -383,7 +390,8 @@ body {
     padding: 20px;
     box-shadow: var(--shadow-md);
     transition: all 0.3s ease;
-    border-left: 4px solid var(--primary-color);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid #d4af37;
 }
 
 .shift-item:hover {
@@ -392,9 +400,10 @@ body {
 }
 
 .shift-item.checked {
-    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-    border-left-color: var(--secondary-color);
-    opacity: 0.8;
+    background: linear-gradient(135deg, #1a2a1a 0%, #1a3a1a 100%);
+    border-left-color: #4ade80;
+    opacity: 0.85;
+    border-color: rgba(74, 222, 128, 0.3);
 }
 
 .shift-header {
@@ -419,11 +428,11 @@ body {
 .shift-time {
     display: inline-block;
     padding: 4px 12px;
-    background: var(--primary-color);
-    color: white;
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
     border-radius: 20px;
     font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .shift-checkbox {
