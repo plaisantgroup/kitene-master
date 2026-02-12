@@ -55,9 +55,10 @@ body {
     text-align: center;
     padding: 30px 0;
     margin-bottom: 20px;
-    background: linear-gradient(135deg, #dc2626 0%, #5d3a1a 100%);
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+    border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .logo {
@@ -65,23 +66,32 @@ body {
     font-weight: 800;
     letter-spacing: 2px;
     margin-bottom: 5px;
-    background: linear-gradient(135deg, #ffffff 0%, #fecaca 100%);
+    background: linear-gradient(90deg, #d4af37, #f5d77a, #d4af37, #a67c00, #d4af37);
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: goldShine 3s linear infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .subtitle {
     font-size: 0.85rem;
-    color: #fecdd3;
+    color: #d4af37;
     font-weight: 500;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
     text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
 }
 
 .logo-icon {
-    -webkit-text-fill-color: initial;
-    background: none;
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.8));
 }
 
 /* ===== ナビゲーション ===== */
@@ -1921,5 +1931,15 @@ body {
     .new-comment-item {
         font-size: 0.75rem;
         padding: 2px 8px;
+    }
+}
+
+/* ===== 金色グラデーションアニメーション ===== */
+@keyframes goldShine {
+    0% {
+        background-position: 0% center;
+    }
+    100% {
+        background-position: 200% center;
     }
 }
