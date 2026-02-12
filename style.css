@@ -170,20 +170,23 @@ body {
     font-weight: 700;
 }
 
-/* 店舗別のアクティブカラー */
+/* 店舗別のアクティブカラー（黒金テーマ） */
 .filter-btn.active[data-store="delidosu"] {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    border-color: #f97316;
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    border-color: #d4af37;
+    color: #0a0a0a;
 }
 
 .filter-btn.active[data-store="anecan"] {
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-    border-color: #ec4899;
+    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
+    border-color: #b76e79;
+    color: #fff;
 }
 
 .filter-btn.active[data-store="ainoshizuku"] {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    border-color: #3b82f6;
+    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
+    border-color: #a8a8a8;
+    color: #0a0a0a;
 }
 
 /* ===== 更新コントロール ===== */
@@ -462,18 +465,18 @@ body {
 }
 
 .btn-delidosu {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
 }
 
 .btn-anecan {
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
     color: white;
 }
 
 .btn-ainoshizuku {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
+    color: #0a0a0a;
 }
 
 .btn-link:hover:not(:disabled) {
@@ -952,18 +955,18 @@ body {
 }
 
 .main-store-badge.delidosu {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
 }
 
 .main-store-badge.anecan {
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
     color: #fff;
 }
 
 .main-store-badge.ainoshizuku {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    color: #fff;
+    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
+    color: #0a0a0a;
 }
 
 /* ===== クラスヘッダー（全キャストタブ用） ===== */
@@ -1795,7 +1798,8 @@ body {
 
 /* ===== 新着コメント通知バー ===== */
 .new-comment-bar {
-    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+    border: 1px solid rgba(212, 175, 55, 0.3);
     color: white;
     padding: 12px 16px;
     margin: 0 16px 16px 16px;
@@ -1867,17 +1871,20 @@ body {
     width: auto;
 }
 
-/* 新着コメント - 店舗別カラー */
+/* 新着コメント - 店舗別カラー（黒金テーマ） */
 .new-comment-item.delidosu {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background: linear-gradient(135deg, #d4af37 0%, #a67c00 100%);
+    color: #0a0a0a;
 }
 
 .new-comment-item.anecan {
-    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    background: linear-gradient(135deg, #b76e79 0%, #8b4557 100%);
+    color: #fff;
 }
 
 .new-comment-item.ainoshizuku {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
+    color: #0a0a0a;
 }
 
 .new-comment-item:hover {
