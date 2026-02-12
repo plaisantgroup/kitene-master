@@ -184,9 +184,10 @@ body {
 }
 
 .filter-btn.active[data-store="ainoshizuku"] {
-    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
-    border-color: #a8a8a8;
-    color: #0a0a0a;
+    background: linear-gradient(135deg, #f5f5f5 0%, #6d28d9 100%);
+    border-color: #6d28d9;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(109, 40, 217, 0.5);
 }
 
 /* ===== 更新コントロール ===== */
@@ -475,8 +476,9 @@ body {
 }
 
 .btn-ainoshizuku {
-    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
-    color: #0a0a0a;
+    background: linear-gradient(135deg, #f5f5f5 0%, #6d28d9 100%);
+    color: white;
+    box-shadow: 0 0 10px rgba(109, 40, 217, 0.4);
 }
 
 .btn-link:hover:not(:disabled) {
@@ -965,8 +967,9 @@ body {
 }
 
 .main-store-badge.ainoshizuku {
-    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
-    color: #0a0a0a;
+    background: linear-gradient(135deg, #f5f5f5 0%, #6d28d9 100%);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(109, 40, 217, 0.4);
 }
 
 /* ===== クラスヘッダー（全キャストタブ用） ===== */
@@ -1883,8 +1886,8 @@ body {
 }
 
 .new-comment-item.ainoshizuku {
-    background: linear-gradient(135deg, #a8a8a8 0%, #707070 100%);
-    color: #0a0a0a;
+    background: linear-gradient(135deg, #f5f5f5 0%, #6d28d9 100%);
+    color: #fff;
 }
 
 .new-comment-item:hover {
