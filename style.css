@@ -439,6 +439,12 @@ body {
     border-radius: 20px;
     font-size: 0.9rem;
     font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shift-time:hover {
+    filter: brightness(1.2);
 }
 
 .shift-checkbox {
@@ -976,6 +982,89 @@ body {
     background: linear-gradient(135deg, #f5f5f5 0%, #6d28d9 100%);
     color: #fff;
     box-shadow: 0 0 10px rgba(109, 40, 217, 0.4);
+}
+
+/* ===== v3.5: 当欠スタイル ===== */
+.shift-time.touketu {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+    color: #fff !important;
+    animation: touketu-pulse 2s ease-in-out infinite;
+}
+
+@keyframes touketu-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.shift-item.touketu-card {
+    opacity: 0.45;
+    filter: grayscale(30%);
+}
+
+.shift-item.touketu-card:hover {
+    opacity: 0.7;
+}
+
+/* ===== v3.5: オキニトークバッジ ===== */
+.okini-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-top: 2px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 30px;
+}
+
+.okini-badge.okini-clear {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.okini-badge.okini-warn {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.okini-badge.okini-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ===== v3.5: 話したよボタン ===== */
+.okini-talked-btn {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-left: 2px;
+    cursor: pointer;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(148, 163, 184, 0.1);
+    color: #64748b;
+    vertical-align: middle;
+}
+
+.okini-talked-btn:hover {
+    background: rgba(148, 163, 184, 0.25);
+}
+
+.okini-talked-btn.talked {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* ===== v3.5: オキニ行（バッジ＋話したよを横並び） ===== */
+.okini-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 2px;
 }
 
 /* ===== クラスヘッダー（全キャストタブ用） ===== */
