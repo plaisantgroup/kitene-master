@@ -1014,12 +1014,12 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    padding: 3px 10px;
+    font-size: 14px;
+    padding: 4px 12px;
     border-radius: 10px;
     font-weight: 800;
     text-align: center;
-    min-width: 40px;
+    min-width: 48px;
     letter-spacing: 0.5px;
 }
 
@@ -1061,8 +1061,8 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
-    padding: 3px 8px;
+    font-size: 13px;
+    padding: 4px 10px;
     border-radius: 6px;
     cursor: pointer;
     border: 1.5px solid rgba(148, 163, 184, 0.4);
