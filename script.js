@@ -26,6 +26,9 @@ let expandedComments = new Set(); // 展開中のコメントを記録
 let currentCommentName = null;   // コメント編集中の源氏名
 let currentCommentRowIndex = null; // コメント編集中の行番号
 
+// ★★★ v3.5追加: オキニトークデータ ★★★
+let okiniData = [];
+
 // ===============================
 // 初期化
 // ===============================
@@ -117,10 +120,11 @@ function showView(viewName) {
 
 async function loadAllData() {
     console.log('loadAllData: 全データロード開始');
-    await loadShiftDate();  // ★★★ 日付を読み込み ★★★
+    await loadShiftDate();
     await loadShiftData();
     await loadUrlData();
-    await loadAllLatestComments();  // ★★★ コメント一括取得 ★★★
+    await loadOkiniData();  // ★★★ v3.5追加 ★★★
+    await loadAllLatestComments();
     console.log('loadAllData: 全データロード完了');
 }
 
@@ -387,6 +391,7 @@ function formatTime(timeValue) {
 
 function parseTime(timeStr) {
     if (!timeStr) return 0;
+    if (timeStr === '当欠') return 99999;  // ★★★ v3.5: 当欠は最後尾 ★★★
     const [hours, minutes] = timeStr.split(':').map(Number);
     
     // ★★★ 深夜営業ルール: 0:00～9:59は翌日深夜として扱う ★★★
@@ -606,8 +611,13 @@ function renderShiftList() {
         };
     });
     
-    // ★★★ 出勤時間順にソート（深夜営業対応） ★★★
+    // ★★★ 出勤時間順にソート（当欠は最後尾） ★★★
     mergedData.sort((a, b) => {
+        // 当欠を最後尾に
+        const aTouketu = a.time === '当欠' ? 1 : 0;
+        const bTouketu = b.time === '当欠' ? 1 : 0;
+        if (aTouketu !== bTouketu) return aTouketu - bTouketu;
+        // 時間順
         const timeA = parseTime(a.time);
         const timeB = parseTime(b.time);
         if (timeA !== timeB) return timeA - timeB;
@@ -615,29 +625,21 @@ function renderShiftList() {
     });
     
     listElement.innerHTML = mergedData.map(shift => {
-        // ★★★ 時刻を適切にフォーマット ★★★
-        const formattedTime = formatTime(shift.time);
-        
-        // ★★★ メイン店舗バッジの生成 ★★★
-        let mainBadge = '';
-        if (shift.mainStore) {
-            const storeNames = {
-                'delidosu': 'でりどす',
-                'anecan': 'アネキャン',
-                'ainoshizuku': 'しずく'
-            };
-            const storeName = storeNames[shift.mainStore] || '';
-            if (storeName) {
-                mainBadge = `<span class="main-store-badge ${shift.mainStore}">${storeName}</span>`;
-            }
-        }
+        // ★★★ 時刻フォーマット ★★★
+        const isTouketu = shift.time === '当欠';
+        const formattedTime = isTouketu ? '当欠' : formatTime(shift.time);
+        const timeClass = isTouketu ? 'shift-time touketu' : 'shift-time';
+        const cardClass = isTouketu ? 'shift-item touketu-card' : 'shift-item';
         
         return `
-            <div class="shift-item" data-name="${shift.name}">
+            <div class="${cardClass}" data-name="${shift.name}">
                 <div class="shift-header">
                     <div class="shift-info">
                         <span class="shift-name">${shift.name}</span>
-                        <span class="shift-time">${formattedTime}</span>
+                        <span class="${timeClass}" 
+                              onclick="toggleTouketu('${shift.name}')"
+                              title="クリックで当欠切り替え"
+                        >${formattedTime}</span>
                         ${getMainStoreBadge(shift.name)}
                     </div>
                 </div>
@@ -655,6 +657,7 @@ function renderShiftList() {
                                 ${!shift.delidosuUrl ? 'disabled' : ''}>
                             ${shift.delidosuUrl ? 'でりどす' : '未登録'}
                         </button>
+                        ${getOkiniBadge(shift.name, 'delidosu')}
                     </div>
                     <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}">
                         <input type="checkbox" 
@@ -669,6 +672,7 @@ function renderShiftList() {
                                 ${!shift.anecanUrl ? 'disabled' : ''}>
                             ${shift.anecanUrl ? 'アネキャン' : '未登録'}
                         </button>
+                        ${getOkiniBadge(shift.name, 'anecan')}
                     </div>
                     <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}">
                         <input type="checkbox" 
@@ -683,6 +687,7 @@ function renderShiftList() {
                                 ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
                             ${shift.ainoshizukuUrl ? '愛のしずく' : '未登録'}
                         </button>
+                        ${getOkiniBadge(shift.name, 'ainoshizuku')}
                     </div>
                 </div>
             </div>
@@ -1470,6 +1475,7 @@ async function refreshData() {
         // データを再読み込み
         await loadUrlData();
         await loadShiftData();
+        await loadOkiniData();  // ★★★ v3.5追加 ★★★
         
         // 現在のタブに応じて再描画
         if (document.getElementById('shift-view').classList.contains('active')) {
@@ -1547,6 +1553,7 @@ function startAutoRefresh() {
         try {
             await loadUrlData();
             await loadShiftData();
+            await loadOkiniData();  // ★★★ v3.5追加 ★★★
             
             // 現在のタブに応じて再描画
             if (document.getElementById('shift-view').classList.contains('active')) {
@@ -3083,4 +3090,136 @@ function scrollToInterview(name) {
     };
     
     setTimeout(tryScroll, 100);
+}
+
+// =============================================
+// ★★★ v3.5追加: オキニトーク・話したよ・当欠 ★★★
+// =============================================
+
+/**
+ * オキニトークデータを読み込み
+ */
+async function loadOkiniData() {
+    try {
+        console.log('loadOkiniData: オキニデータ取得中...');
+        const response = await fetch(`${API_URL}?action=getOkiniData`);
+        const result = await response.json();
+        if (result.success) {
+            okiniData = result.data;
+            console.log('loadOkiniData: データ件数', okiniData.length);
+        } else {
+            console.error('loadOkiniData: エラー:', result.error);
+        }
+    } catch (error) {
+        console.error('loadOkiniData: 例外:', error);
+    }
+}
+
+/**
+ * オキニバッジHTML生成
+ * 店舗ボタンの下にバッジ + 話したよボタンを表示
+ */
+function getOkiniBadge(name, store) {
+    const castOkini = okiniData.find(o => o.name === name);
+    if (!castOkini) return '';
+    
+    const count = castOkini[store];
+    const talked = castOkini[store + 'Talked'] === '済';
+    
+    // 未登録（空欄）: 非表示
+    if (count === '' || count === undefined || count === null) return '';
+    
+    // 0件: 緑の✓（話したよボタンなし）
+    if (count === '0' || count === 0) {
+        return '<div class="okini-row"><span class="okini-badge okini-clear">✓</span></div>';
+    }
+    
+    // 1件以上: バッジ + 話したよボタン
+    let badgeClass, badgeText;
+    if (count === '9+') {
+        badgeClass = 'okini-danger';
+        badgeText = '💬9+';
+    } else {
+        badgeClass = 'okini-warn';
+        badgeText = '💬' + count;
+    }
+    
+    const talkedClass = talked ? 'talked' : '';
+    const talkedText = talked ? '✅' : '☐';
+    
+    return '<div class="okini-row">' +
+        '<span class="okini-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '<span class="okini-talked-btn ' + talkedClass + '" ' +
+            'onclick="event.stopPropagation(); toggleOkiniTalked(\'' + name + '\', \'' + store + '\')" ' +
+            'title="' + (talked ? '話し済み' : 'クリックで話したよマーク') + '"' +
+        '>' + talkedText + '</span>' +
+    '</div>';
+}
+
+/**
+ * 話したよ✅トグル
+ */
+async function toggleOkiniTalked(name, store) {
+    const castOkini = okiniData.find(o => o.name === name);
+    if (!castOkini) return;
+    
+    const currentTalked = castOkini[store + 'Talked'] === '済';
+    const newTalked = !currentTalked;
+    
+    // 即座にUI更新（楽観的更新）
+    castOkini[store + 'Talked'] = newTalked ? '済' : '';
+    renderShiftList();
+    
+    // GASに保存
+    try {
+        await fetch(API_URL + '?action=updateOkiniTalked', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ name: name, store: store, talked: newTalked })
+        });
+        console.log('話したよ更新:', name, store, newTalked);
+    } catch (error) {
+        console.error('話したよ保存エラー:', error);
+    }
+}
+
+/**
+ * 当欠トグル
+ */
+async function toggleTouketu(name) {
+    const shift = shiftData.find(s => s.name === name);
+    if (!shift) return;
+    
+    const isCurrentlyTouketu = shift.time === '当欠';
+    
+    if (isCurrentlyTouketu) {
+        // 当欠 → 元の時間に戻す
+        shift.time = shift.originalTime || '00:00';
+        shift.originalTime = '';
+    } else {
+        // 通常 → 当欠にする
+        shift.originalTime = shift.time;
+        shift.time = '当欠';
+    }
+    
+    // 即座にUI更新
+    renderShiftList();
+    
+    // GASに保存
+    try {
+        await fetch(API_URL + '?action=updateShiftTime', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+                name: name,
+                time: shift.time,
+                originalTime: shift.originalTime || ''
+            })
+        });
+        console.log('当欠更新:', name, shift.time);
+        showToast(isCurrentlyTouketu ? name + ' の当欠を解除しました' : name + ' を当欠にしました', 'success');
+    } catch (error) {
+        console.error('当欠保存エラー:', error);
+        showToast('当欠の保存に失敗しました', 'error');
+    }
 }
