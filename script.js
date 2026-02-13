@@ -856,46 +856,52 @@ function renderCastCard(cast) {
             </div>
             <div class="check-buttons">
                 <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'delidosu') ? 'checked' : ''}">
-                    <input type="checkbox" 
-                           class="store-checkbox" 
-                           data-name="${cast.name}" 
-                           data-store="delidosu"
-                           ${getCheckStatus(cast.name, 'delidosu') ? 'checked' : ''}
-                           onchange="toggleStoreCheck('${cast.name}', 'delidosu', this.checked)"
-                           ${!cast.delidosuUrl ? 'disabled' : ''}>
-                    <button class="btn-link btn-delidosu" 
-                            onclick="window.open('${cast.delidosuUrl}', '_blank')"
-                            ${!cast.delidosuUrl ? 'disabled' : ''}>
-                        ${cast.delidosuUrl ? 'でりどす' : '未登録'}
-                    </button>
+                    <div style="display:flex; align-items:center; gap:4px; width:100%;">
+                        <input type="checkbox" 
+                               class="store-checkbox" 
+                               data-name="${cast.name}" 
+                               data-store="delidosu"
+                               ${getCheckStatus(cast.name, 'delidosu') ? 'checked' : ''}
+                               onchange="toggleStoreCheck('${cast.name}', 'delidosu', this.checked)"
+                               ${!cast.delidosuUrl ? 'disabled' : ''}>
+                        <button class="btn-link btn-delidosu" 
+                                onclick="window.open('${cast.delidosuUrl}', '_blank')"
+                                ${!cast.delidosuUrl ? 'disabled' : ''}>
+                            ${cast.delidosuUrl ? 'でりどす' : '未登録'}
+                        </button>
+                    </div>
                 </div>
                 <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'anecan') ? 'checked' : ''}">
-                    <input type="checkbox" 
-                           class="store-checkbox" 
-                           data-name="${cast.name}" 
-                           data-store="anecan"
-                           ${getCheckStatus(cast.name, 'anecan') ? 'checked' : ''}
-                           onchange="toggleStoreCheck('${cast.name}', 'anecan', this.checked)"
-                           ${!cast.anecanUrl ? 'disabled' : ''}>
-                    <button class="btn-link btn-anecan" 
-                            onclick="window.open('${cast.anecanUrl}', '_blank')"
-                            ${!cast.anecanUrl ? 'disabled' : ''}>
-                        ${cast.anecanUrl ? 'アネキャン' : '未登録'}
-                    </button>
+                    <div style="display:flex; align-items:center; gap:4px; width:100%;">
+                        <input type="checkbox" 
+                               class="store-checkbox" 
+                               data-name="${cast.name}" 
+                               data-store="anecan"
+                               ${getCheckStatus(cast.name, 'anecan') ? 'checked' : ''}
+                               onchange="toggleStoreCheck('${cast.name}', 'anecan', this.checked)"
+                               ${!cast.anecanUrl ? 'disabled' : ''}>
+                        <button class="btn-link btn-anecan" 
+                                onclick="window.open('${cast.anecanUrl}', '_blank')"
+                                ${!cast.anecanUrl ? 'disabled' : ''}>
+                            ${cast.anecanUrl ? 'アネキャン' : '未登録'}
+                        </button>
+                    </div>
                 </div>
                 <div class="check-btn-wrapper ${getCheckStatus(cast.name, 'ainoshizuku') ? 'checked' : ''}">
-                    <input type="checkbox" 
-                           class="store-checkbox" 
-                           data-name="${cast.name}" 
-                           data-store="ainoshizuku"
-                           ${getCheckStatus(cast.name, 'ainoshizuku') ? 'checked' : ''}
-                           onchange="toggleStoreCheck('${cast.name}', 'ainoshizuku', this.checked)"
-                           ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
-                    <button class="btn-link btn-ainoshizuku" 
-                            onclick="window.open('${cast.ainoshizukuUrl}', '_blank')"
-                            ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
-                        ${cast.ainoshizukuUrl ? '愛のしずく' : '未登録'}
-                    </button>
+                    <div style="display:flex; align-items:center; gap:4px; width:100%;">
+                        <input type="checkbox" 
+                               class="store-checkbox" 
+                               data-name="${cast.name}" 
+                               data-store="ainoshizuku"
+                               ${getCheckStatus(cast.name, 'ainoshizuku') ? 'checked' : ''}
+                               onchange="toggleStoreCheck('${cast.name}', 'ainoshizuku', this.checked)"
+                               ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
+                        <button class="btn-link btn-ainoshizuku" 
+                                onclick="window.open('${cast.ainoshizukuUrl}', '_blank')"
+                                ${!cast.ainoshizukuUrl ? 'disabled' : ''}>
+                            ${cast.ainoshizukuUrl ? '愛のしずく' : '未登録'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
