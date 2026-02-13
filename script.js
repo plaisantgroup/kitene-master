@@ -141,7 +141,8 @@ async function loadShiftData() {
             // ★★★ 時刻データをformatTimeで変換 ★★★
             shiftData = result.data.map(shift => ({
                 ...shift,
-                time: formatTime(shift.time)
+                time: formatTime(shift.time),
+                originalTime: shift.originalTime ? formatTime(shift.originalTime) : ''
             }));
             console.log('loadShiftData: データ件数', shiftData.length);
             console.log('loadShiftData: 時刻変換後の最初のデータ:', shiftData[0]);
