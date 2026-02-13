@@ -611,15 +611,11 @@ function renderShiftList() {
         };
     });
     
-    // ★★★ 出勤時間順にソート（当欠は最後尾） ★★★
+    // ★★★ 出勤時間順にソート ★★★
     mergedData.sort((a, b) => {
-        // 当欠を最後尾に
-        const aTouketu = a.time === '当欠' ? 1 : 0;
-        const bTouketu = b.time === '当欠' ? 1 : 0;
-        if (aTouketu !== bTouketu) return aTouketu - bTouketu;
-        // 時間順
-        const timeA = parseTime(a.time);
-        const timeB = parseTime(b.time);
+        // 当欠の子は元の時間(originalTime)で並べる
+        const timeA = parseTime(a.time === '当欠' ? (a.originalTime || '00:00') : a.time);
+        const timeB = parseTime(b.time === '当欠' ? (b.originalTime || '00:00') : b.time);
         if (timeA !== timeB) return timeA - timeB;
         return a.name.localeCompare(b.name, 'ja');
     });
@@ -627,7 +623,7 @@ function renderShiftList() {
     listElement.innerHTML = mergedData.map(shift => {
         // ★★★ 時刻フォーマット ★★★
         const isTouketu = shift.time === '当欠';
-        const formattedTime = isTouketu ? '当欠' : formatTime(shift.time);
+        const formattedTime = isTouketu ? '当欠(' + formatTime(shift.originalTime || '') + ')' : formatTime(shift.time);
         const timeClass = isTouketu ? 'shift-time touketu' : 'shift-time';
         const cardClass = isTouketu ? 'shift-item touketu-card' : 'shift-item';
         
