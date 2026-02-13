@@ -145,6 +145,22 @@ async function loadShiftData() {
             }));
             console.log('loadShiftData: データ件数', shiftData.length);
             console.log('loadShiftData: 時刻変換後の最初のデータ:', shiftData[0]);
+            
+            // ★★★ v3.5改善: シフトデータからオキニデータを生成 ★★★
+            okiniData = shiftData
+                .filter(s => s.okiniDelidosu || s.okiniAnecan || s.okiniAinoshizuku ||
+                             s.talkedDelidosu || s.talkedAnecan || s.talkedAinoshizuku)
+                .map(s => ({
+                    name: s.name,
+                    delidosu: s.okiniDelidosu || '',
+                    anecan: s.okiniAnecan || '',
+                    ainoshizuku: s.okiniAinoshizuku || '',
+                    delidosuTalked: s.talkedDelidosu || '',
+                    anecanTalked: s.talkedAnecan || '',
+                    ainoshizukuTalked: s.talkedAinoshizuku || ''
+                }));
+            console.log('loadShiftData: オキニデータ', okiniData.length, '件');
+            
             renderShiftList();
         } else {
             console.error('loadShiftData: エラー:', result.error);
@@ -331,9 +347,23 @@ function readExcelFile(file) {
                         return timeA - timeB;
                     });
                 
-                console.log('readExcelFile: フィルタ後の件数', filteredData.length);
-                console.log('フィルタ後のデータ:', filteredData);
-                resolve(filteredData);
+                // ★★★ v3.5: 重複排除（同じ源氏名は最初の1件だけ） ★★★
+                const seenNames = {};
+                const uniqueData = filteredData.filter(item => {
+                    if (seenNames[item.name]) {
+                        console.log('⚠️ 重複排除:', item.name);
+                        return false;
+                    }
+                    seenNames[item.name] = true;
+                    return true;
+                });
+                if (filteredData.length !== uniqueData.length) {
+                    console.log('★ 重複排除: ' + filteredData.length + '件 → ' + uniqueData.length + '件');
+                }
+                
+                console.log('readExcelFile: フィルタ後の件数', uniqueData.length);
+                console.log('フィルタ後のデータ:', uniqueData);
+                resolve(uniqueData);
             } catch (error) {
                 console.error('readExcelFile: エラー', error);
                 reject(error);
@@ -641,48 +671,54 @@ function renderShiftList() {
                 </div>
                 <div class="check-buttons">
                     <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'delidosu') ? 'checked' : ''}">
-                        <input type="checkbox" 
-                               class="store-checkbox" 
-                               data-name="${shift.name}" 
-                               data-store="delidosu"
-                               ${getCheckStatus(shift.name, 'delidosu') ? 'checked' : ''}
-                               onchange="toggleStoreCheck('${shift.name}', 'delidosu', this.checked)"
-                               ${!shift.delidosuUrl ? 'disabled' : ''}>
-                        <button class="btn-link btn-delidosu" 
-                                onclick="window.open('${shift.delidosuUrl}', '_blank')"
-                                ${!shift.delidosuUrl ? 'disabled' : ''}>
-                            ${shift.delidosuUrl ? 'でりどす' : '未登録'}
-                        </button>
+                        <div style="display:flex; align-items:center; gap:4px; width:100%;">
+                            <input type="checkbox" 
+                                   class="store-checkbox" 
+                                   data-name="${shift.name}" 
+                                   data-store="delidosu"
+                                   ${getCheckStatus(shift.name, 'delidosu') ? 'checked' : ''}
+                                   onchange="toggleStoreCheck('${shift.name}', 'delidosu', this.checked)"
+                                   ${!shift.delidosuUrl ? 'disabled' : ''}>
+                            <button class="btn-link btn-delidosu" 
+                                    onclick="window.open('${shift.delidosuUrl}', '_blank')"
+                                    ${!shift.delidosuUrl ? 'disabled' : ''}>
+                                ${shift.delidosuUrl ? 'でりどす' : '未登録'}
+                            </button>
+                        </div>
                         ${getOkiniBadge(shift.name, 'delidosu')}
                     </div>
                     <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}">
-                        <input type="checkbox" 
-                               class="store-checkbox" 
-                               data-name="${shift.name}" 
-                               data-store="anecan"
-                               ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}
-                               onchange="toggleStoreCheck('${shift.name}', 'anecan', this.checked)"
-                               ${!shift.anecanUrl ? 'disabled' : ''}>
-                        <button class="btn-link btn-anecan" 
-                                onclick="window.open('${shift.anecanUrl}', '_blank')"
-                                ${!shift.anecanUrl ? 'disabled' : ''}>
-                            ${shift.anecanUrl ? 'アネキャン' : '未登録'}
-                        </button>
+                        <div style="display:flex; align-items:center; gap:4px; width:100%;">
+                            <input type="checkbox" 
+                                   class="store-checkbox" 
+                                   data-name="${shift.name}" 
+                                   data-store="anecan"
+                                   ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}
+                                   onchange="toggleStoreCheck('${shift.name}', 'anecan', this.checked)"
+                                   ${!shift.anecanUrl ? 'disabled' : ''}>
+                            <button class="btn-link btn-anecan" 
+                                    onclick="window.open('${shift.anecanUrl}', '_blank')"
+                                    ${!shift.anecanUrl ? 'disabled' : ''}>
+                                ${shift.anecanUrl ? 'アネキャン' : '未登録'}
+                            </button>
+                        </div>
                         ${getOkiniBadge(shift.name, 'anecan')}
                     </div>
                     <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}">
-                        <input type="checkbox" 
-                               class="store-checkbox" 
-                               data-name="${shift.name}" 
-                               data-store="ainoshizuku"
-                               ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}
-                               onchange="toggleStoreCheck('${shift.name}', 'ainoshizuku', this.checked)"
-                               ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
-                        <button class="btn-link btn-ainoshizuku" 
-                                onclick="window.open('${shift.ainoshizukuUrl}', '_blank')"
-                                ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
-                            ${shift.ainoshizukuUrl ? '愛のしずく' : '未登録'}
-                        </button>
+                        <div style="display:flex; align-items:center; gap:4px; width:100%;">
+                            <input type="checkbox" 
+                                   class="store-checkbox" 
+                                   data-name="${shift.name}" 
+                                   data-store="ainoshizuku"
+                                   ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}
+                                   onchange="toggleStoreCheck('${shift.name}', 'ainoshizuku', this.checked)"
+                                   ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
+                            <button class="btn-link btn-ainoshizuku" 
+                                    onclick="window.open('${shift.ainoshizukuUrl}', '_blank')"
+                                    ${!shift.ainoshizukuUrl ? 'disabled' : ''}>
+                                ${shift.ainoshizukuUrl ? '愛のしずく' : '未登録'}
+                            </button>
+                        </div>
                         ${getOkiniBadge(shift.name, 'ainoshizuku')}
                     </div>
                 </div>
@@ -3096,18 +3132,33 @@ function scrollToInterview(name) {
  * オキニトークデータを読み込み
  */
 async function loadOkiniData() {
-    try {
-        console.log('loadOkiniData: オキニデータ取得中...');
-        const response = await fetch(`${API_URL}?action=getOkiniData`);
-        const result = await response.json();
-        if (result.success) {
-            okiniData = result.data;
-            console.log('loadOkiniData: データ件数', okiniData.length);
-        } else {
-            console.error('loadOkiniData: エラー:', result.error);
+    // ★ v3.5改善: シフトデータから直接取得済み（loadShiftDataで生成）
+    // フォールバックとしてAPI呼び出しも残す
+    if (shiftData.length > 0) {
+        okiniData = shiftData
+            .filter(s => s.okiniDelidosu || s.okiniAnecan || s.okiniAinoshizuku ||
+                         s.talkedDelidosu || s.talkedAnecan || s.talkedAinoshizuku)
+            .map(s => ({
+                name: s.name,
+                delidosu: s.okiniDelidosu || '',
+                anecan: s.okiniAnecan || '',
+                ainoshizuku: s.okiniAinoshizuku || '',
+                delidosuTalked: s.talkedDelidosu || '',
+                anecanTalked: s.talkedAnecan || '',
+                ainoshizukuTalked: s.talkedAinoshizuku || ''
+            }));
+        console.log('loadOkiniData: シフトデータから', okiniData.length, '件取得');
+    } else {
+        try {
+            const response = await fetch(`${API_URL}?action=getOkiniData`);
+            const result = await response.json();
+            if (result.success) {
+                okiniData = result.data;
+                console.log('loadOkiniData: API経由', okiniData.length, '件取得');
+            }
+        } catch (error) {
+            console.error('loadOkiniData: エラー:', error);
         }
-    } catch (error) {
-        console.error('loadOkiniData: 例外:', error);
     }
 }
 
@@ -3125,30 +3176,35 @@ function getOkiniBadge(name, store) {
     // 未登録（空欄）: 非表示
     if (count === '' || count === undefined || count === null) return '';
     
-    // 0件: 緑の✓（話したよボタンなし）
-    if (count === '0' || count === 0) {
-        return '<div class="okini-row"><span class="okini-badge okini-clear">✓</span></div>';
-    }
-    
-    // 1件以上: バッジ + 話したよボタン
+    // バッジクラスとテキスト
     let badgeClass, badgeText;
-    if (count === '9+') {
+    const numCount = parseInt(count) || 0;
+    
+    if (count === '9+' || numCount >= 10) {
         badgeClass = 'okini-danger';
         badgeText = '💬9+';
-    } else {
+    } else if (numCount >= 1) {
         badgeClass = 'okini-warn';
         badgeText = '💬' + count;
+    } else {
+        badgeClass = 'okini-clear';
+        badgeText = '✓ 0';
     }
     
-    const talkedClass = talked ? 'talked' : '';
-    const talkedText = talked ? '✅' : '☐';
+    // 話したよボタン（1件以上の場合のみ）
+    let talkedHtml = '';
+    if (numCount >= 1 || count === '9+') {
+        const talkedClass = talked ? 'talked' : '';
+        const talkedText = talked ? '✅済' : '☐未';
+        talkedHtml = '<span class="okini-talked-btn ' + talkedClass + '" ' +
+            'onclick="event.stopPropagation(); toggleOkiniTalked(\'' + name + '\', \'' + store + '\')" ' +
+            'title="' + (talked ? '話し済み' : 'クリックで話したよマーク') + '"' +
+            '>' + talkedText + '</span>';
+    }
     
     return '<div class="okini-row">' +
         '<span class="okini-badge ' + badgeClass + '">' + badgeText + '</span>' +
-        '<span class="okini-talked-btn ' + talkedClass + '" ' +
-            'onclick="event.stopPropagation(); toggleOkiniTalked(\'' + name + '\', \'' + store + '\')" ' +
-            'title="' + (talked ? '話し済み' : 'クリックで話したよマーク') + '"' +
-        '>' + talkedText + '</span>' +
+        talkedHtml +
     '</div>';
 }
 
