@@ -335,7 +335,7 @@ function readExcelFile(file) {
                     })
                     .map(row => ({
                         name: row['源氏名'] || '',
-                        time: formatTime(row['出勤時間']),
+                        time: formatTimeRange(row['出勤時間'], row['退勤時間']),
                         status: row['シフト状態'] || '',
                         delidosuName: row['でりどす'] || '',
                         anecanName: row['アネキャン'] || '',
@@ -390,6 +390,11 @@ function formatTime(timeValue) {
         return timeValue;
     }
     
+    // ★ "HH:MM〜HH:MM" range形式の場合もそのまま返す
+    if (typeof timeValue === 'string' && /^\d{1,2}:\d{2}[〜～~\-]\d{1,2}:\d{2}$/.test(timeValue)) {
+        return timeValue;
+    }
+    
     // ★★★ ISO 8601形式の場合 - JSTとして取得 ★★★
     if (typeof timeValue === 'string' && timeValue.includes('T')) {
         try {
@@ -420,9 +425,28 @@ function formatTime(timeValue) {
     return String(timeValue);
 }
 
+/**
+ * ★ 出勤時間+退勤時間 → "HH:MM〜HH:MM" 形式に結合
+ * 例: formatTimeRange("18:00", "03:00") → "18:00〜03:00"
+ */
+function formatTimeRange(startValue, endValue) {
+    const start = formatTime(startValue);
+    const end = formatTime(endValue);
+    if (start && end) {
+        return start + '〜' + end;
+    }
+    return start || '';
+}
+
 function parseTime(timeStr) {
     if (!timeStr) return 0;
     if (timeStr === '当欠') return 99999;  // ★★★ v3.5: 当欠は最後尾 ★★★
+    
+    // ★ "HH:MM〜HH:MM" range形式 → 開始時間だけ取り出してソート
+    if (typeof timeStr === 'string' && /\d{1,2}:\d{2}[〜～~\-]/.test(timeStr)) {
+        timeStr = timeStr.split(/[〜～~\-]/)[0].trim();
+    }
+    
     const [hours, minutes] = timeStr.split(':').map(Number);
     
     // ★★★ 深夜営業ルール: 0:00～9:59は翌日深夜として扱う ★★★
