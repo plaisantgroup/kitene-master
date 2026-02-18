@@ -15,6 +15,7 @@ let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
+let currentOkiniFilter = 'all'; // ★v3.5 オキニフィルター（all/danger/warn/clear）
 let autoRefreshInterval = null;  // 自動リロードのインターバルID
 let autoRefreshSeconds = 60;     // 自動リロードの間隔（秒）
 let cardIdCounter = 0;      // カードID用カウンター
@@ -560,6 +561,67 @@ function filterUrlDataByStore(data, store) {
     return data.filter(item => item.mainStore === store);
 }
 
+/**
+ * ★v3.5 オキニフィルター切り替え
+ */
+function filterByOkini(level) {
+    console.log('filterByOkini:', level);
+    currentOkiniFilter = level;
+    
+    // ボタンのアクティブ状態を更新
+    document.querySelectorAll('.okini-filter-btn').forEach(btn => {
+        if (btn.dataset.okini === level) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // 出勤タブを再描画
+    renderShiftList();
+}
+
+/**
+ * ★v3.5 オキニレベルでフィルター
+ * 全店舗のオキニ数を見て、該当するキャストだけ返す
+ */
+function filterDataByOkini(data, level) {
+    if (level === 'all') return data;
+    
+    return data.filter(item => {
+        const okini = okiniData.find(o => o.name === item.name);
+        if (!okini) {
+            // オキニデータなし → "clear"フィルターでは表示しない
+            return false;
+        }
+        
+        // 全店舗のオキニ数を集める
+        const counts = [okini.delidosu, okini.anecan, okini.ainoshizuku]
+            .filter(c => c !== '' && c !== undefined && c !== null);
+        
+        if (counts.length === 0) return false;
+        
+        // 各レベルの判定
+        switch(level) {
+            case 'danger':
+                // 9+または10以上がある
+                return counts.some(c => c === '9+' || (parseInt(c) || 0) >= 10);
+            case 'warn':
+                // 1〜9がある（9+は含まない）
+                return counts.some(c => {
+                    if (c === '9+') return false;
+                    const n = parseInt(c) || 0;
+                    return n >= 1 && n <= 9;
+                });
+            case 'clear':
+                // 全て0
+                return counts.every(c => c === '0' || c === 0);
+            default:
+                return true;
+        }
+    });
+}
+
 // ===============================
 // あいうえお順グループ化
 // ===============================
@@ -644,8 +706,14 @@ function renderShiftList() {
     }
     
     // ★★★ 店舗フィルターを適用 ★★★
-    const filteredData = filterDataByStore(shiftData, currentStoreFilter);
-    console.log('フィルター後のデータ件数:', filteredData.length, '(フィルター:', currentStoreFilter, ')');
+    const storeFiltered = filterDataByStore(shiftData, currentStoreFilter);
+    
+    // ★★★ v3.5: オキニフィルターを適用 ★★★
+    const filteredData = filterDataByOkini(storeFiltered, currentOkiniFilter);
+    console.log('フィルター後のデータ件数:', filteredData.length, '(店舗:', currentStoreFilter, ', オキニ:', currentOkiniFilter, ')');
+    
+    // ★★★ v3.5: 出勤人数カウンターを更新 ★★★
+    updateShiftCounter(storeFiltered);
     
     if (filteredData.length === 0) {
         listElement.style.display = 'none';
@@ -754,6 +822,36 @@ function renderShiftList() {
     // 日付表示（handleExcelUpload関数で設定済みなので、ここでは何もしない）
     
     console.log('renderShiftList: 描画完了');
+}
+
+/**
+ * ★v3.5 出勤人数カウンターを更新
+ * 店舗フィルター後のデータを受け取り、出勤/当欠の人数を表示
+ */
+function updateShiftCounter(storeFilteredData) {
+    const counter = document.getElementById('shift-counter');
+    if (!counter) return;
+    
+    if (storeFilteredData.length === 0) {
+        counter.style.display = 'none';
+        return;
+    }
+    
+    const total = storeFilteredData.length;
+    const touketuCount = storeFilteredData.filter(s => s.time === '当欠').length;
+    const activeCount = total - touketuCount;
+    
+    counter.style.display = 'block';
+    
+    if (touketuCount > 0) {
+        counter.innerHTML = 
+            '<span class="count-main">出勤 ' + activeCount + '人</span>' +
+            '<span class="count-detail">/ 元' + total + '人' +
+            '（<span class="count-touketu">当欠' + touketuCount + '人</span>）</span>';
+    } else {
+        counter.innerHTML = 
+            '<span class="count-main">出勤 ' + activeCount + '人</span>';
+    }
 }
 
 // ===============================
