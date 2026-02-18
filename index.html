@@ -63,6 +63,22 @@
             </button>
         </div>
 
+        <!-- ★v3.5 オキニフィルター -->
+        <div class="okini-filter" id="okini-filter">
+            <button class="okini-filter-btn active" data-okini="all" onclick="filterByOkini('all')">
+                全部
+            </button>
+            <button class="okini-filter-btn" data-okini="danger" onclick="filterByOkini('danger')">
+                🔴9+
+            </button>
+            <button class="okini-filter-btn" data-okini="warn" onclick="filterByOkini('warn')">
+                🟡1-9
+            </button>
+            <button class="okini-filter-btn" data-okini="clear" onclick="filterByOkini('clear')">
+                🟢0
+            </button>
+        </div>
+
         <!-- 更新コントロール -->
         <div class="refresh-control">
             <button class="refresh-btn" onclick="refreshData()">
@@ -87,6 +103,9 @@
         <div id="shift-view" class="view active">
             <!-- 日付表示 -->
             <div class="date-display" id="date-display">📅 日付未選択</div>
+            
+            <!-- ★v3.5 出勤人数カウンター -->
+            <div class="shift-counter" id="shift-counter" style="display:none;"></div>
 
             <!-- アップロードエリア -->
             <div class="upload-area">
