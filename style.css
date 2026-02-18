@@ -192,6 +192,92 @@ body {
     box-shadow: 0 0 15px rgba(109, 40, 217, 0.5);
 }
 
+/* ===== v3.5: オキニフィルター ===== */
+.okini-filter {
+    display: flex;
+    gap: 6px;
+    padding: 8px 15px;
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.okini-filter-btn {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.okini-filter-btn:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.okini-filter-btn.active[data-okini="all"] {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.okini-filter-btn.active[data-okini="danger"] {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #ef4444;
+    color: #f87171;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.okini-filter-btn.active[data-okini="warn"] {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: #f59e0b;
+    color: #fbbf24;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.okini-filter-btn.active[data-okini="clear"] {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #10b981;
+    color: #34d399;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* ===== v3.5: 出勤人数カウンター ===== */
+.shift-counter {
+    text-align: center;
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.shift-counter .count-main {
+    font-size: 1.3rem;
+    color: var(--text-primary);
+    font-weight: 800;
+}
+
+.shift-counter .count-touketu {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+.shift-counter .count-detail {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
 /* ===== 更新コントロール ===== */
 .refresh-control {
     display: flex;
