@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面談履歴アナリティクス | キャストインサイトレポート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f1e8;
+    --bg-card: #fdfbf5;
+    --bg-soft: #ebe5d6;
+    --ink: #1a1612;
+    --ink-soft: #4a3f30;
+    --ink-mute: #87796a;
+    --line: #d8cfb8;
+    --line-soft: #e8e1cd;
+    --accent: #8a2e1c;
+    --accent-soft: #b85a47;
+    --accent-bg: #f0d9d2;
+    --gold: #a87c2e;
+    --green: #4a6b3a;
+    --blue: #355a7a;
+    --serif-jp: "Shippori Mincho B1", serif;
+    --serif-en: "Cormorant Garamond", serif;
+    --sans-jp: "Noto Sans JP", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans-jp);
+    font-size: 14px;
+    line-height: 1.7;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ──────── ヘッダー ──────── */
+  .masthead {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 28px 40px 24px;
+    border-bottom: 6px double var(--gold);
+    position: relative;
+  }
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+  .masthead-top .label {
+    font-family: var(--serif-en);
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    opacity: 0.6;
+  }
+  .masthead-top .label-jp {
+    font-family: var(--serif-jp);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    opacity: 0.5;
+  }
+  .masthead h1 {
+    font-family: var(--serif-jp);
+    font-weight: 800;
+    font-size: 34px;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .masthead h1 .small {
+    font-family: var(--serif-en);
+    font-size: 22px;
+    font-style: italic;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-left: 8px;
+  }
+  .masthead p.subtitle {
+    font-family: var(--serif-jp);
+    font-size: 14px;
+    opacity: 0.7;
+    letter-spacing: 0.08em;
+  }
+
+  /* ──────── レイアウト ──────── */
+  .container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 36px 40px 80px;
+  }
+  section { margin-bottom: 48px; }
+
+  /* ──────── セクション見出し ──────── */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+  }
+  .section-head .num {
+    font-family: var(--serif-en);
+    font-style: italic;
+    font-size: 28px;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  .section-head h2 {
+    font-family: var(--serif-jp);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  .section-head .en {
+    font-family: var(--serif-en);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--ink-mute);
+    margin-left: auto;
+    letter-spacing: 0.1em;
+  }
+
+  /* ──────── サマリーカード ──────── */
+  .summary-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+  }
+  .summary-strip .cell {
+    padding: 22px 20px;
+    border-right: 1px solid var(--line);
+    text-align: center;
+  }
+  .summary-strip .cell:last-child { border-right: none; }
+  .summary-strip .cell .num {
+    font-family: var(--serif-en);
+    font-size: 38px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .summary-strip .cell .num .unit {
+    font-family: var(--serif-jp);
+    font-size: 14px;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+  .summary-strip .cell .label {
+    font-family: var(--serif-jp);
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-top: 6px;
+    letter-spacing: 0.15em;
+  }
+
+  /* ──────── ダッシュボード ──────── */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+  }
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    padding: 24px;
+  }
+  .panel-title {
+    font-family: var(--serif-jp);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .panel-title::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 16px;
+    background: var(--accent);
+  }
+  .panel-sub {
+    font-family: var(--serif-en);
+    font-style: italic;
+    color: var(--ink-mute);
+    font-size: 12px;
+    margin-bottom: 18px;
+  }
+
+  /* テーマ分布 - 横棒グラフ */
+  .theme-bars { display: flex; flex-direction: column; gap: 10px; }
+  .theme-bar {
+    display: grid;
+    grid-template-columns: 130px 1fr 50px;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .theme-bar .name {
+    font-family: var(--serif-jp);
+    color: var(--ink-soft);
+  }
+  .theme-bar .track {
+    background: var(--bg-soft);
+    height: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .theme-bar .fill {
+    background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+    height: 100%;
+    transition: width 0.8s ease;
+  }
+  .theme-bar .num {
+    font-family: var(--serif-en);
+    font-weight: 600;
+    text-align: right;
+    color: var(--ink);
+  }
+
+  /* スタッフ円形 */
+  .staff-list { display: flex; flex-direction: column; gap: 8px; }
+  .staff-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 40px;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .staff-row .name {
+    font-family: var(--serif-jp);
+    font-weight: 600;
+  }
+  .staff-row .track {
+    background: var(--bg-soft);
+    height: 14px;
+  }
+  .staff-row .fill {
+    background: var(--ink-soft);
+    height: 100%;
+  }
+  .staff-row .num {
+    font-family: var(--serif-en);
+    font-size: 14px;
+    text-align: right;
+    color: var(--ink-mute);
+  }
+
+  /* 月次推移 - 積み上げ棒 */
+  .monthly-chart { margin-top: 8px; }
+  .monthly-bars {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    align-items: end;
+    height: 200px;
+    margin-bottom: 12px;
+    padding-top: 12px;
+  }
+  .month-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .month-col .stack {
+    width: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    border: 1px solid var(--ink);
+    border-bottom: none;
+  }
+  .month-col .stack .seg { width: 100%; transition: opacity 0.3s; }
+  .month-col .stack .seg:hover { opacity: 0.7; cursor: pointer; }
+  .month-col .lbl {
+    font-family: var(--serif-en);
+    font-size: 11px;
+    margin-top: 6px;
+    color: var(--ink-mute);
+  }
+  .month-col .total {
+    font-family: var(--serif-en);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .month-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    font-size: 11px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    color: var(--ink-soft);
+  }
+  .month-legend .item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--serif-jp);
+  }
+  .month-legend .swatch {
+    width: 14px;
+    height: 10px;
+    display: inline-block;
+  }
+
+  /* ──────── キャスト一覧 ──────── */
+  .controls {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(26,22,18,0.04);
+  }
+  .controls input, .controls select {
+    font-family: var(--sans-jp);
+    font-size: 13px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    padding: 8px 12px;
+    color: var(--ink);
+    outline: none;
+    transition: border 0.2s;
+  }
+  .controls input:focus, .controls select:focus {
+    border-color: var(--accent);
+  }
+  .controls input { width: 100%; }
+  .controls .label {
+    font-family: var(--serif-jp);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.1em;
+    margin-right: 4px;
+  }
+  .controls .grp {
+    display: flex;
+    align-items: center;
+  }
+  .result-info {
+    font-family: var(--serif-en);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+    padding-left: 4px;
+  }
+
+  /* ──────── キャストカード ──────── */
+  .cast-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cast {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    transition: border-color 0.2s;
+  }
+  .cast.featured {
+    border-left: 3px solid var(--accent);
+  }
+  .cast:hover { border-color: var(--ink-mute); }
+  .cast.open { border-color: var(--ink); box-shadow: 0 6px 20px rgba(26,22,18,0.08); }
+
+  .cast-head {
+    padding: 16px 22px;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    align-items: center;
+    gap: 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .cast-name {
+    font-family: var(--serif-jp);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .cast-name .badge {
+    font-family: var(--serif-en);
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 2px 8px;
+    letter-spacing: 0.1em;
+  }
+  .cast-meta {
+    font-family: var(--serif-en);
+    font-size: 13px;
+    color: var(--ink-mute);
+    text-align: right;
+    line-height: 1.4;
+  }
+  .cast-meta .count {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-right: 4px;
+  }
+  .cast-meta .count-jp {
+    font-family: var(--serif-jp);
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .cast-themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+    max-width: 280px;
+  }
+  .theme-tag {
+    font-family: var(--serif-jp);
+    font-size: 10px;
+    padding: 2px 8px;
+    background: var(--bg-soft);
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .cast-staff {
+    font-family: var(--serif-jp);
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-align: right;
+    max-width: 140px;
+  }
+  .toggle-icon {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--ink-mute);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-soft);
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .cast.open .toggle-icon {
+    background: var(--ink);
+    color: var(--bg);
+    transform: rotate(180deg);
+  }
+
+  /* ──────── キャスト詳細 ──────── */
+  .cast-body {
+    display: none;
+    border-top: 1px solid var(--line);
+    padding: 24px 28px 28px;
+    background: linear-gradient(180deg, var(--bg-card), var(--bg));
+  }
+  .cast.open .cast-body { display: block; }
+
+  .ai-section {
+    background: var(--bg);
+    border: 1px solid var(--line-soft);
+    padding: 22px 24px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .ai-section::before {
+    content: "AI";
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--serif-en);
+    font-style: italic;
+    font-size: 11px;
+    padding: 2px 10px;
+    letter-spacing: 0.2em;
+  }
+  .ai-headline {
+    font-family: var(--serif-jp);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .ai-meta-themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .ai-meta-themes .tag {
+    font-family: var(--serif-jp);
+    font-size: 11px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 3px 10px;
+    border: 1px solid var(--accent);
+  }
+  .ai-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    border-top: 1px dashed var(--line);
+    padding-top: 16px;
+  }
+  .ai-block .head {
+    font-family: var(--serif-en);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.15em;
+    margin-bottom: 4px;
+  }
+  .ai-block .head-jp {
+    font-family: var(--serif-jp);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .ai-block .text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+  }
+  .generate-btn {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    padding: 10px 20px;
+    font-family: var(--serif-jp);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .generate-btn:hover { background: var(--accent); }
+  .generate-btn:disabled {
+    background: var(--ink-mute);
+    cursor: not-allowed;
+  }
+  .generate-empty {
+    text-align: center;
+    padding: 24px;
+    color: var(--ink-mute);
+    font-family: var(--serif-jp);
+    font-size: 13px;
+  }
+  .generate-empty p { margin-bottom: 14px; }
+  .err-msg {
+    color: var(--accent);
+    font-size: 12px;
+    margin-top: 8px;
+    font-family: var(--serif-jp);
+  }
+
+  /* 面談履歴 */
+  .meetings-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+  }
+  .meetings-head h4 {
+    font-family: var(--serif-jp);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .meetings-head .en {
+    font-family: var(--serif-en);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .meetings {
+    display: flex;
+    flex-direction: column;
+  }
+  .meeting {
+    display: grid;
+    grid-template-columns: 110px 70px 1fr;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 13px;
+  }
+  .meeting:last-child { border-bottom: none; }
+  .meeting .date {
+    font-family: var(--serif-en);
+    color: var(--ink-soft);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .meeting .date .day {
+    font-family: var(--serif-jp);
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-left: 4px;
+  }
+  .meeting .staff {
+    font-family: var(--serif-jp);
+    color: var(--ink-mute);
+    font-size: 12px;
+    border-left: 2px solid var(--line);
+    padding-left: 10px;
+  }
+  .meeting .comment {
+    line-height: 1.75;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+  }
+  .meeting .comment .mtag {
+    display: inline-block;
+    font-family: var(--serif-jp);
+    font-size: 10px;
+    background: var(--bg-soft);
+    color: var(--ink-mute);
+    padding: 1px 6px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  /* スピナー */
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--bg);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ──────── フッター ──────── */
+  footer {
+    text-align: center;
+    padding: 32px 20px;
+    border-top: 1px solid var(--line);
+    margin-top: 40px;
+    color: var(--ink-mute);
+    font-family: var(--serif-jp);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+  footer .en {
+    font-family: var(--serif-en);
+    font-style: italic;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  /* ──────── レスポンシブ ──────── */
+  @media (max-width: 900px) {
+    .container { padding: 24px 16px 60px; }
+    .masthead { padding: 20px 20px 18px; }
+    .masthead h1 { font-size: 24px; }
+    .summary-strip { grid-template-columns: repeat(2, 1fr); }
+    .summary-strip .cell:nth-child(2) { border-right: none; }
+    .summary-strip .cell:nth-child(1), .summary-strip .cell:nth-child(2) {
+      border-bottom: 1px solid var(--line);
+    }
+    .dashboard { grid-template-columns: 1fr; }
+    .controls { grid-template-columns: 1fr 1fr; }
+    .controls > :first-child { grid-column: 1 / -1; }
+    .cast-head {
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+    .cast-meta, .cast-themes, .cast-staff { grid-column: 1 / -1; text-align: left; max-width: none; }
+    .cast-themes { justify-content: flex-start; }
+    .ai-grid { grid-template-columns: 1fr; }
+    .meeting { grid-template-columns: 1fr; gap: 4px; }
+    .monthly-bars { gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-top">
+    <span class="label-jp">ミ テ ネ マ ス タ ー</span>
+    <span class="label">CAST INSIGHT REPORT &nbsp;/&nbsp; Vol.01</span>
+  </div>
+  <h1>面談履歴アナリティクス<span class="small">Cast Insight Report</span></h1>
+  <p class="subtitle" id="period-line">— 期間 : 集計中 —</p>
+</header>
+
+<div class="container">
+
+  <!-- ──── サマリー ──── -->
+  <section>
+    <div class="summary-strip" id="summary-strip">
+      <div class="cell"><div class="num" id="s-records">—</div><div class="label">面 談 レ コ ー ド</div></div>
+      <div class="cell"><div class="num" id="s-casts">—</div><div class="label">対 象 キ ャ ス ト</div></div>
+      <div class="cell"><div class="num" id="s-staff">—</div><div class="label">担 当 ス タ ッ フ</div></div>
+      <div class="cell"><div class="num" id="s-summarized">—</div><div class="label">事 前 A I 要 約</div></div>
+    </div>
+  </section>
+
+  <!-- ──── ダッシュボード ──── -->
+  <section>
+    <div class="section-head">
+      <span class="num">01</span>
+      <h2>全体傾向</h2>
+      <span class="en">Overview &amp; Trends</span>
+    </div>
+    <div class="dashboard">
+      <div class="panel">
+        <div class="panel-title">テーマ別 出現回数</div>
+        <div class="panel-sub">Theme Frequency &mdash; 1コメント中に複数テーマを含む場合あり</div>
+        <div class="theme-bars" id="theme-bars"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">担当スタッフ別 件数</div>
+        <div class="panel-sub">Staff Workload</div>
+        <div class="staff-list" id="staff-list"></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:24px;">
+      <div class="panel-title">月次推移 &mdash; テーマ別積上</div>
+      <div class="panel-sub">Monthly Trend by Theme</div>
+      <div class="monthly-chart">
+        <div class="monthly-bars" id="monthly-bars"></div>
+        <div class="month-legend" id="month-legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──── キャスト一覧 ──── -->
+  <section>
+    <div class="section-head">
+      <span class="num">02</span>
+      <h2>キャスト別 詳細</h2>
+      <span class="en">Individual Profiles</span>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="q-search" placeholder="源氏名で検索…">
+      <div class="grp"><span class="label">担当</span>
+        <select id="q-staff"><option value="">すべて</option></select>
+      </div>
+      <div class="grp"><span class="label">テーマ</span>
+        <select id="q-theme"><option value="">すべて</option></select>
+      </div>
+      <div class="grp"><span class="label">面談数</span>
+        <select id="q-count">
+          <option value="0">すべて</option>
+          <option value="7" selected>7回以上(要約あり)</option>
+          <option value="3">3回以上</option>
+          <option value="2">2回以上</option>
+        </select>
+      </div>
+      <div class="grp"><span class="label">並び</span>
+        <select id="q-sort">
+          <option value="count">面談回数(多い順)</option>
+          <option value="last">最終面談日(新しい順)</option>
+          <option value="first">初回面談日(新しい順)</option>
+          <option value="name">五十音順</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="result-info" id="result-info">— 件</div>
+    <div class="cast-list" id="cast-list"></div>
+  </section>
+
+</div>
+
+<footer>
+  <span class="en">Compiled with Claude · 2026</span>
+  ミテネマスター 面談履歴アナリティクス
+</footer>
+
+<script id="data-blob" type="application/json">
+{"summary":{"total_records":683,"total_casts":158,"period":{"start":"2025-11-24","end":"2026-04-26"},"themes":{"日記・コンテンツ":299,"出勤・シフト":260,"オキニトーク":164,"撮影":130,"プロフィール":80,"掛け持ち・他店":79,"条件・給与":70,"集客ツール":55,"業務態度・指導":55},"staffs":{"幅":340,"せいや":185,"蛍":43,"なべ":40,"太田":25,"ばしこ":24,"成瀬":12,"八谷":10,"かぶ":4},"monthly":{"2025-11":{"集客ツール":11,"オキニトーク":11,"日記・コンテンツ":5,"条件・給与":4,"プロフィール":1,"掛け持ち・他店":3,"業務態度・指導":2,"撮影":3,"出勤・シフト":2},"2025-12":{"オキニトーク":62,"日記・コンテンツ":44,"集客ツール":30,"プロフィール":4,"掛け持ち・他店":8,"撮影":14,"出勤・シフト":20,"条件・給与":6,"業務態度・指導":1},"2026-01":{"集客ツール":7,"日記・コンテンツ":76,"撮影":22,"出勤・シフト":37,"オキニトーク":13,"掛け持ち・他店":12,"プロフィール":21,"条件・給与":9,"業務態度・指導":6},"2026-02":{"オキニトーク":12,"日記・コンテンツ":25,"出勤・シフト":17,"プロフィール":10,"撮影":16,"掛け持ち・他店":12,"条件・給与":5,"業務態度・指導":5},"2026-03":{"日記・コンテンツ":80,"撮影":37,"条件・給与":22,"出勤・シフト":111,"掛け持ち・他店":28,"オキニトーク":19,"業務態度・指導":18,"プロフィール":25,"集客ツール":3},"2026-04":{"集客ツール":4,"日記・コンテンツ":69,"出勤・シフト":73,"プロフィール":19,"撮影":38,"条件・給与":24,"オキニトーク":47,"業務態度・指導":23,"掛け持ち・他店":16}},"count_distribution":{"1":41,"2":24,"3":24,"4":10,"5":13,"6":9,"7":10,"8":5,"9":7,"10":3,"11":2,"12":2,"13":3,"14":2,"15":2,"17":1},"untagged_records":81,"monthly_chart":[{"month":"2025-11","total":42,"日記・コンテンツ":5,"出勤・シフト":2,"オキニトーク":11,"撮影":3,"プロフィール":1,"掛け持ち・他店":3,"条件・給与":4,"集客ツール":11,"業務態度・指導":2},{"month":"2025-12","total":189,"日記・コンテンツ":44,"出勤・シフト":20,"オキニトーク":62,"撮影":14,"プロフィール":4,"掛け持ち・他店":8,"条件・給与":6,"集客ツール":30,"業務態度・指導":1},{"month":"2026-01","total":203,"日記・コンテンツ":76,"出勤・シフト":37,"オキニトーク":13,"撮影":22,"プロフィール":21,"掛け持ち・他店":12,"条件・給与":9,"集客ツール":7,"業務態度・指導":6},{"month":"2026-02","total":102,"日記・コンテンツ":25,"出勤・シフト":17,"オキニトーク":12,"撮影":16,"プロフィール":10,"掛け持ち・他店":12,"条件・給与":5,"集客ツール":0,"業務態度・指導":5},{"month":"2026-03","total":343,"日記・コンテンツ":80,"出勤・シフト":111,"オキニトーク":19,"撮影":37,"プロフィール":25,"掛け持ち・他店":28,"条件・給与":22,"集客ツール":3,"業務態度・指導":18},{"month":"2026-04","total":313,"日記・コンテンツ":69,"出勤・シフト":73,"オキニトーク":47,"撮影":38,"プロフィール":19,"掛け持ち・他店":16,"条件・給与":24,"集客ツール":4,"業務態度・指導":23}],"months":["2025-11","2025-12","2026-01","2026-02","2026-03","2026-04"],"themes_order":["日記・コンテンツ","出勤・シフト","オキニトーク","撮影","プロフィール","掛け持ち・他店","条件・給与","集客ツール","業務態度・指導"]},"casts":[{"name":"さな","count":17,"staffs":["せいや","なべ","幅","成瀬"],"themes":{"集客ツール":3,"オキニトーク":4,"業務態度・指導":5,"掛け持ち・他店":2,"日記・コンテンツ":1,"出勤・シフト":5,"条件・給与":7,"撮影":2},"first_date":"2025-11-26","last_date":"2026-04-16","meetings":[{"date":"2025-11-26","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明、オキニトークで炎上させました。12/6電話にてアネも説明。やる気はありそうでした。","themes":["集客ツール","オキニトーク","業務態度・指導","掛け持ち・他店"]},{"date":"2025-12-24","staff":"幅","comment":"みたよ！の使い方\n女の子を見たよ！押して訪問者数を伸ばす。\nみたよ！を押してくれたユーザーは、気にして\nみたよ！を押してるから、そのユーザーへオキニトークを仕掛けていくのが、実際に来客へ繋がり易いよ　などの説明\n実際に文章を作って、やってみせて　やり方は把握","themes":["集客ツール","オキニトーク"]},{"date":"2026-01-15","staff":"せいや","comment":"復帰日迎えで軽く話。代行及びサポ不要✕\nまた頑張ってくれそうではあるので定期的に話して煮詰めていく。北区への引っ越し検討中","themes":[]},{"date":"2026-01-18","staff":"せいや","comment":"日記休日のみサポOK\nこだわりあるので本人らしさ残すためにコピペ文書を簡潔にして次回出勤告知程度で","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-01-27","staff":"成瀬","comment":"最高キャスト割引がフルバックに影響するとモチベーション下がる\n→割引5000円は一日一人までに受付で調整してそれがフルにならないようになるべくするということで了承してくれました。","themes":["条件・給与","業務態度・指導"]},{"date":"2026-02-07","staff":"せいや","comment":"閑散期モチベアップと頑張り反映で1000円バック上げた。月100時間受付が継続条件。色々いつも言ってるが定期的にフォローすれば問題ない。","themes":["条件・給与","業務態度・指導"]},{"date":"2026-03-03","staff":"せいや","comment":"姫デコ継続。\n給料下げる予定だったが\n最後の優しさで3月ラストチャンス100H受付","themes":["条件・給与"]},{"date":"2026-03-09","staff":"なべ","comment":"24日大二郎アイコニック撮影予定。\n早朝枠が空いていたので大二郎が声をかけたら参加になりました。価格はでりどす価格20000円ですが、店で出す方向で。\n\n大二郎が個人でやってるやつだけどランキング頑張ってくれてから店から出すね！で口裏併せてください。最近10位割ってるのでそこでモチベにしてランキング上げさせれたらと。","themes":["撮影","業務態度・指導","掛け持ち・他店"]},{"date":"2026-03-10","staff":"せいや","comment":"マンジャロの副作用か、不正出血が止まらず悔しくて泣いてました。前向きではあるのでまたご飯とか挟みながらフォローしていく","themes":[]},{"date":"2026-03-23","staff":"幅","comment":"最高キャスト、出勤アラート（画像渡し済）、先行予約3週の説明済み\n幅、せいや","themes":["出勤・シフト"]},{"date":"2026-03-24","staff":"幅","comment":"最近、勤怠の悪さは、自分自身　理解してる\n事務所のそばに引っ越しして、自宅待機できれば休まずに出勤出来るからの話しで、今月4.生理あけ6日  計10間　10時間受付70万保証で、一気に引っ越し費用を作ったらと提案　明日撮影で、明後日出勤の際に、書類にサインして条件を決めようと話し","themes":["撮影","出勤・シフト","条件・給与"]},{"date":"2026-03-27","staff":"せいや","comment":"ネット予約の件について、一旦+10分は切った。付随価値を相談中（おそらく電マになる）\n\n給料下げたくないから後3日出勤頑張ってと伝えた、明日幅さんと3人で話し合える時間作って保証の件も話しましょうと終話。","themes":["集客ツール","出勤・シフト","条件・給与"]},{"date":"2026-04-01","staff":"せいや","comment":"条件報告LINEにて3月受付時間報告\n生理明けのシフトもOK、保証の話もするが散々行ってきたバックの話どうするか幅さんと相談。80時間で線を引く予定ではいる","themes":["出勤・シフト","条件・給与"]},{"date":"2026-04-03","staff":"せいや","comment":"幅さんと3者面談。10H受付x7万x10日間\nﾄｰﾀﾙ70万保証。\n\nどう見ても勤怠だけなので\nそこはせいやで密に連携して\n構っていくしかない。\n\n幅さんから\n続くようだと来月から見直しと警告済み\n今月は見直し見送りで、バック継続条件を月に80Hに緩和。\n\n事務所付近に引っ越し予定\n\n幅さんが叩き役せいやがフォロー役の絵図","themes":["条件・給与"]},{"date":"2026-04-07","staff":"幅","comment":"お気に入り登録に、オキニトークで一斉送信の文を作成して、GWの予定はいかがですか？など仕掛けていく提案","themes":["オキニトーク"]},{"date":"2026-04-13","staff":"せいや","comment":"膀胱炎は治ったそう。\nカメラの設定教えてもらった。復帰日で凝ったことは話さず、オキニトーク溜まってるよぐらい。そこ見ながら次回","themes":["オキニトーク"]},{"date":"2026-04-16","staff":"幅","comment":"前回途中上がり、本日も待機で帰らないようモチベーション上がるポジティブな考え方を色々提案","themes":["業務態度・指導"]}],"ai_summary":{"headline":"勤怠不安定の主役、保証付き集中出勤で再起をかける","themes":["条件・給与の調整","勤怠改善","メンタルフォロー"],"challenges":"勤怠が極端に不安定。事務所付近への引っ越しで安定化を図っている段階。マンジャロ副作用や不正出血など体調面の波も大きい。","progress":"3月の70万トータル保証(10H×7万×10日)を実行中。バック継続条件を月100Hから80Hに緩和。GW向けにオキニトーク一斉送信で予約獲得提案中。","approach":"幅が叩き役・せいやがフォロー役の二人三脚で密にフォロー。来月以降は見直し警告済みで、勤怠次第の崖っぷち。"}},{"name":"あーりん","count":15,"staffs":["せいや","八谷","幅"],"themes":{"条件・給与":2,"掛け持ち・他店":1,"日記・コンテンツ":3,"撮影":1,"オキニトーク":5,"出勤・シフト":3,"集客ツール":1},"first_date":"2026-02-25","last_date":"2026-04-22","meetings":[{"date":"2026-02-25","staff":"幅","comment":"Classi四日市、グランドOperaに5年在籍\n心機一転名古屋でと思い面接、\nE➕、グランド、当店の中から、当店を選んで\n最初は、不安もあり掛け持ち予定だったが、3月いっぱい保証をつける事で、バックアップ\n名駅で自宅待機は、一本目大変かと思いますが、よろしくお願いします。またClassi四日市では、貸切客や、サイト上では、エリア1位も取ってるよう","themes":["条件・給与","掛け持ち・他店"]},{"date":"2026-02-27","staff":"幅","comment":"Laraにて、仮撮影大二郎　3月のニュース枠にて早番宣伝、内緒話しなどのバナーにて、押す話しからの説明打ち合わせ","themes":["日記・コンテンツ","撮影"]},{"date":"2026-03-05","staff":"幅","comment":"今日で無事にクラッシーとグランドオペラ卒業しました！✨連絡あり","themes":[]},{"date":"2026-03-11","staff":"幅","comment":"ニュースが上がって、注目度が上がるので、日記、オキニトークをしっかりやっていくよう連絡済み","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-03-12","staff":"八谷","comment":"カンジダ発症。\n性病疑惑で高熱も出たとのこと。\n検査結果が5日後に出るとのことで、それまで様子見。\nニュース期間なのにタイミングが・・・","themes":["日記・コンテンツ"]},{"date":"2026-03-16","staff":"幅","comment":"今週は、性病に引っかかってるのもあり、台湾へ旅行へ行く予定で、\n来週から、しっかり頑張ります！","themes":[]},{"date":"2026-03-25","staff":"幅","comment":"出勤アラート、早番出勤なので、特にアップ\n最高キャストもテンプレートに登録して定期的にアップ　オキニトークの増加キッチリ返信　本日オキニトークから来店","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-03-28","staff":"幅","comment":"鶴舞3Pの迎えの際に、最高キャスト・出勤アラートが上がってないので、テンプレートに登録してアップするやり方を再度説明","themes":["出勤・シフト"]},{"date":"2026-04-01","staff":"幅","comment":"3月の保証トータル10H5万でクリアしたが、少し不安が残るため、10H4万トータル保証で継続ただし、遅番出勤も入れていく","themes":["出勤・シフト"]},{"date":"2026-04-04","staff":"幅","comment":"昨日初めての遅番で、すぐリピートがあった為、金曜以外に遅番の日を入れながら、様子見て行くのを提案、来週の予定を立てる\nGW絡みもあるから、時間など調整していきましょう","themes":[]},{"date":"2026-04-06","staff":"幅","comment":"オキニトークでの　やり取りで指名料について質問あり、通常のネット予約は、P指1000円\nGW先行予約を機にオキニトークからの予約にちいて、会議してまた、お知らせしますの返答\nまた、姫予約に関しては、何かないですか？","themes":["集客ツール","オキニトーク"]},{"date":"2026-04-10","staff":"幅","comment":"オキニトークから予約に繋がる事が多い\n本日もオキニトークからのお客様\n先行予約と絡めてを提案","themes":["オキニトーク"]},{"date":"2026-04-11","staff":"幅","comment":"タイマーが故障との事で新調\n口コミの返信が溜まってたので、返信するように、またアクセスが口コミ返信は、一番取れるので早めにと提案","themes":[]},{"date":"2026-04-22","staff":"幅","comment":"ゴールデンウィーク、昼職がない時は、スケジュール出し済み　現状オキニトークから実客が取れて来てる為、本人的にもオキニトークの重要性は、感じてる","themes":["オキニトーク"]},{"date":"2026-04-22","staff":"せいや","comment":"送迎中稼げるなら長時間待機で10万ぐらいという会話が出た。確かに頑張れるなら下地を作ってしまうのもアリだねと返答。ロングになれば条件も出せるが、幅さん主導で動いているので相談","themes":["条件・給与"]}],"ai_summary":{"headline":"クラッシー&グランドOpera卒の即戦力、オキニトーク経由の集客で実績","themes":["保証付き入店","オキニトーク活用","出勤戦略"],"challenges":"2月入店直後にカンジダ・性病疑惑で停滞。台湾旅行を挟むなど波あり。指名料の質問など細部の不明点も。","progress":"3月10H5万保証クリア後、4月から10H4万トータル保証で継続。遅番もリピート発生。オキニトーク経由の予約が増え本人も重要性を実感。","approach":"幅さん主導で進行中。GW絡みで先行予約とオキニトークを連動。長時間待機で10万案も浮上、ロング条件出しは協議中。"}},{"name":"さとえり","count":15,"staffs":["せいや","なべ","ばしこ","幅"],"themes":{"オキニトーク":3,"日記・コンテンツ":11,"出勤・シフト":3,"撮影":6,"条件・給与":2,"プロフィール":2,"業務態度・指導":1},"first_date":"2026-02-01","last_date":"2026-04-23","meetings":[{"date":"2026-02-01","staff":"幅","comment":"エデン在籍1年半くらい単価60  15000円、\n週5.6出勤予定　12時間出勤経験あり\n日記について、出勤時、休日時などの説明、\nオキニトーク、なとヘブンツール理解ある為\nレギュラーメンバーとして育てて行く予定","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-02-02","staff":"せいや","comment":"キャバ時代にダンス経験等ありで幅さん大二郎含めて風俗バージョンの動画作っていこうと話を進めた。愛想は良い。れおと繋がりある。","themes":["日記・コンテンツ"]},{"date":"2026-02-04","staff":"幅","comment":"強制お気に入りの予定、最高キャストの説明、日記に定期的に上げるようにして、人数を増やしていく","themes":["日記・コンテンツ"]},{"date":"2026-02-14","staff":"幅","comment":"出勤時間を後ろへ伸ばすのを提案、入店から7回出勤も保証をクリアだが、不安も残る為、2月いっぱいまで延長、2／15より強制お気に入り、内緒話しが始まる為、鍵付き日記とオキニトークの強化をお願い","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-02-17","staff":"幅","comment":"日記用動画を撮影、マイガール強制が入ってるので動画を店からアップして行く\n第二弾も撮影していく予定（第二弾はエロダンス）","themes":["日記・コンテンツ","撮影"]},{"date":"2026-03-02","staff":"幅","comment":"引き続き12時間受付フルバックを付けて行く代わりに、姫デコブーストを毎度月末までに44000円を初めていく、マイガールが2000人超えるまで来たので、日記マイガール限定を更新していくように、撮影の日程などの段取り","themes":["日記・コンテンツ","撮影","条件・給与"]},{"date":"2026-03-09","staff":"なべ","comment":"春撮影と合わせて日記用の撮影。\n日記の写真が偏ってきているが、写メ用もスマホで撮るのが嫌らしいので大二郎撮影の回数を増やす。\n16日にグラビアと鍵大二郎撮影。←ここでも写メ用に使える用多めに撮影","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-09","staff":"ばしこ","comment":"前回編集した25本ほどの動画のうち、使ってほしくない内容のものが多々あった模様。\n1度もらった素材を本人と直で相談し再編集予定","themes":["日記・コンテンツ"]},{"date":"2026-03-11","staff":"せいや","comment":"給料もモチベも下がっていてラーメンって言ってたので連れて行った。さわりなので細かいことはまだ詰めてないが、二人三脚で頑張っていこうと、撮影等楽しみにしたりと前向きな部分もあるので定期的に顔合わせて","themes":["撮影","条件・給与","業務態度・指導"]},{"date":"2026-03-19","staff":"せいや","comment":"やっと動画もらった。こちらで1日一本ずつ上げていく。オキニトークも一斉送信したので返信の旨伝え。マルチタスクがダメなので順に潰していく、一段落したら次はX。\n膀胱炎らしく病院行かせるもしくは付き添い頼まれてる。売上の基盤を作れるようにここを重点的に接していく","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-04-04","staff":"せいや","comment":"出勤アラート説明（作成済み）\n以前の最高キャスト合わせて\nテンプレートも教えた。\n\n生理前で気が立ってる。\n定期的に構ってれば〇\n生理明けにSNS開始と真面目トーク","themes":["出勤・シフト"]},{"date":"2026-04-08","staff":"せいや","comment":"仕事が電話の鳴りに比例し過ぎてるので、新規や履歴の薄いフリーに宣伝とリピートを兼ねて行ってもらってると説明しフォロー。\n生理明けにSNSとアイドル系ではなくセクシー系のダンス撮影を組むつもり、疎かになると良いことないのでもう少し頻度上げて見ていく","themes":["撮影"]},{"date":"2026-04-13","staff":"せいや","comment":"日記の効率化のススメ\n通勤時とランチタイム時のアクセスの集中を伝え予約投稿するように","themes":["日記・コンテンツ"]},{"date":"2026-04-17","staff":"せいや","comment":"ヘラってるのでフォロー。\n店側から見て接客のギャップが良い意味であるので、自信をもってやること。日記について盛れた写真の日常系をあげれているので、軸として日常→時折ドエロの形で行うよう指示。エロ売り→接客ではなく、接客でエロいギャップを大きく見せれるように。","themes":["日記・コンテンツ","プロフィール"]},{"date":"2026-04-23","staff":"幅","comment":"5/8日金　夜ガイYouTube撮影の提案\nオッケーとの事で、チャンネルを送ってみといてもらう　新規客獲得のチャンスを活かすように！","themes":["撮影"]}],"ai_summary":{"headline":"エデン経由の即戦力、鍵付き日記とエロダンス動画で攻める","themes":["日記・動画コンテンツ","撮影スケジュール","メンタル管理"],"challenges":"マルチタスクが苦手で順に潰していく必要あり。生理前のヘラりや膀胱炎など体調波。エロ売り→接客の順番を逆転させる指導が必要。","progress":"12時間受付フルバック+姫デコブースト44000円継続。マイガール2000人超え。第二弾エロダンス、グラビア、5/8夜ガイYouTube撮影と撮影目白押し。","approach":"二人三脚で前向きに。日常→時折ドエロのギャップ戦略。盛れた日常写真を軸に売る方針。せいやが連携の中心。"}},{"name":"みすず","count":14,"staffs":["せいや"],"themes":{"集客ツール":1,"日記・コンテンツ":5,"オキニトーク":2,"撮影":2,"条件・給与":1,"プロフィール":1,"業務態度・指導":2,"出勤・シフト":2},"first_date":"2025-12-18","last_date":"2026-04-24","meetings":[{"date":"2025-12-18","staff":"せいや","comment":"パフォーマンスヘブンはまだ話せてない。\n多少勤怠が改善されてきたのでジワジワこっちのペースに。通勤時とお昼時に日記を仕込むのは7割がた守ってくれてる。自身の問題で退店がチラついてるのでフォロー中","themes":["集客ツール","日記・コンテンツ"]},{"date":"2025-12-19","staff":"せいや","comment":"ｵｷﾆﾄｰｸ承認ﾃﾝﾌﾟﾚOK。\n金に手段選ばないので、稼げるマネジメント引き続き。持ち上げるとスムーズに話入っていく","themes":["オキニトーク"]},{"date":"2026-01-14","staff":"せいや","comment":"バニラ連携〇\n意外にも日記サポ・代行不要。\n年明け初対面で近況教えてもらうだけ。\n厳しく接するよりジワジワ長期目線で。\n17日撮影季節物+グラビア+コスプレ+バナー用撮ってもらう。引き続きせいやで連携とります","themes":["日記・コンテンツ","撮影"]},{"date":"2026-02-14","staff":"せいや","comment":"幅さんと三者面談。\n動きがありそうで一旦昇格保証は保留、追って話。","themes":[]},{"date":"2026-02-21","staff":"せいや","comment":"幅さんと三者面談。\n保証や条件変更（マインド参照）\n前向きに頑張っていきそうなので\n引き続き対応します","themes":["条件・給与"]},{"date":"2026-03-07","staff":"せいや","comment":"勤怠もまともになってきたので、15日区切りで保証継続。コスプレの相談に乗ったりしてるので意欲も継続はしてる。購入後撮影予定。立ち上がりが悪いのでスタートイベントにも乗り気でバナー作って始める予定","themes":["撮影"]},{"date":"2026-03-13","staff":"せいや","comment":"引っ越しの審査落ちで文句言ってた。これ以上の手助けはできないので上層部にパス。日記の写真もとっていてやる気はある","themes":["日記・コンテンツ","プロフィール","業務態度・指導"]},{"date":"2026-03-20","staff":"せいや","comment":"ガス抜きに送迎、文句は吐き出した。出確がどーたらなのでこっちで責任持つから個人LINEにて送るように。出勤は一緒にしてくるので来てしまえば安定している。","themes":["出勤・シフト"]},{"date":"2026-03-26","staff":"せいや","comment":"話したいとのことで対応。\nその場での理解は得られるので些細な事でも仕組みや考え伝えて疑問潰していく形。\n出勤出ていなかったので月末まで確保","themes":["出勤・シフト"]},{"date":"2026-03-29","staff":"せいや","comment":"引っ越しが決まらないと嘆いていた。モチベは下がり気味。少し距離詰めてヒアリングのターン。時間取れ次第日記等の説明含めて予定","themes":["日記・コンテンツ","業務態度・指導"]},{"date":"2026-04-01","staff":"せいや","comment":"延長に電話しないのは雰囲気、トークで他のキャストとの差別化図ってるとのこと。るなまで行かないが事実客はいるのでそこは飲んで、話さなくていいから着信入れてからLINEしてと伝え。話せば話すほど何でもさらけ出してくれるので辛抱と維持を","themes":[]},{"date":"2026-04-05","staff":"せいや","comment":"オキニトーク未送信に送信請負、返してないのも返していくように伝え","themes":["オキニトーク"]},{"date":"2026-04-23","staff":"せいや","comment":"保証の件について話\n切っても頑張りそうだが、ぶつぶつと\n幅さんに相談して引き続き","themes":[]},{"date":"2026-04-24","staff":"せいや","comment":"動画バナーを作成したため、動画の重要性及び鍵付き日記も使っていくように","themes":["日記・コンテンツ"]}],"ai_summary":{"headline":"勤怠改善のじわじわ立て直し組、せいや専属で長期目線","themes":["勤怠改善","引っ越しトラブル","対話による疑問解消"],"challenges":"引っ越し審査落ち繰り返しで文句やモチベ低下。出勤せず月末まで確保が必要。延長に電話しないなど独自の接客スタイルも修正対象。","progress":"勤怠まともになり15日区切りで保証継続。コスプレ撮影意欲あり。動画バナー作成で動画と鍵付き日記の重要性を再強調。","approach":"厳しく接するよりジワジワ長期目線。話せばさらけ出すタイプなので辛抱強く対話。せいやがほぼ専属で対応、上層部に責任パスしながら対応。"}},{"name":"りょうこ","count":14,"staffs":["幅"],"themes":{"オキニトーク":5,"日記・コンテンツ":3,"撮影":3,"出勤・シフト":2,"集客ツール":1,"掛け持ち・他店":2,"業務態度・指導":1,"条件・給与":2},"first_date":"2025-12-03","last_date":"2026-04-18","meetings":[{"date":"2025-12-03","staff":"幅","comment":"オキニトークについて\nニュース、メルマガの件","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2025-12-09","staff":"幅","comment":"12／15〜21 強制お気に入り\nオキニトークの予約はこちら説明","themes":["オキニトーク"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2025-12-20","staff":"幅","comment":"強制オキニ追加オキニトーク送信","themes":["オキニトーク"]},{"date":"2025-12-30","staff":"幅","comment":"バニラ連携完了☑️本年総括、来年目標など","themes":[]},{"date":"2026-01-02","staff":"幅","comment":"向こう5日間の出勤は全て完売の為以降で、着物撮影の予定連絡待ち","themes":["撮影","出勤・シフト"]},{"date":"2026-01-05","staff":"幅","comment":"1／末から毎月　鍵付き33000を回収\n一旦やってみて、様子を見る\nキテネ回数50回、鍵付きパネル5枚、グラビアなど、特典の説明済み\nしずく一本で、やって行くとの事","themes":["集客ツール","掛け持ち・他店"]},{"date":"2026-01-09","staff":"幅","comment":"日記について、自分で内容重視しながら本数を増やして行く","themes":["日記・コンテンツ"]},{"date":"2026-01-24","staff":"幅","comment":"ニュース用撮影、バレンタインがかかる為、内容打ち合わせ","themes":["日記・コンテンツ","撮影"]},{"date":"2026-02-18","staff":"幅","comment":"グラビア撮影、今後の展開など打ち合わせ\n直近の本指名客について、ガチ恋系が多いので対策が必要、昼職の場所が何故か特定された？など\n要注意必要\n誕プレ","themes":["撮影","業務態度・指導"]},{"date":"2026-03-20","staff":"幅","comment":"連休明け　送りにて、本日接客の中に引き抜き話しの様な客あり　アネキャン利用過去にあり、アバンスが岡崎に出す話をなぜかされた。","themes":["掛け持ち・他店"]},{"date":"2026-03-25","staff":"幅","comment":"先行予約、最高キャスト、出勤アラート\n全て繋がってる話しで、やり方を説明\n姫デコブーストが年間50万近くなるのは、どお？からの話しから、4月より出勤時間に合わせて、フルバックをつける話しで対応、まだ確定までの話しは、時間ある際にで、本日の話しは終了","themes":["出勤・シフト","条件・給与"]},{"date":"2026-04-09","staff":"幅","comment":"オキニトークからの予約について説明、\n先行予約が既に3件程入ってるので、オキニトークを絡めて予約へ誘導\n前回の話しの結果　8H80  10H100 12H120\nまでのフルバックで対応","themes":["オキニトーク","条件・給与"]},{"date":"2026-04-18","staff":"幅","comment":"近況伺い　客層が若干若くなってきたとの事、\n予約状況、収入は、問題なし\n前もって、先行予約で、うめていく・ホテルを方面でかためる","themes":[]}],"ai_summary":{"headline":"しずく一本の安定運営、鍵付き日記月33000で固定収益化","themes":["鍵付き日記収益化","オキニトーク予約導線","ガチ恋客対応"],"challenges":"本指にガチ恋系が多く対策必要。昼職特定の懸念、引き抜き話やアバンス岡崎話などの外部リスクあり。","progress":"鍵付き33000円月次回収を継続(50回キテネ・パネル5枚特典)。4月から8H80/10H100/12H120のフルバック導入。先行予約3件で先回り埋め推進。","approach":"幅が一貫して担当。安定運営のため先行予約とオキニトークの連動を強化。ホテル方面固めで安全と効率を両立。"}},{"name":"さとみ","count":13,"staffs":["せいや","太田","幅","成瀬"],"themes":{"集客ツール":1,"オキニトーク":4,"条件・給与":1,"日記・コンテンツ":3,"掛け持ち・他店":2,"撮影":4,"出勤・シフト":4},"first_date":"2025-12-08","last_date":"2026-04-23","meetings":[{"date":"2025-12-08","staff":"成瀬","comment":"ネット予約+10分　キテネ説明。\nオキニトーク送って欲しいということで、自動承認OKで請負いました。","themes":["集客ツール","オキニトーク"]},{"date":"2025-12-08","staff":"太田","comment":"条件見直し","themes":["条件・給与"]},{"date":"2026-01-06","staff":"幅","comment":"案内前に、動画を簡単に作成して、日記のマイガール動画アップ　今後動画アップか、静止画を繋げてなど、日記力アップの話し","themes":["日記・コンテンツ"]},{"date":"2026-01-09","staff":"太田","comment":"アネキャンで尾張ランキングTOP３入り狙う","themes":["掛け持ち・他店"]},{"date":"2026-03-11","staff":"幅","comment":"生理になったが、量は少な目、生理痛なしとの事で明日セットサロンに連れていき予定通りYouTube撮影オッケー","themes":["撮影"]},{"date":"2026-03-12","staff":"幅","comment":"バニラにてアネキャン用スプラッシュYouTube撮影　　3／25〜3／31 指名料無料\n出演料は、次回出勤の際に下着","themes":["撮影","出勤・シフト","掛け持ち・他店"]},{"date":"2026-04-03","staff":"幅","comment":"YouTubeの出演として、サルートプレゼント撮影予定を組む　せいや含めて話し3月の売り上げ、キャスト報酬1位だが当欠8回あったので平均10万の為【成瀬コンサルAI使用】\n80万損してる、これを少なくとも3回に抑える話し","themes":["撮影","出勤・シフト"]},{"date":"2026-04-08","staff":"せいや","comment":"最高キャスト・出勤アラート説明。\n仕事が入って作成まではいかなかったがテンプレートまで説明。追って確認含め声掛け","themes":["出勤・シフト"]},{"date":"2026-04-11","staff":"幅","comment":"オキニトークが，溜まってたので全て一緒に返信\n口コミのお礼も同じく、返信　今後たまらないようにしないと、またでいいや！になっちゃうので、特に口コミお礼は、すぐ書くように提案","themes":["オキニトーク"]},{"date":"2026-04-13","staff":"幅","comment":"今回の件は、誰も知らないと言ってあるので、周知徹底でお願いします。","themes":[]},{"date":"2026-04-16","staff":"幅","comment":"撮影用セットサロンからの撮影、大二郎\n来週月曜に、荷物を持って行って、四日市から持ってくる　寮は、そのまま使用予定で、荷物入れ替えで、出勤多数してもらう方向","themes":["撮影","出勤・シフト"]},{"date":"2026-04-22","staff":"せいや","comment":"4/17メモ漏れ\nハプバーの件で顔見知りがいるので他の子がどんな接客しているか気になっている様子。周りに感化されず入店時のままでいいと伝え。日記やオキニトークを受付終了後に溜めてまとめてやる癖があるので、しんどくなるからルーティーンを決めて継続するように提案。例の件は自ら言ってこず。定期的にガス抜きと軌道修正","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-04-23","staff":"幅","comment":"案内時の会話で、尾張ランキング3位だから、\n上を目指そう！例えば声⭕️らしいので、声日記は、アクセス取れるアドバイス\nオキニトークの返信、口コミお礼日記は、特にマメにするように","themes":["オキニトーク","日記・コンテンツ"]}],"ai_summary":{"headline":"尾張ランキングTOP3狙いの実力派、当欠改善が最大の課題","themes":["当欠削減","YouTube・撮影","オキニトーク返信習慣化"],"challenges":"3月キャスト報酬1位だが当欠8回で平均10万×80万損失。オキニトーク・口コミお礼を溜める癖。ハプバー顔見知り情報で揺れる。","progress":"アネキャン用YouTube撮影、サルートプレゼント企画で露出強化。当欠を3回まで抑える目標設定。寮そのままで荷物入れ替え出勤多数化方向。","approach":"せいや・幅・成瀬の連携体制。声日記など声を活かしたアクセス施策提案。定期的なガス抜きと軌道修正を繰り返す。"}},{"name":"ひい","count":13,"staffs":["せいや","なべ","ばしこ","幅"],"themes":{"集客ツール":2,"日記・コンテンツ":9,"撮影":6,"掛け持ち・他店":1,"プロフィール":3,"オキニトーク":2,"出勤・シフト":2,"業務態度・指導":1},"first_date":"2026-01-23","last_date":"2026-04-22","meetings":[{"date":"2026-01-23","staff":"せいや","comment":"面接同行\nデリは初めて。メンエスで店からOP本番強制とかあったそうで客を選んでいたと、ルームに空きがないと外で待たされたり。でも10万ほど稼ぎがあったからと。\n根性はあるので入りが大事、都度評価して長期的に頑張ってもらいたい。ポテンシャルはありそう。","themes":[]},{"date":"2026-01-25","staff":"なべ","comment":"バニラ連携〇\nスタート3本続いて、3本ともお客様が優しかったので全然大丈夫でした～とのこと。\n話した感じ肝は座ってそう。\n彼氏がいてバレないかだけ心配してたのでモザの濃さ変えたり随時対応できることは伝えてます。","themes":[]},{"date":"2026-01-28","staff":"幅","comment":"パフォーマンスヘブンの説明、\n日記を事前に予約投稿してるが、動画がない為、今後動画をアップして行くように\n撮影及び、加工","themes":["集客ツール","日記・コンテンツ","撮影"]},{"date":"2026-02-21","staff":"せいや","comment":"近況伺いながら送迎。\n夕方の暇さを感じており\n夜提案すると夜型であっさり承諾\n1か月やってみて、自宅等も行けそうとのことだったので仕事の幅を広げる提案が上手くいきました。山岡家の味噌ラーメンが好きらしい","themes":[]},{"date":"2026-03-08","staff":"せいや","comment":"面接時より真面目にやればスグに昇給できる旨を伝えており、勤怠、日記、リピートの感触、遅番にも代えてくれたのででりどすをプレミアに昇給。\n業界友達も閑散期感じてるらしく最近の暇な感じは納得していた。動画撮影をまだ組んでないので次はそこから。","themes":["日記・コンテンツ","撮影","掛け持ち・他店"]},{"date":"2026-03-10","staff":"ばしこ","comment":"写メ用の写真撮りだめ段取り中。\n動画少しずつ増やして行く方針\nコンカフェ経験ありでメイド服などを着て撮りたいとの事なので用意して撮る","themes":["日記・コンテンツ","プロフィール"]},{"date":"2026-03-19","staff":"せいや","comment":"アイドル時代のオタクにストーカーされてる。話を聞いたうえで本人に判断を委ねたが一旦このままパネルも掲載してやっていくとのこと。パフォーマンスヘブンを見せながら日記はちゃんとやっているので動画の重要性と作り方をレクチャー。接触回数増やして伸ばしていきたい。次回動画日記の確認とオキニトーク","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2026-03-23","staff":"幅","comment":"最高キャスト、出勤アラート、共に画像を渡して説明、先行予約は先まで出せるよう\n幅、せいや説明","themes":["出勤・シフト"]},{"date":"2026-03-26","staff":"せいや","comment":"入店1ヶ月頑張ったら行こうねと約束してたラーメンに連れてった。\n遅番10Hで5万くらいが希望収入。\n現在トラベラーNGだがインバウンド向けの話を進めるとこれからは行ってみるとのこと。現在不満なく働かせて頂いてるとのこと。\n日記も勤怠も優秀なので質を高めていきたい","themes":["日記・コンテンツ"]},{"date":"2026-03-28","staff":"ばしこ","comment":"写メ日記用の写真など撮影して本人に渡し済み\n\nちょっと体調が良くなさそだったので軽く撮影後また枚数欲しくなればいつでも協力するスタンス。","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-04-10","staff":"なべ","comment":"幅さんと面談\n4月20日(月)～26日(日)\n→強制マイガール\nその期間にすることやいい流れを取り戻すためにやるべきことを説明。\n\n3月はピルの副作用が思ったより多く当欠が多くなったとのこと。本人もやる気はある様子なのでここから切り替えて再始動。\nストーカーからも連絡が来なくなったとのこと。\n\n3月動画が1本も上がってないのでばしこ撮影組む","themes":["日記・コンテンツ","撮影","出勤・シフト","業務態度・指導"]},{"date":"2026-04-20","staff":"幅","comment":"強制オキニ入り説明と、新規顧客を生かしていく為に、増えた分のオキニトークファーストメッセージは、スタッフで返信は自身で、日記1日10回分の写メ日記用写真は大二郎撮影　先行して上げていく事を提案","themes":["オキニトーク","日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-04-22","staff":"せいや","comment":"動画バナーができるため動画を撮影時含め量産するように伝え。近況奮わないが同業の友人も時期を感じてるらしく自ら仕方ないと思ってしまっている。\n今やってもらってることは報われるので継続していこうと終話","themes":["日記・コンテンツ","撮影"]}],"ai_summary":{"headline":"デリ初心者から1ヶ月でプレミア昇給、優等生路線で質を高める","themes":["動画コンテンツ強化","ストーカー対応","勤怠と日記の質"],"challenges":"アイドル時代のオタクにストーカーされてる(現在は連絡途絶)。ピル副作用での当欠が3月に多発。エロ売りの幅は本人と相談しながら。","progress":"面接同行から始まり1ヶ月でプレミア昇給。3月動画ゼロをばしこ撮影で挽回。4/20-26強制マイガール期間で再始動。動画バナーで量産フェーズへ。","approach":"せいや・なべ・ばしこ・幅の総合体制。希望収入5万/遅番10H。ラーメン約束など信頼関係を着実に。インバウンド向けも徐々に解禁。"}},{"name":"まこ","count":13,"staffs":["幅","蛍"],"themes":{"オキニトーク":6,"日記・コンテンツ":9,"集客ツール":2,"出勤・シフト":6,"プロフィール":1,"撮影":1,"業務態度・指導":1},"first_date":"2025-12-05","last_date":"2026-04-16","meetings":[{"date":"2025-12-05","staff":"幅","comment":"オキニトークファーストメッセージ\n動画を作成する件","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2025-12-26","staff":"幅","comment":"料金がプレミアになった為、通常ではなく自分に価値を付けて行くように　まずは、口コミ（口コミ返信日記）を増やして行く、みたよユーザーを狙い撃ち、出勤日前日の日記などの話し","themes":["集客ツール","日記・コンテンツ","出勤・シフト"]},{"date":"2025-12-26","staff":"幅","comment":"料金がプレミアになった為、通常ではなく自分に価値を付けて行くように　まずは、口コミ（口コミ返信日記）を増やして行く、みたよユーザーを狙い撃ち、出勤日前日の日記などの話し","themes":["集客ツール","日記・コンテンツ","出勤・シフト"]},{"date":"2025-12-30","staff":"幅","comment":"バニラ連携完了☑️、動画アップ","themes":["日記・コンテンツ"]},{"date":"2026-01-11","staff":"蛍","comment":"日記のアップの仕方・本数・日記補助\nもう一度頑張ってみる","themes":["日記・コンテンツ"]},{"date":"2026-01-15","staff":"幅","comment":"日記用写真撮影、今後の迎え、送りについて説明","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-01-23","staff":"幅","comment":"最高キャストの日記、本指さんへの直接のアプローチ、オキニトークの仕分けについて説明","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-03-20","staff":"幅","comment":"お客様の事、日記について、出勤予定、\n今後　自分がしていったら良いことなど、送り中、質問が多数あったため、溜め込まない程度に話しを聞く　4/8日前には誕プレ","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-26","staff":"幅","comment":"出勤アラート27を50に、最高キャスト15を20に、テンプレートを作成しておいたので、定期的にアップするように、先行予約については、予定が早めに分かるので賛成","themes":["出勤・シフト"]},{"date":"2026-04-02","staff":"幅","comment":"お願いをしてあった、出勤アラート、最高キャスト、オキニトーク、口コミお礼日記の確認と、直近のガス抜きトーク、時間ある時に、誕プレでモチベーションアップ⤴️","themes":["オキニトーク","日記・コンテンツ","出勤・シフト","業務態度・指導"]},{"date":"2026-04-08","staff":"幅","comment":"誕プレを渡して、最近の仕事状況について話し\nロングコースも増えてきて、アドバイスを実行しているようで、次のステップは、出勤を増やして行く為、更なるオキニトークの活用を提案","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-04-16","staff":"幅","comment":"ゴールデンウィークの先行予約の文章が、間違ってたので、正しく提案、オキニトークをフル活用していく方法や、返し方なども提案","themes":["オキニトーク"]}],"ai_summary":{"headline":"プレミア昇格後の価値づけ、誕プレで細やかにモチベ管理","themes":["日記・口コミ強化","オキニトーク仕分け","出勤増加"],"challenges":"プレミア料金に見合う付加価値づくり。ロングコースは増加傾向だが出勤本数自体を伸ばす必要あり。","progress":"出勤アラート27→50、最高キャスト15→20に増加。誕プレでモチベアップ。GW先行予約でオキニトークフル活用へ。","approach":"幅と蛍の体制。口コミ返信日記・最高キャスト・出勤アラートの3点セットを定期アップ。質問が多いタイプなので溜め込まず対話。"}},{"name":"あみ","count":12,"staffs":["幅","蛍"],"themes":{"オキニトーク":4,"日記・コンテンツ":4,"出勤・シフト":2,"業務態度・指導":1},"first_date":"2025-12-05","last_date":"2026-04-24","meetings":[{"date":"2025-12-05","staff":"幅","comment":"オキニトークファーストからの返信、\n毎日20人の見たよ、見たよ返しについて","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2025-12-20","staff":"幅","comment":"アクセス解析、動画日記投稿を習慣するよう","themes":["日記・コンテンツ"]},{"date":"2025-12-28","staff":"蛍","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-01-11","staff":"蛍","comment":"日記の本数アップ・補助","themes":["日記・コンテンツ"]},{"date":"2026-01-31","staff":"幅","comment":"2月の出勤　週4で出るのと、別紙参照にて保証の話し","themes":["出勤・シフト"]},{"date":"2026-02-15","staff":"幅","comment":"最近　本指が離れてると感じてた事について相談あり、2月の閑散期でも来てくれる、お客様を大切にしていく、オキニトークで拾っていく話しをして、様子見","themes":["オキニトーク"]},{"date":"2026-03-13","staff":"蛍","comment":"メンヘラ発動。大丈夫だから保証期間にしっかり種まきしよう。日記・オキニトーク等細かなとこ見直して改善するように話し","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-03-24","staff":"蛍","comment":"出勤アラート説明\n先行予約も早めにシフト出すように話し","themes":["出勤・シフト"]},{"date":"2026-04-17","staff":"蛍","comment":"幅さんと、3人でモチベーションの保ち方などの話しと、ルーティンを変えることを提案","themes":["業務態度・指導"]},{"date":"2026-04-23","staff":"蛍","comment":"帰る・辞めると言い出し話しを聞いたとこ、悩んでいたなかドライバーの一言で引き金をひいたとの事。しっかり話しをし、引き留め。ドライバーにも余計な会話をしないように指示したい。\nこの周期は定期的にくるので様子見必要。","themes":[]},{"date":"2026-04-24","staff":"幅","comment":"昨日、帰る辞めるの発言があったのを蛍から聞いてたので、あえての世間話しで様子見\n強がってその件には、触れないような会話をあえてしてきた","themes":[]}],"ai_summary":{"headline":"メンタル周期に注意、ドライバーの一言が引き金になるタイプ","themes":["メンタル管理","本指離れ対策","オキニトーク"],"challenges":"「帰る・辞める」の周期的発言。ドライバーの何気ない言葉が引き金に。本指が離れている自覚あり。メンヘラ発動の波。","progress":"保証期間に種まき方針継続。日記・オキニトーク見直し改善中。蛍が引き留めてドライバーにも余計な会話禁止指示の方針。","approach":"幅と蛍が継続フォロー。定期的に来る不調期は様子見必要、強がりで触れない世間話で間接的に支える。"}},{"name":"しほ","count":12,"staffs":["せいや","なべ","ばしこ","太田"],"themes":{"集客ツール":2,"オキニトーク":2,"日記・コンテンツ":4,"撮影":4,"出勤・シフト":5,"業務態度・指導":2,"プロフィール":2,"条件・給与":1},"first_date":"2025-11-24","last_date":"2026-04-25","meetings":[{"date":"2025-11-24","staff":"太田","comment":"11/24　ネット予約+10分、キテネ、パフォーマンスヘブン","themes":["集客ツール"]},{"date":"2025-12-15","staff":"せいや","comment":"ｵｷﾆﾄｰｸ自動承認、ﾃﾝﾌﾟﾚ作成済み。","themes":["オキニトーク"]},{"date":"2025-12-20","staff":"なべ","comment":"次回の商品説明をしがてらインフルエンサーレベルの振り返り。\n次回動画日記のレベル上げを目標にしつつ、動画に関してポロリ以外NGがないから滝修行とかでもOKの子なのでキャラを生かしてバラエティ感のある動画を一緒に作っていこうという話になりました。\nあと、日記の素材をどんどん撮影する。\n\n仕事に関しては自分の売上はどの位置にいるのかのみ気にしていて、病むことがないそうでかなりメンタルは強そう。\n\n2月に豊胸予定","themes":["日記・コンテンツ","撮影"]},{"date":"2026-01-14","staff":"なべ","comment":"日記代行OK\n\n2/6に豊胸するのでそこから1ヶ月休み。\n服を着た撮影は出来るとのこだったので2月中旬に動画を撮影して3月の復活時に存在が消えてないようにサポートする。\n\n正月の燃えつきで今は少しモチベ下がっているそうです。\nけど期待して貰えることがモチベになるみたいなので様子見ながら声かける。","themes":["日記・コンテンツ","撮影","出勤・シフト","業務態度・指導"]},{"date":"2026-02-05","staff":"なべ","comment":"休暇中にアップできる用写メ・動画を撮りだめ。\n胸が落ち着くまでは今日の素材を使用して、落ち着いたらTikTokや日記用で企画物をばしこと作成予定。\n3月に入ったら🆕パネルを撮影をして3月頭に復帰予定。\n\n休み中は本人も上げつつこちらでもサポをしてマイガールが減らないようにします。","themes":["日記・コンテンツ","プロフィール","撮影","出勤・シフト"]},{"date":"2026-03-02","staff":"なべ","comment":"豊胸後初のパネル撮影＆TikTok用撮影\n8日から復活\n姫デコ料金アップ○","themes":["撮影"]},{"date":"2026-03-09","staff":"なべ","comment":"休み中も日記サポや定期的なやりとりをしていたので店から大切にされていると実感している様子。復帰後のモチベは◎。本指が少ないことは自負しているから推されてる分成績で示したいと語っていました。\n豊胸によるＰ指増と本指が他県の人ばかりだから地元の本指を増やすのを目標にしていくそうです。","themes":["日記・コンテンツ","出勤・シフト","業務態度・指導"]},{"date":"2026-03-09","staff":"ばしこ","comment":"TikTok編集済みで数日感覚で3本UP予定","themes":[]},{"date":"2026-03-10","staff":"せいや","comment":"ずっと回るかな～と店マターで話してるので、回すのはあなたと終始伝えている。高額円盤がリピート率低い原因なのでタイミングみて突っ込む","themes":[]},{"date":"2026-03-16","staff":"なべ","comment":"ダウンタイム中に体験に行ったキャバに入店したそう。\nデリの頻度は変わらないが休みの日が暇すぎていつも飲みに行くだけだから仕事にしたとのこと。(週1くらい)＆5月までおっぱいを安静にしないといけなくて本気でおっぱいを使ったプレイは×なのもある。\n\nかといってデリの出勤日数をこれ以上増やすと体力的に厳しいとのことで様子見。\n情報を引き出せる関係もキープしつつこっちの出勤が万が一減ったら突っ込む。","themes":["出勤・シフト"]},{"date":"2026-04-06","staff":"せいや","comment":"直近動きが悪いのは何となく感じており、本指に感謝していた。今回接客の部分については突いておらず。数字見せながらアクセスの重要さどの記事が伸びているか、今後の伸ばし方を説明。\n\n最高キャスト・出勤アラート説明。\n↑テンプレートも\nビジュが良すぎるためブランディングが弱いと仇になるよう伝え最高キャストを急がせた\n\n構っていると気分が良いタイプ","themes":["プロフィール","出勤・シフト"]},{"date":"2026-04-25","staff":"せいや","comment":"オキニトークバック説明。自分から営業かければ稼ぐシステムになっていってるので活かしすよう説明。無難にこなすが順序わかってないので、最高キャスト5人とネット予約金星を目指すように伝え","themes":["集客ツール","オキニトーク","条件・給与"]}],"ai_summary":{"headline":"豊胸後復帰のメンタル強キャラ、本指少なくとも推され勢で勝負","themes":["豊胸ダウンタイム対応","ブランディング","オキニトークバック"],"challenges":"本指少ないことを自負、推され分を成績で示したい。ビジュ良すぎでブランディングが弱いと仇に。キャバ掛け持ちで体力的に出勤増は厳しい。","progress":"2/6豊胸→1ヶ月休み→3/8復帰。撮りだめでマイガール維持。豊胸後初パネル撮影&TikTok展開。最高キャスト5人とネット予約金星目標。","approach":"なべ中心+せいや・ばしこ。構うと気分良いタイプ。5月までおっぱい安静、地元本指獲得が長期目標。"}},{"name":"あん","count":11,"staffs":["幅","蛍"],"themes":{"オキニトーク":5,"日記・コンテンツ":5,"プロフィール":1,"出勤・シフト":3,"集客ツール":1},"first_date":"2025-12-15","last_date":"2026-03-15","meetings":[{"date":"2025-12-15","staff":"幅","comment":"業界未経験の為、まずは日記の文章、写真から\n折をみて、オキニトーク、動画など\n月30万目標　週3くらいの為出勤したら3万平均目標","themes":["オキニトーク","日記・コンテンツ","プロフィール","出勤・シフト"]},{"date":"2025-12-16","staff":"幅","comment":"初出勤、オキニトーク送信、性格診断、日記の種類を説明","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2025-12-20","staff":"幅","comment":"強制オキニ追加オキニトーク送信","themes":["オキニトーク"]},{"date":"2025-12-29","staff":"幅","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-01-02","staff":"幅","comment":"パフォーマンスヘブンにて、足りない点を説明　現場では口コミ日記では限定、動画も含めてサンプルは作成して渡した。休日の日記の重要性も出来る範囲で、出来ない点は、様子をみて補助","themes":["集客ツール","日記・コンテンツ"]},{"date":"2026-01-14","staff":"幅","comment":"控えめな日記と声日記動画で、アクセス狙って行く方向の確認　アクセスの動きを見て修正\n昨日1800アクセスいったんで、継続の話し","themes":["日記・コンテンツ"]},{"date":"2026-01-23","staff":"幅","comment":"最高キャストについて昨日、作成してアップした所オキニトークにやります！の連絡があったようで、0→5人以上最高キャストが押されてたのでそれについて説明、またオキニトーク内の仕分けを説明","themes":["オキニトーク"]},{"date":"2026-03-08","staff":"幅","comment":"親、親族バレで退店についての話し\n色々お金を立替えてもらう上で、昼職の社員になる為、3／15日の出勤をもって退店となりました。","themes":["出勤・シフト"]},{"date":"2026-03-10","staff":"幅","comment":"今後の事について、残された日で引き留め中","themes":[]},{"date":"2026-03-15","staff":"蛍","comment":"今夜最後のお礼日記をアップして明日の午後以降にサイト削除となります","themes":["日記・コンテンツ"]}],"ai_summary":{"headline":"親バレで2026/3/15退店、最後まで丁寧にフォロー","themes":["未経験スタート支援","退店フォロー"],"challenges":"業界未経験で日記の文章・写真からスタート。親・親族バレで昼職社員になるため退店決定。","progress":"12月入店から3ヶ月で月30万目標へ。控えめな日記+声日記動画でアクセス1800達成も。最終日まで残された日数で引き留め試みつつ円満退店。","approach":"幅と蛍の体制。立替金の精算含めて誠実に対応。最終お礼日記アップ後にサイト削除済み。"}},{"name":"すみれ","count":11,"staffs":["せいや","なべ","ばしこ","幅"],"themes":{"オキニトーク":3,"日記・コンテンツ":7,"出勤・シフト":4,"条件・給与":5,"業務態度・指導":3,"プロフィール":1,"撮影":2},"first_date":"2026-03-27","last_date":"2026-04-22","meetings":[{"date":"2026-03-27","staff":"幅","comment":"メンエス経験のみ、歯科衛生士で働きながらの出勤だが、週4，5日　15時～3時辺りで出勤予定　4月プレミアで様子見　勤怠、日記、オキニトークを見て、見直し（アップ）\nヘブンのツールは初めての為バックアップしていく　小橋作で初出勤用・動画を作成","themes":["オキニトーク","日記・コンテンツ","出勤・シフト","条件・給与"]},{"date":"2026-03-29","staff":"幅","comment":"無事初出勤　オキニトークのファーストメセージ、案内前🌸歩きアップ　合間の時間で様子聞きながらモチベーションアップへ　\n最高キャスト、出勤アラートをテンプレートにセット　途中話したがプレイ等　問題なしとの事","themes":["オキニトーク","日記・コンテンツ","出勤・シフト","業務態度・指導"]},{"date":"2026-03-29","staff":"せいや","comment":"精算お迎えへ。無事初日こなしてくれて次回出勤もOK。未経験らしく意見や質問が常識あるので対応は紳士に。ブランディングやモチベーションは幅さんがしっかりやられているので、こちらは吐け出し口で。天性的な物があるので個人的にはロング本指たくさん作るだろうなという印象でした。","themes":["プロフィール","出勤・シフト","業務態度・指導"]},{"date":"2026-03-31","staff":"幅","comment":"本撮影、分からない事など聞くと、タバコを吸う方の件について質問あり、今週の予定をクリアしたら、来週からフルバックをつけていく予定","themes":["撮影","条件・給与"]},{"date":"2026-04-04","staff":"幅","comment":"今週クリアしたら、最初の約束通り\n来週から12時間受付120分フルパック\n条件は！日記6回必須で、前々に早めに上げていくようアドバイス、案内時に案内動画など提供","themes":["日記・コンテンツ","条件・給与"]},{"date":"2026-04-07","staff":"幅","comment":"出勤動画をアップしていく提案\n本日からフルバックがつくので、日記を先行して上げていく、オキニトークで先行予約を取っていく提案","themes":["オキニトーク","日記・コンテンツ","出勤・シフト","条件・給与"]},{"date":"2026-04-08","staff":"なべ","comment":"ニュース・メルマガの説明。その時期にやることも含め。\n口コミお礼日記の上げ方と効果の説明。","themes":["日記・コンテンツ"]},{"date":"2026-04-18","staff":"幅","comment":"やっと体調戻り復活、\n空いた時間を取り戻す為、まずは\n日記動画、回数を倍近く上げていく\nこちらでバックアップするために、待機時間は、スタジオで撮影","themes":["日記・コンテンツ","撮影","条件・給与"]},{"date":"2026-04-18","staff":"ばしこ","comment":"動画加工して本人へ送信済み","themes":["日記・コンテンツ"]},{"date":"2026-04-20","staff":"幅","comment":"昨日は、ほぼ満枠からの本日は、スタートから空きで、ゴールデンウイーク前で波もあるので、トータルで考えて行こう　理解あり\n昼職が、ほぼ毎日ある為、気持ちモチベーションは常に目を配っていく","themes":["業務態度・指導"]},{"date":"2026-04-22","staff":"幅","comment":"ガチ恋客、友達客、太客など自分の中で、生理しながら、接客してる。働く理由についても話しの話題になり話しを聞いたが、彼女は、しっかりしている！","themes":[]}],"ai_summary":{"headline":"歯科衛生士兼業の天性キャスト、未経験から本指作りの星","themes":["条件・給与","日記・オキニトーク量産","モチベ管理"],"challenges":"メンエス経験のみで日記・撮影が未経験。昼職毎日ある中で体調・モチベ管理。空き時間にスタジオ撮影で補助必要。","progress":"3月末入店、初日無事クリア。4月から12H受付120分フルパック条件、日記6回必須。動画加工も体制構築中。","approach":"未経験で常識ある質問者なので紳士的対応。幅がブランディング・モチベ、せいやが吐け出し口の役割分担。ガチ恋・友達・太客を整理して接客できる芯の強さ。"}},{"name":"しおん","count":10,"staffs":["せいや","なべ","幅"],"themes":{"集客ツール":1,"日記・コンテンツ":4,"プロフィール":1,"撮影":2,"業務態度・指導":2,"出勤・シフト":3,"条件・給与":1,"掛け持ち・他店":1,"オキニトーク":1},"first_date":"2025-12-01","last_date":"2026-04-17","meetings":[{"date":"2025-12-01","staff":"なべ","comment":"インフルエンサーレべルがお店TOP3以内には入っていること、みんなのお手本であることを前提に11月はインフルエンサーレベル76(A評価)だったので、S評価を狙うため、\n12月目標\n口コミ7件→10件以上\n写メ日記82件→100件以上(本人的には1日5本目標)\nネット予約24本→25本以上\nという話をしました。\n\n別件でココアstory(YouTube)出演OKを貰ったのでIMCと日程調整中です。","themes":["集客ツール","日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-01-10","staff":"せいや","comment":"日記のサポートの可否→必要\n本人でクオリティは保つので次回案内等で回数稼いで日記のAランクを狙おうと話で固まりました。ハプバーやプライベートな話を多く語ってくれるので引き続きいい距離間で対応します。","themes":["日記・コンテンツ","業務態度・指導"]},{"date":"2026-02-24","staff":"幅","comment":"近況の話し、誕プレを撮影用下着プレゼント\n閑散期を感じないくらいの最近状況（本日満枠の為）新規も最近は、あるとの事だった為、本人的にもリピートに繋げて行こうのモチベ","themes":["撮影","業務態度・指導"]},{"date":"2026-02-27","staff":"幅","comment":"姫デコブーストのアップの件説明⭕️","themes":[]},{"date":"2026-03-09","staff":"なべ","comment":"日記をやって貰えるのはありがたいけど本指からいちいち日記についてLINEが来てしまうと相談がありました。\n休みの日は1本程度無難な次回いつ出勤、出勤時は次回何時など差し当たりない物でしおんちゃんのカラーをそのまま使って手書きサポートすることになりました。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-25","staff":"幅","comment":"出勤アラート、最高キャスト、テンプレートに保存して定期的にアップするように説明\nインバウンドyoyasobi　貸し切りの料金を考えて決まり次第　参考に設定","themes":["出勤・シフト"]},{"date":"2026-03-28","staff":"幅","comment":"鶴舞3Pの拾いで、日記にインスタ風のテロップを入れて、ストーリーを持たせていくのも良きの提案　出勤アラート・最高キャストがまだ上がってないので、アップお願い","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-07","staff":"せいや","comment":"せしるフォローがてら久しぶりに時間取れた\nしおんちゃんもアネキャンの並びに不満を持っているそう。せしるが暴走して10時間フルバックとか目の前で言った怒\n周りからよく相談されるが自身の収入が落ちてないので困る時がある。しおんちゃんも奥底では周りの努力が足りないと思ってそう。","themes":["条件・給与","掛け持ち・他店"]},{"date":"2026-04-15","staff":"せいや","comment":"オキニトークでの姫予約について説明。文言残したスクショを推奨","themes":["オキニトーク"]},{"date":"2026-04-17","staff":"せいや","comment":"先行予約説明。\n色々話すが、顔見知りのキャストの捌け口になっているので定期的にフォロー","themes":[]}],"ai_summary":{"headline":"インフルエンサーS評価狙いの優等生、周りの相談係でも","themes":["日記KPI管理","撮影・動画","顔見知りキャストフォロー"],"challenges":"アネキャンの並びに不満。せしるの暴走発言で困惑。周りからよく相談される立場で逆に重荷も。","progress":"12月インフルエンサー76→100目標。日記100件以上、ネット予約25本以上のKPI設定。ココアstory出演OK。インバウンドyoyasobi貸切設定中。","approach":"本人でクオリティ保つので回数稼いでAランク狙い。ハプバー等プライベート話を多く語ってくれるので距離感維持。捌け口役なので定期フォロー。"}},{"name":"ゆあ","count":10,"staffs":["せいや","幅"],"themes":{"条件・給与":1,"掛け持ち・他店":1,"日記・コンテンツ":6,"プロフィール":2,"撮影":2,"業務態度・指導":1,"出勤・シフト":4,"オキニトーク":1},"first_date":"2026-03-12","last_date":"2026-04-18","meetings":[{"date":"2026-03-12","staff":"幅","comment":"せいや、幅　面接\n現在メンエス　GOLD   7時間5万〜8万稼ぎ\n愛ラブ面接を考えてたが、阻止\n一旦掛け持ちで、やってデリだけで月100最低行けると思ったら1本化　その際は、フルバックをつける条件を提示　3月は、トータル保証をつけて様子見","themes":["条件・給与","掛け持ち・他店"]},{"date":"2026-03-18","staff":"幅","comment":"21日デビューに向けて、撮影\n日記用、動画、写メ\n下着を新着してくるなど、モチベーション高め","themes":["日記・コンテンツ","プロフィール","撮影","業務態度・指導"]},{"date":"2026-03-20","staff":"幅","comment":"明日の事について連絡あり、日記動画を小橋くん作成のもの上げ方など説明","themes":["日記・コンテンツ"]},{"date":"2026-03-21","staff":"幅","comment":"最高キャストの画像を作って、文章と共に送り、説明　スタートから予約はある為\n初日の為　様子見","themes":[]},{"date":"2026-03-24","staff":"せいや","comment":"様子見に拾いに行った。\n現状客当たりが悪いそう（本強客が多い）だが店としては問題なく良い環境だと思っているそう。次回出勤が25日の為そこで出勤アラートと直近のシフトを叩く。\n\nニュース、内緒話バナーをlineにて説明　幅","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-25","staff":"せいや","comment":"出勤促したが、生理予定だそう。当欠でも大丈夫だからギリギリまで出勤入れていいよと伝えメンエスに出勤出したので調整してこっち増やしますとのこと。","themes":["出勤・シフト"]},{"date":"2026-03-27","staff":"せいや","comment":"個人に連絡あり。\n前回のシフトの件検討してくれたがエステですでに予約入ってしまったので増やせなかったとのこと。生理が4日ぐらいに終わる予定なのでそこから頑張りますとのこと。元々エステのリスクを切りたいために来てるのでやや強めにプッシュしていく","themes":["出勤・シフト"]},{"date":"2026-04-08","staff":"せいや","comment":"結局どっちつかずなので\nメンエス辞める前提で来ている経緯もあり強めにプッシュ。\n週3出勤で7H-4万8H-5万\n新人イベント4末まで継続\n当日はしっかりやる子なので前日と当日は日記で売り込むことを伝え、休みの日はちょこちょここちらでやっていく。\n\n全出しはマイガールのみ\n\n写真もらった。撮影は髪巻きたいそうで、個人でスケジューリングします。\n\nオキニトークのテンプレももらい\nオキニトーク姫予約も詳しく説明。\n\nオーラはピカ一と感じているのでモノにしたい。","themes":["オキニトーク","日記・コンテンツ","プロフィール","撮影","出勤・シフト"]},{"date":"2026-04-15","staff":"せいや","comment":"動画日記を新天地デビュータグをつけることで特設サイトにピックアップされることを伝え","themes":["日記・コンテンツ"]},{"date":"2026-04-18","staff":"せいや","comment":"新人イベントの口コミお礼日記を新天地デビューで動画で投稿するように","themes":["日記・コンテンツ"]}],"ai_summary":{"headline":"メンエスから1本化中の期待株、新人イベント中の伸び盛り","themes":["1本化交渉","新人イベント","オキニトーク姫予約"],"challenges":"エステ予約優先になりがち、生理タイミングと重なり調整難。GOLDメンエスとの掛け持ち期間中に強めにプッシュ必要。","progress":"3/21デビュー後新人イベント4末まで継続。週3出勤7H-4万/8H-5万条件。新天地デビュータグで特設サイト掲載。","approach":"せいや中心。オーラピカ一でモノにしたい意気込み。当日はしっかりやる子なので前日と当日の日記売り込みを徹底。"}},{"name":"りの","count":10,"staffs":["なべ","ばしこ","幅","蛍"],"themes":{"オキニトーク":2,"日記・コンテンツ":6,"集客ツール":2,"プロフィール":4,"業務態度・指導":2,"撮影":4,"出勤・シフト":1},"first_date":"2025-12-10","last_date":"2026-04-01","meetings":[{"date":"2025-12-10","staff":"幅","comment":"オキニトーク、日記動画アップの話し","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2025-12-25","staff":"幅","comment":"料金変更の話し、オキニトークは、新規含めて返信済み、みたよからのユーザーを狙って仕掛けていく話し","themes":["集客ツール","オキニトーク"]},{"date":"2025-12-28","staff":"幅","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-01-18","staff":"蛍","comment":"プロフィール写真の変更","themes":["プロフィール"]},{"date":"2026-01-26","staff":"幅","comment":"パフォーマンスヘブンから、足りない部分と日記の上げ方など、前向きな話し\n写メの選択や、売り込みポイントも指導","themes":["集客ツール","日記・コンテンツ","プロフィール","業務態度・指導"]},{"date":"2026-01-31","staff":"幅","comment":"昨年の稼ぎと本年の稼ぎで、比較など\n最近コンテンツをやっている事を含めて、プロフィール変更、2月の保証\n別紙参照","themes":["プロフィール"]},{"date":"2026-03-09","staff":"なべ","comment":"エロ売りが出来ないのでどんな動画が良いか悩み中。キャラを活かした恋人系やイチャイチャ系で17日に動画をばしこ撮影。\n\n仕事の入りが△なことなどは前々から悩んでいたりコンテンツに関してや悩みなど定期的に連絡が来るので対応しながら伸ばしていく。こだわりが強いので本人の意思も尊重しながらじわじわ。","themes":["日記・コンテンツ","撮影"]},{"date":"2026-03-16","staff":"なべ","comment":"四日市店の出勤を増やす相談があったので推奨しました。\n日記は10本上げてるのにアクセスが1000から伸びないことも相談があったのでいろいろ提案しました。動画が乗り気なのでひとまず明日のばしこ撮影でモチベを上げる。","themes":["日記・コンテンツ","撮影","出勤・シフト","業務態度・指導"]},{"date":"2026-03-17","staff":"ばしこ","comment":"本人と相談しながら日記用動画メインで撮影完了。\n\n何本かモザイク処理を施した後、本人へ送る。","themes":["日記・コンテンツ","撮影"]},{"date":"2026-04-01","staff":"ばしこ","comment":"日記用の写真、特に動画を多めに撮影\n使えるように加工して本人に渡す。","themes":["日記・コンテンツ","プロフィール","撮影"]}],"ai_summary":{"headline":"エロ売り苦手の恋人系路線、アクセス頭打ち打開を模索","themes":["動画路線確立","プロフィール変更","アクセス改善"],"challenges":"エロ売り不可、日記10本上げてもアクセス1000で頭打ち。こだわり強くじわじわ進めるしかない。","progress":"ばしこ撮影で恋人系・イチャイチャ系動画。3/17動画撮影でモチベアップ。四日市店出勤も増加方向。","approach":"なべ・ばしこ・幅・蛍の体制。本人の意思尊重しながらじわじわ。撮影頻度を上げてキャラを活かす。"}},{"name":"あい","count":9,"staffs":["せいや","ばしこ"],"themes":{"日記・コンテンツ":4,"撮影":4,"プロフィール":3,"業務態度・指導":1,"出勤・シフト":6,"掛け持ち・他店":2},"first_date":"2026-02-08","last_date":"2026-03-28","meetings":[{"date":"2026-02-08","staff":"せいや","comment":"なべさんと面接、アイモードで1年風俗経験あり、デリは初めて。ポテンシャル高そうだが本人も控えめで緊張してそうだったのでレギュラーからスタート、リピートあるようならプレミアへ。\n日記も撮影もやったことないそうで1からサポートが必要。\n\nコミュニケーションは取りずらそうなので回数重ねて","themes":["日記・コンテンツ","撮影"]},{"date":"2026-02-11","staff":"せいや","comment":"パネル撮影。やる気はある。今のところは6時間で3万メドに稼ぎたいと。追々時間は延ばしていく予定。写真破壊力あるので伸びるかと、なべさんとフォローしていく。\n\nプレミア、自走の為ガソリンか厚生費でタイミング見て伸ばしていきたい。\n\n好物は肉だそうで1か月頑張って作戦会議がてらいこうね～と","themes":["プロフィール","撮影","業務態度・指導"]},{"date":"2026-03-07","staff":"せいや","comment":"スタートとしてはP指本指良好だが週末6時間勤務のみ。平日の暇を懸念しているそう、もちろんそういう日も出てくるがこちらもサポートしていくのでもったいないから出ておいでと話。シャイで多人数前では話せないが、2人だと話してくれる","themes":["出勤・シフト"]},{"date":"2026-03-13","staff":"ばしこ","comment":"24日平日の出勤時に写メ撮影段取り。\n動画なども撮影して効果的に写メ日記使用してもらえる用にクロージング予定","themes":["日記・コンテンツ","プロフィール","撮影","出勤・シフト"]},{"date":"2026-03-20","staff":"せいや","comment":"入店1か月短い受付時間の中リピートあるのでどんどん下地を作っていこうと伝え、出勤叩いた、今日中に必ず申請するように。\n動画の作り方を教えて出勤1日1本。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-24","staff":"せいや","comment":"遅くまで就業していたので出勤アラートのさわりだけ説明。平日の出勤が足りないので7H受付3万保証で持ちかけるつもり。次の出勤が出てるのでそこで時間作って話そうねで終話","themes":["出勤・シフト"]},{"date":"2026-03-28","staff":"ばしこ","comment":"写メ日記用の写真など撮影後本人に渡し済み\n細かい加工などが苦手みたいで何枚か投げて貰えれば教えながら加工しますよとお伝え済み","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-28","staff":"せいや","comment":"最高キャスト、出勤アラート、インバウンド〇\n\n目の前ででりどすでのあげ方及び加工方法伝えて投稿。アネキャンは踏まえて自身であげるように。","themes":["出勤・シフト","掛け持ち・他店"]},{"date":"2026-03-28","staff":"せいや","comment":"出勤日数の話。\n掴み切れないが何かと掛け持ちかな？受付時間伸ばすのはしんどいと言っていた。知ってたら共有してください。\n\nリピートもあるしゆくゆくは週末本指出勤という目的が合致している為、下地を作る為に入りは頑張っていこうよと\n\n週4、7H受付3万トータル保証を提案。返答待ち。","themes":["出勤・シフト","掛け持ち・他店"]}],"ai_summary":{"headline":"シャイで2人だと話せるタイプ、写真破壊力で伸びる予感","themes":["未経験サポート","出勤拡大","撮影・加工指導"],"challenges":"コミュニケーションが取りにくく回数で慣らす段階。週末6時間勤務のみ、平日の暇を懸念。掛け持ち疑惑あり。","progress":"2/8入店、6時間で3万目標から始動。スタートとしてP指本指良好。週4・7H受付3万トータル保証を提案中。","approach":"せいやとばしこ中心。1ヶ月頑張ったらお肉約束。加工苦手なので教えながら一緒にやる。長期では週末本指出勤目指す。"}},{"name":"あむ","count":9,"staffs":["せいや","幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":4,"掛け持ち・他店":1},"first_date":"2026-03-05","last_date":"2026-04-22","meetings":[{"date":"2026-03-05","staff":"幅","comment":"ペット同伴で、出稼ぎを転々としてるよう\n名古屋は、友人が居て丸の内からの5日間\nリピートしてる店も無いよう　大阪では、中国人向けのデリヘルでたまに働いてるとの事","themes":[]},{"date":"2026-03-06","staff":"幅","comment":"本日初日　前日より日記をアップ（動画日記）\n出勤時迎えに行った際にも日記は、予約投稿済み、オキニトークの返信も移動中にやってくれてる　　リピートの話しから5日間で交通費片道支給します。話し済み","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-07","staff":"幅","comment":"初日の印象含めて、名古屋へ引っ越しを考えてるよう　不動産を色々見てたとの事だったので、事務所に言ってもらえば、不動産屋紹介できますよ。この出稼ぎ期間で、在籍で固めたい","themes":[]},{"date":"2026-03-10","staff":"せいや","comment":"保証は1.4万プラス。\n最終日の精算にて、率直にどうだったか確認したが納得してそうではあった。幅さんからも残したい旨聞いていたので5日間以上なら片道交通費も出すし、来てもらった日程が店的に苦しいタイミングだったがポテンシャルは伝わったからまた是非来て欲しいと伝えた。引っ越しも検討中とのこと","themes":[]},{"date":"2026-03-17","staff":"幅","comment":"前回の丸の内に宿泊\n中1日休みを挟んでリピート\n3／30.31\n4／1.3.4.5.6\n7日間\n20時〜4時受付\n30000✖️7\nトータル21万保証\n交通費片道支給","themes":["出勤・シフト"]},{"date":"2026-03-31","staff":"せいや","comment":"珍しく名古屋の客層が良い人で得意らしく、稼ぎも満足そう。アラート等の話をしたいが中々時間合わず、作って早急に対応する。次はGWを考えているがおススメを聞かれたので仰られたように月末か長期連休かなと。こちらがしんどい時期に保証出せば来てくれそうな感もある。","themes":[]},{"date":"2026-04-03","staff":"せいや","comment":"最高キャスト・出勤アラート説明。\n\n出稼ぎなので特に出勤アラートの重要性を説く。次はGW予定と気に入ってリピートしてくれてるので定期的にスタッフから声掛けを","themes":["出勤・シフト"]},{"date":"2026-04-21","staff":"幅","comment":"稼ぎ面で不安が出来て、他店に行ってたが\nせいやと3人で話しをして、当店1本に\nゴールデンウイーク期間10日間の出勤の約束などは別紙参照","themes":["出勤・シフト","掛け持ち・他店"]},{"date":"2026-04-22","staff":"幅","comment":"29日～5/10までの間で10日間　\n20時～4時受け　トータル30万保証【特日のみ+8時間3万】","themes":[]}],"ai_summary":{"headline":"ペット同伴の出稼ぎ族、当店一本化で在籍化を狙う","themes":["出稼ぎ→在籍化","保証付き集中出勤","条件設定"],"challenges":"他店に行く稼ぎ不安あり。中国向けデリと並行。出稼ぎリズムから在籍リズムへの転換が課題。","progress":"3月5日間→7日間21万保証→GW10日間30万保証と段階的に拡大。3者面談で当店一本に同意。引っ越し検討中。","approach":"幅とせいやの体制。出勤アラートの重要性を出稼ぎ視点で説明。客層が良い人で稼ぎ満足、しんどい時期に保証出せば来てくれる感触。"}},{"name":"あやめ","count":9,"staffs":["かぶ","幅","蛍"],"themes":{"オキニトーク":1,"日記・コンテンツ":2,"集客ツール":1,"掛け持ち・他店":1,"出勤・シフト":1,"業務態度・指導":1},"first_date":"2025-12-02","last_date":"2026-04-12","meetings":[{"date":"2025-12-02","staff":"幅","comment":"オキニトークファーストメッセージについて","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-01-07","staff":"幅","comment":"バニラ連結完了☑️女の子並び順についての話し\nアクセス、足りない点、出来てる点について、パフォーマンスヘブンの説明","themes":["集客ツール"]},{"date":"2026-02-26","staff":"幅","comment":"姫デコブーストの値段アップの件を話し済み","themes":[]},{"date":"2026-03-09","staff":"蛍","comment":"今の現状に悩みを抱えてたので\n気持が自分の仕事メインにいってるので\nしずくの方にもう少し気持ちを向ける事\n日記がリピ向けの内容になってるので\nあやめちゃんを知らない人にもっと発信するように話し。","themes":["日記・コンテンツ","掛け持ち・他店"]},{"date":"2026-03-10","staff":"幅","comment":"事務所に来て、話し聞いて欲しいの相談から話しをした。現状、これからの展開など","themes":[]},{"date":"2026-03-11","staff":"かぶ","comment":"接客が1本だけでフルの状態が2～3日あった為、本人が気にしていたため現状と状況を説明して、焦らず行きましょうと話し済み","themes":[]},{"date":"2026-03-12","staff":"蛍","comment":"幅さんとも喋り彼女の中で腑に落ちなかった部分も解消されたようです。頭では理解しつつも心がついてこなかった部分も解消され今後も頑張ってくれると思います","themes":[]},{"date":"2026-03-23","staff":"幅","comment":"出勤アラートを画像付きで渡して説明\n先行予約も予定を翌月分出してもらう話しで調整","themes":["出勤・シフト"]},{"date":"2026-04-12","staff":"蛍","comment":"モチベが戻らず本人も悩み中…芯の部分をつき泣いていたが少しスッキリした様子。\n暫く様子見必要か…","themes":["業務態度・指導"]}],"ai_summary":{"headline":"メンタル波あり、リピ向けから新規向け日記への転換指導","themes":["メンタル管理","日記内容転換","しずく寄り意識"],"challenges":"気持ちが自分の仕事メインに行きしずく寄りで悩む。日記がリピ向けになりがち。モチベ戻らず芯の部分で泣くことも。","progress":"3月幅・蛍・かぶの三方面フォロー。腑に落ちなかった部分は対話で解消。出勤アラートと先行予約の翌月分提出で調整。","approach":"蛍と幅が交代でフォロー。様子見必要な状態が続く。あやめを知らない人への発信を意識した日記に転換中。"}},{"name":"かぴ","count":9,"staffs":["せいや","なべ","幅"],"themes":{"集客ツール":1,"掛け持ち・他店":1,"オキニトーク":3,"日記・コンテンツ":4,"プロフィール":1,"業務態度・指導":3,"出勤・シフト":3,"撮影":1},"first_date":"2025-12-07","last_date":"2026-04-25","meetings":[{"date":"2025-12-07","staff":"なべ","comment":"ネット予約に関しては社長から電話で説明。\n店でやっている＋10分はやりたくないとのことで個人オプションの内容を改良。(社長とかぴも直接電話済み)\nアネキャンは個人オプションは一旦なし。\n\nキテネは11月に説明済み。※マイガールの人に関しても多めに押して欲しいとのことでした。","themes":["集客ツール","掛け持ち・他店"]},{"date":"2026-01-10","staff":"なべ","comment":"オキニトーク一括送信OK。\n当日の問い合わせなども来店に繋がりそうなものはこちらで返してOKの許可を貰いました。※文章に注意なのでなるべくなべ返します。\n\n日記に関しても代行OKですが、文章とタイトル、写真を集めて2月からスタートしたいとのこと。\n1日5本上げれるようストックを作って2月上げたものを3月以降は完全コピペ。\nタイトルのみエロOKにするそうなので作成は手伝うことになりました。","themes":["オキニトーク","日記・コンテンツ","プロフィール","業務態度・指導"]},{"date":"2026-03-03","staff":"せいや","comment":"姫デコ継続。\n困ったら話してくるので\nガツガツ行かず受身で。\nなべさんの日記が効いてるのでタイミング見て突っ込む","themes":["日記・コンテンツ"]},{"date":"2026-03-23","staff":"幅","comment":"出勤アラート、先行予約の説明　先行予約は食い気味で聞いてきてたので、予定がわかるのは本人にとって良いことなのかも","themes":["出勤・シフト"]},{"date":"2026-04-07","staff":"せいや","comment":"面接時にはけたついでに20分ほど会話。\nモチベーション低下触られたくない病。\n日記もオキニトークもやらないがケチはつけたい感じ。そこをやれと言うより、自分の見る夏のビジョンに核としていて欲しいと訴えやる気と遠回しに実力主義の方針と伝えてみた。\n\n雑談で気持ちよく関係築きながら、店上がっていけばついてきそう、俗にぬるま湯","themes":["オキニトーク","日記・コンテンツ","業務態度・指導"]},{"date":"2026-04-08","staff":"なべ","comment":"日記を休みの日も1本は上げるために毎日上げるテンプレの相談。\n毎度何かしらやろうとするが続かないので引き続き様子見。\nオキニトークは初回から下ネタの人はオールスルーだけどそれ以外返してく…とは言ってたけど…続くかどうか…。\nこっちからも溜まってるよアナウンスはOK。","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-22","staff":"せいや","comment":"色々不満は溜まっていて、改善というより話を聞いてほしい感じ。変化を求めず自分達が変われば景色も変わるから一緒に頑張ろうトーク。整形に120万貯金予定でやる気はある。\n口コミは独自のやり方で、後は時間経てば追いつくとのこと。本当は看板としてやりたそうだが、現状行動が足りてないことをやんわり伝え。","themes":["業務態度・指導"]},{"date":"2026-04-24","staff":"せいや","comment":"前回撮影をお願いしにくいと言っていたのでクリエイター班に相談したうえで、姫デコ分で月1は大丈夫だよと伝え。寂しそうなので仕事含め声掛け頻繁に","themes":["撮影"]},{"date":"2026-04-25","staff":"なべ","comment":"GW出勤しない理由は客層が悪くなったり普段来ない新規が来るから。\n病むくらいなら休むとのこと。ついでに生理こさせようなぁ。\n本指からリクエストがあったら出勤するかもとは言っていた。","themes":["出勤・シフト"]}],"ai_summary":{"headline":"触られたくない病のぬるま湯型、雑談で関係築く長期戦","themes":["モチベ管理","雑談ベース対応","日記テンプレ化"],"challenges":"日記もオキニトークもやらないがケチはつけたい。何かしらやろうとするが続かない。GW出勤しない理由は客層悪化や新規来訪を嫌う。","progress":"1月から日記代行・オキニ一括送信OK。日記5本ストックで2月以降コピペ運用。整形120万貯金目標で奥底にやる気。","approach":"なべとせいや中心、ガツガツ行かず受身で。実力主義方針を遠回しに伝達。月1撮影で寂しくならないよう接触頻度上げる。"}},{"name":"しのぶ","count":9,"staffs":["かぶ","幅","蛍"],"themes":{"オキニトーク":1,"日記・コンテンツ":2,"撮影":2,"出勤・シフト":4,"掛け持ち・他店":3},"first_date":"2025-12-25","last_date":"2026-04-18","meetings":[{"date":"2025-12-25","staff":"幅","comment":"出勤に関しては、勤怠⭕️だが、接客時間より待機時間が、多いため　それを逆転させる為にやる事　　日記の種類、オキニトークの有効な使い方　　撮影に関しては積極的ではないので、\n空き時間にスタジオ使ってセルフにて撮影","themes":["オキニトーク","日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2025-12-28","staff":"蛍","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-03-09","staff":"蛍","comment":"かけもちの相談あり\n岐阜のデリとの掛け持ちで一旦様子見\n出勤は半々で出勤する予定！","themes":["出勤・シフト","掛け持ち・他店"]},{"date":"2026-03-09","staff":"かぶ","comment":"本日2件目のお客さん　金額回収忘れ本人とも話し合い済み　お客さん連絡取れ次第、対応連絡いれる話済み","themes":[]},{"date":"2026-03-11","staff":"幅","comment":"本日パネル撮影　予約の関係で若干の時間変更","themes":["撮影"]},{"date":"2026-03-11","staff":"かぶ","comment":"前回にあった金額貰い忘れの件で連絡取れず折り返しも無い件でやはり先に金額を受け取っておく事の必要性を話し今後の対応等も話していきました","themes":[]},{"date":"2026-03-12","staff":"蛍","comment":"3/10に　岐阜のデリへ面接一体してきたとの事。やっぱり距離もあり大変なので岐阜は週2日か3日で様子見たい。高速代・時間もかけて行くので続けれるかわからない。\nあくまでもしずくがメインの気持ちは変わらない。","themes":["掛け持ち・他店"]},{"date":"2026-03-27","staff":"蛍","comment":"出勤アラート・最高キャスト説明\nついでに日記の話しもかるく付け加えて話し済み","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-18","staff":"蛍","comment":"クラミジア陽性で休み\nその後出稼ぎ木曜日からしずくに出勤","themes":["出勤・シフト","掛け持ち・他店"]}],"ai_summary":{"headline":"岐阜デリ掛け持ちもしずくメイン、距離あり継続検討中","themes":["他店掛け持ち","金額回収トラブル","病気休み"],"challenges":"岐阜デリへ高速代と時間で続けられるか不安。金額貰い忘れトラブルあり対応徹底。クラミジア陽性で休み発生。","progress":"週2-3で岐阜と分散。しずくメイン気持ちは変わらず。出稼ぎは木曜からしずく出勤の流れ。","approach":"蛍とかぶ中心。先に金額受け取る対応を徹底周知。距離・時間を考慮した無理のない運用。"}},{"name":"にこ","count":9,"staffs":["せいや","幅"],"themes":{"日記・コンテンツ":3,"出勤・シフト":7,"オキニトーク":2,"プロフィール":1,"撮影":1,"掛け持ち・他店":1},"first_date":"2026-03-06","last_date":"2026-04-26","meetings":[{"date":"2026-03-06","staff":"幅","comment":"一旦3／17日までシフト出してもらって\n岡崎からの通いの為　12時から22時受付\n来る時は、志賀本通駅まで、帰りは金山か名駅送り　日記も初めてもらう","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-18","staff":"幅","comment":"本日引っ越し完了☑️の連絡あり、落ち着き次第出勤予定","themes":["出勤・シフト"]},{"date":"2026-03-19","staff":"幅","comment":"20，21日と出勤が決まりスタートダッシュに向けて、来週からの強制お気に入りでマイガール限定日記、動画、オキニトークの文をもらうなどの、やりとり","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-20","staff":"幅","comment":"日記に使う写真が、ない為　空き時間に大二郎撮影、来週マイガール限定写真、動画アップ用も合わせて撮影","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-21","staff":"幅","comment":"昨日初出勤で2日目の出勤予定だったが、体調不良　環境の慣れるまで無理しないようにと、プレッシャーにならない距離間で連絡","themes":["出勤・シフト"]},{"date":"2026-03-29","staff":"幅","comment":"数日空いて本日から3日間出勤予定、本日分ほぼ満枠完売！人見知りキャストの為、皆で声かけて溶け込ませるように、少しのみ時間みつけて話し\n出勤アラート、最高キャストは、テンプレートに作成して、説明等せいやが対応","themes":["出勤・シフト"]},{"date":"2026-03-29","staff":"せいや","comment":"人見知りと聞いていたが極度ではなさそう！\n幅さんから引き継ぎ諸々説明、アネキャンの素材が欲しいらしいのでせいやで素材作成。接客には自信ありそうなので、全員と連携しつつ夜はしっかりサポートしていく。","themes":["掛け持ち・他店"]},{"date":"2026-04-20","staff":"幅","comment":"出勤出来なく、迷惑をかける為、退店したいとLineがあったが、それ以外には何もないとの事だったので、事務所からの『出勤どうですか？』などの連絡は入れないので、当日でも構わないので、気持ち体調良い際に出れば大丈夫ですよ！　本人からの連絡を待ちましょう","themes":["出勤・シフト"]},{"date":"2026-04-26","staff":"せいや","comment":"久しぶりの出勤。出稼ぎのような状態じゃないとたるんでしまうとのこと。今日みたいな急遽出勤でもいいし、まとめたお金必要なら在籍出稼ぎみたいな形も取るから相談してくださいと伝え。オキニトークこちらでやって欲しいとのこと","themes":["オキニトーク","出勤・シフト"]}],"ai_summary":{"headline":"岡崎引っ越し済みの人見知り、本人ペースで急がず対応","themes":["引っ越し対応","体調・出勤波","退店願望対応"],"challenges":"極度ではないが人見知り、初出勤後体調不良で離脱。「迷惑かけるから退店したい」発言あり。出勤波が大きい。","progress":"3/18引っ越し完了→3/20初出勤満枠完売の好スタート。出稼ぎ的な急遽出勤や在籍出稼ぎ形式も提案。","approach":"幅とせいや中心。「出勤どうですか」連絡は控え本人発信を待つ。皆で声かけて溶け込ませる方針。オキニトークは店側で代行。"}},{"name":"るな","count":9,"staffs":["せいや","幅"],"themes":{"条件・給与":2,"出勤・シフト":4,"業務態度・指導":2},"first_date":"2026-01-19","last_date":"2026-04-26","meetings":[{"date":"2026-01-19","staff":"幅","comment":"最近貸し切りが何度かあり、その件の給料についてLINEあり※LINE参照\nコースについて、延長についての説明をした上で、今度は30R8000円で60分本16000円の半分とし30R✖️2でも60本の給料と変わらないようにする話しで納得","themes":["条件・給与"]},{"date":"2026-03-10","staff":"幅","comment":"出勤が出てないとの事で、伺いLINEを送ってたが既読ない為、また様子伺いのLINE","themes":["出勤・シフト"]},{"date":"2026-03-11","staff":"幅","comment":"前向きなLINEありだが、話しをするタイミングは、るな待ち　本人の考えるように合わせていく","themes":[]},{"date":"2026-03-12","staff":"せいや","comment":"なんか不穏そうだったので顔を見だけに送迎行った。全然普通に話してきて一安心。\n変わらず焼肉行きたいと言っていたので社長でも僕でもいいよと伝えておいた、日程調整や店に話しにくいことあったら相談して～とLINE教えといた","themes":[]},{"date":"2026-03-29","staff":"幅","comment":"出勤アラート・最高キャストは作成して、テンプレートに登録　\n直近休んでいた事について、本人の考え等を聞いた上で、せいや合流して説明\nロングコースは個人イベントで、掲載\n一旦スッキリしたようだが、定期的に話を聞いていく","themes":["出勤・シフト"]},{"date":"2026-03-31","staff":"幅","comment":"受付禁止客について、確認後\n八谷、太田、成瀬　経緯について説明、共有\n念には念で、安全対策を本人と共有","themes":[]},{"date":"2026-04-04","staff":"幅","comment":"時間が少し空いたタイミングでも出勤入れれば、休暇期間が、1か月あったので、予約埋まってくるから、直前でもお願いします！\nただストーカーの件や、プライベートの件もあるので、最善の注意バックアップ","themes":["出勤・シフト","条件・給与","業務態度・指導"]},{"date":"2026-04-09","staff":"幅","comment":"今月末まで、予定が決まったので、シフトに入れると先行予約で2週間先まで、予約が入れれる事説明　色々話しがたまってて4/26日の仕事終了後に相談したい事があるみたいで、面談予定","themes":["出勤・シフト"]},{"date":"2026-04-26","staff":"幅","comment":"元々この仕事を始めた理由が、プライベートでの資金を貯める為だったが、今それを失ってる話しなどの相談から、認定資格を取る為、昼職を休職して大学へ通おうか？今出来る目標について色々提案　性格的に絞り込まず、本人の中で決まっている事をあえて相談する傾向があるので、色々な例えで提案　現状の仕事に関してガチ恋系への対応について前例がある為、注意しながらの対応はしてるようです。","themes":["業務態度・指導"]}],"ai_summary":{"headline":"プライベートの相談も受ける深い関係、安全対策を最優先","themes":["条件・給与","ストーカー・受禁客対応","ガチ恋客注意"],"challenges":"受付禁止客の経緯共有・周知必要。ストーカー件で安全対策強化。ガチ恋系への対応に前例ありで慎重。プライベート資金喪失で動揺。","progress":"30R8000円×2で60本給料と同等の調整で納得。先行予約2週間先まで埋め可能に。資格取得目標で昼職休職案も検討中。","approach":"幅中心、せいやとも焼肉行ける関係性。本人が決めていることをあえて相談する傾向あり、色々な例えで提案する対話スタイル。"}},{"name":"ありさ","count":8,"staffs":["せいや","幅"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":6,"出勤・シフト":3,"撮影":3,"掛け持ち・他店":2,"条件・給与":1,"プロフィール":1},"first_date":"2025-11-26","last_date":"2026-04-01","meetings":[{"date":"2025-11-26","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。動画・限定日記・オキニトークの活用（マスター作成前なので自動の話はできていない）","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2026-01-11","staff":"せいや","comment":"バニラ連携、日記サポート〇→ﾃﾝﾌﾟﾚみたいな感じでやってるので書式コピーで非出勤日に投稿して事前予約とっていこうで終話。\n店との距離感が少し遠いので定期的に顔合わせて深い所掘れる関係性まで","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-02-06","staff":"幅","comment":"せいや含めて、3人で面談　他店との掛け持ちも視野にあったようで、まず2月　出勤時間を後ろにずらす事を了承してもらい、保証をつける話し（別紙参照）あとは、日記アクセスが動画がいいため動画撮影を本日してもらう","themes":["日記・コンテンツ","撮影","出勤・シフト","掛け持ち・他店"]},{"date":"2026-03-03","staff":"幅","comment":"姫デコブーストは、継続する\nパネルは、黒髪　日記は、金髪ピンクの為\nパネルに日記を合わせて行くなら保証は引き続き継続但し5万円に　　パネル、日記を今の現状の髪色に変更するなら、保証はなくなる旨を伝えて返事待ち","themes":["日記・コンテンツ"]},{"date":"2026-03-07","staff":"幅","comment":"髪色を今の状態で、やっていきたいとの事で、\n今の条件から保証のみ一旦無しにするが、様子見て相談して下さいと伝えてある\n姫デコブースト継続の為、グラビアや日記用撮影予定を組みました。","themes":["日記・コンテンツ","撮影","条件・給与"]},{"date":"2026-03-10","staff":"せいや","comment":"自分のスタイルで貫くとのことで様子見に送迎いった。どの方向性でもサポートするし応援する旨を伝えた。ダメだったらおとなしく黒髪に戻すと言ってた。\n\n時間使って接していく","themes":[]},{"date":"2026-03-17","staff":"せいや","comment":"えがちゃんにお願いして撮影してもらったそう。髪色相まってコスプレ写真をアネパネルで使いたいと。良ければどすに逆輸入すればいいし本人の意思を引き続きサポートしていく","themes":["プロフィール","撮影","掛け持ち・他店"]},{"date":"2026-04-01","staff":"せいや","comment":"出勤アラート・最高キャスト・インバウンド説明。インバウンドは相変わらず✕。\n予約が入っていたので加工する場所と文面を見せた、ニュアンスは分かったのでやりますとのこと。結果が伴わないのでアラートを強く推奨、上がってきたタイミングでどんどん戦略伝えていく。\n\n動画の反響が良いのでストック切れかけなこともありばしこさんいたので撮ってもらうよう伝え","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":{"headline":"髪色変更で保証なし選択、自分のスタイル貫くマイペース型","themes":["髪色・パネル方針","撮影頻度","アクセス改善"],"challenges":"店との距離感が遠く深い所まで掘れない。インバウンド✕。動画ストック切れがち。","progress":"2月3者面談で出勤後ろ倒し+保証導入。3月髪色変更で保証なしへ。コスプレ写真をアネで活用、どすに逆輸入も。","approach":"せいや・幅中心。本人意思を尊重しダメなら戻すスタンス。動画反響良いのでばしこさん撮影で補充。"}},{"name":"さき","count":8,"staffs":["かぶ","幅"],"themes":{"日記・コンテンツ":6,"プロフィール":3,"出勤・シフト":1,"掛け持ち・他店":3,"条件・給与":1,"撮影":2,"業務態度・指導":2},"first_date":"2026-03-10","last_date":"2026-04-17","meetings":[{"date":"2026-03-10","staff":"幅","comment":"初出勤日が、決まり日記を初めて行く話し、日記用の写真を出勤日に話しましょう！本格的に始まるなら、旦那に言っちゃおうかな？","themes":["日記・コンテンツ","プロフィール","出勤・シフト"]},{"date":"2026-03-13","staff":"幅","comment":"まだ、旦那に言ってない為、携帯を事務所で預かり（位置情報がついてる）働き易くする為にも言った方が、いいのかなぁ？話せば⭕️のよう\nしずく　あんの客と被りそうなタイプなので、振替えていけるように日記などの仕掛けをする","themes":["日記・コンテンツ","掛け持ち・他店"]},{"date":"2026-03-21","staff":"幅","comment":"昨日、音声のみのエロボイスを送ってもらい、小橋にテロップ発注　最高キャストの画像作成して、日記へ上げてもらう","themes":["日記・コンテンツ"]},{"date":"2026-03-22","staff":"幅","comment":"日記など、工夫してやっていこうとしてる。\n本日仕事つけれなかったので、蛍と相談の上次回1本フルバック","themes":["日記・コンテンツ","条件・給与"]},{"date":"2026-04-04","staff":"幅","comment":"写メ用の静止画、動画撮影　意欲あり\n空き時間にスタジオ使用\n旦那に夜の仕事の面接には行ったとまでは、話し済みとの事で、また進展したら聞く","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-04-11","staff":"幅","comment":"風俗で、働く事を旦那に話したので、\nでりどすを目出しに変更、また変更する際に、以前の日記を削除して、始めた日との辻褄が合うよう注意する　目出し用　写真は、日程を組む","themes":["日記・コンテンツ","プロフィール","業務態度・指導","掛け持ち・他店"]},{"date":"2026-04-17","staff":"幅","comment":"でりどす　目だし希望だが、口出しで、\nみなみちゃんの応援で撮影","themes":["撮影","掛け持ち・他店"]},{"date":"2026-04-17","staff":"かぶ","comment":"帰りに蟹江まで送迎しその際に最後の仕事入って連絡してから15～20分ぐらい降りるのに時間が掛かりあまりにも時間が掛かり過ぎるため今後の為にのそれとなくですが注意しておきました","themes":["業務態度・指導"]}],"ai_summary":{"headline":"旦那バレ未対応のグレー期、目出し対応で再スタート","themes":["旦那バレ対応","プロフィール変更","撮影段取り"],"challenges":"携帯位置情報で旦那に隠して稼働。最後の仕事から降りるまで時間かかる癖あり。","progress":"4月旦那に夜の面接話済みから風俗で働くこと告知済み。でりどす目出し希望→口出しでスタート。日記削除して始めた日との辻褄合わせ中。","approach":"幅とかぶ中心。蛍と相談で次回1本フルバック対応。旦那バレ進行に合わせてプロフィール変更段階的に。"}},{"name":"のん","count":8,"staffs":["せいや","なべ","ばしこ","幅","成瀬"],"themes":{"集客ツール":1,"オキニトーク":2,"条件・給与":1,"撮影":4,"日記・コンテンツ":4,"出勤・シフト":3,"掛け持ち・他店":2,"プロフィール":4},"first_date":"2025-11-27","last_date":"2026-04-23","meetings":[{"date":"2025-11-27","staff":"成瀬","comment":"オキニトーク全員送る条件で自動承認OK。\nネット予約+10分説明。","themes":["集客ツール","オキニトーク","条件・給与"]},{"date":"2025-12-25","staff":"幅","comment":"YouTube掲載にともなり、アクセスが倍に伸びてるので、気になって初めて見た新規顧客を増えた分の三分の一は、残そう！増えた分のYouTube向けのオキニトークを作成で拾っていく話し","themes":["オキニトーク","撮影"]},{"date":"2026-01-13","staff":"せいや","comment":"日記サポ〇、当日回数は自身でやるので出勤告知等でフォローしていく。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-03","staff":"せいや","comment":"電話にて姫デコ継続。\nしずくに仕事偏りガチ。\n真面目なので言う事ないがガス抜き程度に送迎でも行きます。","themes":["掛け持ち・他店"]},{"date":"2026-04-02","staff":"せいや","comment":"バナーの件、本人も相談あるようで喫茶店へ。案の定干されてたか、収入不安定でブレ気味の様子。バナーや配置の意図を理解してもらい、のんちゃんの実力・立場踏まえて同じ土俵で戦うべきでない。切り返しで色を出していくことを提案。脱げる・接客スキル・お酒好き、長所踏まえて敢えて顔隠してシークレットなお姉さんブランディングでデートコース等を提案。割と刺さったようで冷静になって考えてみるとのこと。しずくよりでりどすでまだ頑張りたいとのこと。","themes":["プロフィール","掛け持ち・他店"]},{"date":"2026-04-02","staff":"なべ","comment":"せいやパスを受けて本人と今後の売り方の話し合い。\n\n・パネル1枚目はシークレットキャスト仕様\n・2枚目以降も隠し。ロケ撮影\n・写メ日記は基本隠し、マイガール限定で目出しとエロボイス。時限日記。\n・15日日中大二郎撮影、夜ばしこ撮影\n・デートコース設定する\n・テーマは不倫相手\n\n新しく入ってくる若い子に負けたくないという意地で姫デコをやったり顔出しをしていたという本音も踏まえ、けど年齢と勤務時間で戦えないからこそのんちゃんのカラーで売ろう！作戦。","themes":["日記・コンテンツ","プロフィール","撮影","出勤・シフト"]},{"date":"2026-04-22","staff":"ばしこ","comment":"ブランディング変更に伴い、写メ日記のテイストなどもテコ入れ。\n試行錯誤しながら本日撮影。\n今後も本人とすり合わせながら写真や動画を撮っていく予定","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-04-23","staff":"なべ","comment":"撮影後5月の作戦会議。\n※姫デコは4月いっぱいで終了。\nけど推されなすぎもメンタルに来るので出勤時は適度に上に持っていく。\n\n5月に向けて新しい売り出し用の素材をばしこと動画・写メ用準備していく。","themes":["日記・コンテンツ","プロフィール","撮影","出勤・シフト"]}],"ai_summary":{"headline":"シークレットなお姉さんブランディングへ大転換、5月作戦会議","themes":["ブランディング転換","ロケ撮影","ガス抜き"],"challenges":"若い子に負けたくない意地で姫デコ顔出し継続していたが、収入不安定でブレ気味。年齢と勤務時間で正面からは戦えない。","progress":"パネル隠し・マイガール限定で目出しエロボイス・時限日記・デートコース・テーマは不倫相手の路線確定。姫デコ4月で終了、5月新素材撮影開始。","approach":"せいや→なべへパスして売り方話し合い。脱げる・接客スキル・お酒好きの長所活かす。推されなすぎもメンタル来るので適度に上に。"}},{"name":"らら","count":8,"staffs":["せいや","ばしこ","太田"],"themes":{"集客ツール":2,"オキニトーク":1,"撮影":2,"業務態度・指導":4,"日記・コンテンツ":4,"出勤・シフト":2,"プロフィール":2},"first_date":"2025-11-24","last_date":"2026-04-08","meetings":[{"date":"2025-11-24","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。オキニトーク自動承認にした。業務はこなしてくれるがクオリティが問題。12/08ゴルフ撮影。深い所まで突ける関係値があるのでこちらからの提案が重要。","themes":["集客ツール","オキニトーク","撮影","業務態度・指導"]},{"date":"2026-01-09","staff":"太田","comment":"バニラ連携、太田となべでらら再生計画を始動、月100～120目標に頑張っていく","themes":[]},{"date":"2026-03-03","staff":"せいや","comment":"姫デコ継続。\n店のアクセスが上がった事と日記補助で何とかなってる感じ。口出しはしてない","themes":["日記・コンテンツ"]},{"date":"2026-03-16","staff":"せいや","comment":"先週日記のこと突っ込んだが、今日改めて話して生理前なんたらと言ってた。そういう問題ではないが一旦モチベーションは戻ったと言っていたので終話。X凍結されて作り直したがそちらはやる気ゼロ。","themes":["日記・コンテンツ","業務態度・指導"]},{"date":"2026-03-28","staff":"せいや","comment":"奮起促しも踏まえて初めてバナーを2枚目に落としたのでフォローに30分ほど話。\n\n単刀直入に経緯を話す→やる気落ちたけど出勤はすると不貞腐れてた、だが少なからず意図は理解しており少しの間厚めにフォロー。出勤アラート等の話は明日行いまたコミュニケーション増やして行く","themes":["出勤・シフト","業務態度・指導"]},{"date":"2026-03-29","staff":"せいや","comment":"最高キャスト、出勤アラート、インバウンド説明。目の前で加工させテンプレートに貼り付けておいた。\n\n出勤も普通に出したのでメンタル的には大丈夫そう。しばらくは引き続き","themes":["出勤・シフト"]},{"date":"2026-03-31","staff":"ばしこ","comment":"写メ撮影何枚か撮影。\nアクセスUPのため次回これまであまりのせたこと無いテイストの動画を何本か撮影予定。\n内容は本人と相談してから撮る。","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-04-08","staff":"せいや","comment":"ネット予約のテンプレも作らせた。\n電マが本人持ちなので、そこ値切ってでも口コミ営業するよう説明。\n最高キャスト10\nネット予約金色\n口コミ増加を本人に課した。\n日記が弱いので口コミ書かせて丁寧に返信しろと指導。\n\n本指タイプにしないと活路が無いので\n接客も馴染んできたら口出し予定。\n\nエロもいいが顔と声が良いので\nなべさんかばしこさん付き添いで\nラウンドワンにでも行って表情豊かな所と可愛い所移して写メ日記や店の動画も作っていく","themes":["集客ツール","日記・コンテンツ","プロフィール","業務態度・指導"]}],"ai_summary":{"headline":"業務こなすがクオリティ問題、本指タイプ転換が活路","themes":["クオリティ向上","口コミ営業","撮影テイスト変更"],"challenges":"やる気落ちで初のバナー2枚目降格。X凍結後の再始動はやる気ゼロ。日記弱く、エロもいいが顔と声の良さが活きていない。","progress":"電マ持ちで値切ってでも口コミ営業の指示。最高キャスト10・ネット予約金色・口コミ増加を本人に課す。ラウンドワンで表情・可愛さ撮影予定。","approach":"せいやがフォロー強化、ばしこ撮影でテコ入れ。本指タイプにしないと活路なし。新テイスト動画で攻める。"}},{"name":"イヴ","count":8,"staffs":["せいや"],"themes":{"集客ツール":1,"日記・コンテンツ":2,"出勤・シフト":6,"条件・給与":2,"掛け持ち・他店":1,"オキニトーク":2,"撮影":1},"first_date":"2026-01-15","last_date":"2026-04-15","meetings":[{"date":"2026-01-15","staff":"せいや","comment":"面接参加させて頂いた。\n掴みどころのない感じ。日記サポ〇でエロ売り。+1000条件では表情が緩んでいた、本人希望は1日10万。客との駆け引き含め精算時の雰囲気で掴んでいく。豊橋ポイズンに出稼ぎ行ってる次回も日程あり→バック11000だった。なべさんから姫デコ枠もらってるが3日間出勤後に出勤出れば話す流れで。\n\n中心部仕事終わり及び長時間待機にしてしまった場合、自宅に送る承認済み。\n\nとにかく3日間接触多めで","themes":["集客ツール","日記・コンテンツ","出勤・シフト","条件・給与"]},{"date":"2026-01-18","staff":"せいや","comment":"2日間みていたが、正直また来るかはわからない。個人LINEで保証の結果報告、次回出勤は促している","themes":["出勤・シフト"]},{"date":"2026-01-31","staff":"せいや","comment":"汚い自宅行かないで仕事流した、その夜に個人に連絡で謝罪が入った。のでフォロー\nアネで埋まっちゃうのに不満、名古屋プライド。アネのパネルが出稼ぎでも使うメインパネルでどすは足並みは揃えないのいけないのは承知だが不満そう。\nアネが埋まるのは給料安定するのでバレンタイン後のパネルの相談の時にどすをどう伸ばしていこうかお話しましょうで納得。","themes":["条件・給与","掛け持ち・他店"]},{"date":"2026-02-23","staff":"せいや","comment":"お金がピンチなので助けてほしいと\n自宅もアッシムも行くとのこと\n\n\nLINE抜粋↓\n\n17-Lの12時間受付で5万の9日間勤務でトータル45万まで出せます。15時間出勤してもらっても大丈夫ですが17-Lを含めた時間になります。\n\nよっぽど大丈夫だと思いますが\n3日-7日と9日-12日の間で一旦面談を挟みます。普通に勤務して頂ければ9日-12日も継続という形になります。\n\n↑\n了承済みﾄｰﾀﾙ45万","themes":["出勤・シフト"]},{"date":"2026-03-07","staff":"せいや","comment":"保証の件で中間面談。\nだいぶ割れているが勤怠・日記等こなしているので後半も継続。","themes":["日記・コンテンツ"]},{"date":"2026-03-11","staff":"せいや","comment":"保証割れ-84000\n体調不良で2日切る形、本来ならダメだが膨らむ気しかしなかったのでやむなく戦略的撤退。週末から韓国で整形、ダウンタイム挟んでまた4月後半？から整形。\n\nフリーしか行けず心身弱っていたが、頑張ってほしい為に保証はつけた旨伝え、タイミング悪かっただけでまた来てよと\n月末出勤予定。ここで様子見てダメそうならパネル等テコ入れ提案していく。","themes":["出勤・シフト"]},{"date":"2026-04-11","staff":"せいや","comment":"近況伺いに送迎。\n元々出稼ぎ族だが、どこ行っても苦しいそう\nビジュをアップデートしてきたので改めて撮影を提案。近々出勤予定出してくれるので改めて。口頭でオキニトークと先行予約について説明。","themes":["オキニトーク","撮影","出勤・シフト"]},{"date":"2026-04-15","staff":"せいや","comment":"取り急ぎ、先のシフトに特典がある事とオキニトークのメッセージ頂くようLINEでやりとり、仕事後に諸々説明予定","themes":["オキニトーク","出勤・シフト"]}],"ai_summary":{"headline":"出稼ぎ族の波、保証割れ-84000を経て韓国整形ダウンタイム中","themes":["出稼ぎ運用","保証管理","ビジュアップデート"],"challenges":"アネとどすのパネル足並み問題で名古屋プライドの不満。お金ピンチでヘルプ要請。トータル45万保証も体調不良で-84000円割れ。","progress":"戦略的撤退で保証つけ継続的関係維持。韓国整形→4月後半再整形のサイクル。ビジュ更新後に撮影提案中。","approach":"せいや専属に近い。掴みどころない感じだが本人希望日10万。長時間待機なら自宅送り承認済み、距離詰めて接触多めで。"}},{"name":"うた","count":7,"staffs":["せいや","ばしこ","幅"],"themes":{"日記・コンテンツ":7,"出勤・シフト":3,"オキニトーク":1,"撮影":1,"業務態度・指導":1,"掛け持ち・他店":1},"first_date":"2026-04-10","last_date":"2026-04-18","meetings":[{"date":"2026-04-10","staff":"幅","comment":"錦ガールズラウンジで、看板として勤務\nデリ歴は、エデン（当時の店長に囲われてた）\nデリカノ（太客が居て生理中も出勤要請）\n話しが出来て、ポケパラやってるので日記も⭕️との事、見た目とは、裏腹にアーティスト、飲食コンサルなど多彩　正統派ではないが楽しみなキャスト","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-13","staff":"せいや","comment":"初日問題はないとのこと。シフトもらった。\n先行予約のメリットについて説明し次回に出勤アラートの日記等説明しますで終話。\n帰りに送って行ってスタッフの印象も良いそうで特になべちゃんが気にかけてくてくれてると言ってました。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-14","staff":"幅","comment":"オキニトークのファースト作成、送信\n返信が来たらトークで繋げていく、出勤アラート、最高キャスト作成テンプレート入れ","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-15","staff":"幅","comment":"新天地動画アップ用の動画の説明\n送ってもらい小橋加工","themes":["日記・コンテンツ"]},{"date":"2026-04-16","staff":"ばしこ","comment":"＃“新天地”用日記動画、up済","themes":["日記・コンテンツ"]},{"date":"2026-04-18","staff":"幅","comment":"案内動画、お礼動画を、なべちゃん撮影\nでりどす　みゆアイドル時代の知り合いの為要注意","themes":["日記・コンテンツ","撮影","業務態度・指導","掛け持ち・他店"]},{"date":"2026-04-18","staff":"せいや","comment":"新人イベントの口コミお礼日記を新天地デビューで動画で投稿するように","themes":["日記・コンテンツ"]}],"ai_summary":{"headline":"錦ガールズラウンジ看板から転身、多彩な経歴の楽しみキャスト","themes":["新天地デビュー","オキニトークファースト","撮影段取り"],"challenges":"デリ歴ありエデン・デリカノで嫌な経験(囲い・生理中強要)。みゆとアイドル時代知り合いで要注意。","progress":"4/10入店→4/13初日問題なし。新天地動画アップ、案内動画・お礼動画をなべ撮影。新人イベント口コミお礼も新天地デビュータグで投稿。","approach":"幅・せいや・ばしこの体制。なべちゃんが特に気にかけてくれてる。アーティスト・飲食コンサル経歴で正統派ではないが楽しみなキャスト。"}},{"name":"えりな","count":7,"staffs":["せいや","ばしこ","幅","成瀬"],"themes":{"集客ツール":1,"オキニトーク":2,"日記・コンテンツ":4,"条件・給与":1,"プロフィール":4,"出勤・シフト":2,"撮影":3},"first_date":"2025-11-26","last_date":"2026-04-02","meetings":[{"date":"2025-11-26","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約・ｵｷﾆﾄｰｸ説明。\n動画や限定日記を増やすよう伝えた。\nエステでも重要人物なので気持ち程度条件あげても？","themes":["集客ツール","オキニトーク","日記・コンテンツ","条件・給与"]},{"date":"2025-12-10","staff":"成瀬","comment":"オキニトークの重要性。\nこちらで全員送る話と自動承認。","themes":["オキニトーク"]},{"date":"2026-01-11","staff":"せいや","comment":"バニラ連携、写メ日記サポートに関しては基本的にまじめにやっているので当日の簡単な物と休み日の投稿をお願いしたいとのこと。","themes":["日記・コンテンツ","プロフィール","出勤・シフト"]},{"date":"2026-03-12","staff":"ばしこ","comment":"レミスパ用の動画、写メ日記用撮影予定。\n3/12まとめて撮る予定だったが体調不良のため後日段取り。","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-14","staff":"ばしこ","comment":"25日で再度撮影段取り。\n写メやレミスパ用も撮影予定。","themes":["プロフィール","撮影"]},{"date":"2026-03-26","staff":"幅","comment":"先行予約4月より開始、最高キャスト・出勤アラートはテンプレートに登録で説明","themes":["出勤・シフト"]},{"date":"2026-04-02","staff":"ばしこ","comment":"写メ、写メ用動画、PF動画、レミスパ動画、各動画撮影済み。\n素材は本人に渡し済みで自身で加工して使う。\n動画をこちらで編集後UP予定","themes":["日記・コンテンツ","プロフィール","撮影"]}],"ai_summary":{"headline":"エステ重要人物、レミスパ動画で多角展開","themes":["動画コンテンツ","プロフィール撮影","オキニトーク自動承認"],"challenges":"エステでも重要なため条件アップ気味程度の検討。基本真面目で当日簡単な物と休日投稿サポート程度で済む。","progress":"オキニトーク全員送信&自動承認OK。3/12レミスパ用動画予定が体調不良→3/25再撮影。4/2写メ・PF・レミスパ各動画撮影完了。","approach":"せいや・ばしこ・幅・成瀬の体制。素材を本人に渡し自身で加工。先行予約4月開始で長期計画。"}},{"name":"おとは","count":7,"staffs":["せいや","なべ","ばしこ","太田"],"themes":{"集客ツール":1,"日記・コンテンツ":6,"撮影":3,"出勤・シフト":3,"プロフィール":2,"条件・給与":1,"オキニトーク":1},"first_date":"2025-11-26","last_date":"2026-04-25","meetings":[{"date":"2025-11-26","staff":"太田","comment":"11/26　ネット予約+10分、キテネ、日記","themes":["集客ツール","日記・コンテンツ"]},{"date":"2026-01-10","staff":"なべ","comment":"出勤できない状態が続いていたが撮影は来てくれた。自殺未遂をするくらい精神的に病んでいたらしく仕事はまだ復帰できなさそう。2週間ぶりに化粧をしたらしい。\nシフトが出たらバニラ連携と日記サポの話。\nシフトはどうですかー？のLINEより体調どう？とかの方が今は良さそうです。","themes":["日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2026-01-25","staff":"なべ","comment":"バニラ連携〇、日記サポ〇\n1か月ぶりの出勤。メンタルはなんとか復活したとのことでした。\nかなり瘦せたので近日撮影。\n\n全然余談でおとはから聞いた話なのですが、JKの生徒会が一斉に空き巣に入られたらしく、ドライバーが情報を売ったと噂らしい。警察は夜職の子狙った空き巣が多発してるからみたいな感じでまだ解決してないそう。看板だったはづきはさっそく担当に辞めさせられたらしい。","themes":["日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2026-03-16","staff":"せいや","comment":"メモ漏れ\n電話・対面でタイミング見ながら今が頑張り時と伝えている、パネル変更と日記代行で給料伸びてるから。\n結果として受付時間は多少伸びてる。\n関係性を構築をしながら日記の効果を謳い→自発的にさせる→昇給まで持っていく予定\nあまりよくないがベテランの方でつばさちゃんの日記の写真を参考にすると合うかもと伝えてみた\n\nキャラ的には本指はあまりないメンヘラ気質","themes":["日記・コンテンツ","プロフィール","条件・給与"]},{"date":"2026-04-16","staff":"ばしこ","comment":"写メ用撮影完了。\n動画なども使ってもらう為に撮影加工後、本人にデータ渡し済み","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-04-16","staff":"せいや","comment":"合間縫って話。取り急ぎ最高キャスト出勤アラート日記説明。先行予約に伴うオキニトーク出勤アラート絡めて提案。とにかく出し得なので分かる範囲でシフト出してくださいで終話","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-25","staff":"せいや","comment":"最近はリピートもあって手応えはあるそうだが気持ちが追いつかない現状。今しかないよ！やることはやってるので精度上げて","themes":[]}],"ai_summary":{"headline":"自殺未遂歴あり、メンタル復帰中の繊細キャスト","themes":["メンタル復帰","パネル変更","日記代行"],"challenges":"自殺未遂レベルの精神的ピーク後の復帰。メンヘラ気質で本指少ない。気持ちが追いつかない現状。","progress":"1月2週間ぶり化粧→1ヶ月ぶり出勤達成。パネル変更と日記代行で給料伸びてるから受付時間も多少伸長。最近リピート出始めて手応え。","approach":"なべから始まりせいや・ばしこ・太田で多角フォロー。シフトより体調確認のLINEを優先。先行予約絡めたオキニトーク提案で出し得アピール。"}},{"name":"こゆき","count":7,"staffs":["せいや","八谷","幅"],"themes":{"集客ツール":2,"日記・コンテンツ":2,"プロフィール":1,"出勤・シフト":4,"条件・給与":2,"撮影":2},"first_date":"2025-11-26","last_date":"2026-04-20","meetings":[{"date":"2025-11-26","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。時たま万枠嬢なので凝った話はせず。","themes":["集客ツール"]},{"date":"2026-01-16","staff":"八谷","comment":"出勤時は自分で日記あげる。前日の仕込みはこちらで。写メは事務所に送られてくる。","themes":["日記・コンテンツ","プロフィール","出勤・シフト"]},{"date":"2026-03-31","staff":"幅","comment":"最近、昼職を休職しているため、出勤が増やせるようで、入店からバックがプレミアのままだったので、+1000円にアップ\n出勤時間など、遅い時間も考えてと、せいやと提案　出勤アラート・最高キャスト説明","themes":["集客ツール","出勤・シフト","条件・給与"]},{"date":"2026-03-31","staff":"せいや","comment":"様子見に送迎、落ち込んでて話聞いてほしいとのことで四日市の実家まで送迎。昼職は本日退職の伺いを立てに行ったがやんわり保留されたそうだが変わらず退職予定。転職はすぐすぐで決めておらず、しばらくゆっくりしてこっちを頻度を増やしますとのこと。幅さんからもこちらからも給料のサポートはすると伝え済み。長い付き合いだがそんなに深い関係じゃないので頻度上げていって。牛コロ食べたいと言ってたので次回にでも。ここが出てくると強い。\n珍しく弱ってた。","themes":["条件・給与"]},{"date":"2026-04-06","staff":"せいや","comment":"約束したラーメン連れてった。次郎好きらしい\n特別仕事の話は今回入れず、撮影後気持ちよく帰ってもらったが、よくしてもらえているので休職中できるだけ出てきますと言い残して帰っていきました。翌日に神社巡りするそう","themes":["撮影"]},{"date":"2026-04-17","staff":"せいや","comment":"幅さんと3人で、別小江神社へ動画、静止画撮影　日記にショート動画を提案　服がいつも可愛いので、ついつい見てしまう動画　ゴールデンウイークに向けてまとまった、出勤をどうか？前向きな返答","themes":["日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2026-04-20","staff":"幅","comment":"4/24に韓国旅行帰り、29日に出勤予定だが、昼から夜の出勤にして、時間のばしたらの提案（本日1本で終わってしまった為）ゴールデンウイーク期間の保証の話し含めて29日に面談","themes":["出勤・シフト"]}],"ai_summary":{"headline":"万枠嬢、昼職休職で出勤拡大の好機到来","themes":["昼職休職対応","撮影・動画","GW出勤交渉"],"challenges":"万枠だが昼職在職中は出勤限定的。落ち込み弱り期もあり、四日市実家送迎まで。","progress":"3/31昼職退職伺い保留も継続退職予定。プレミア+1000円アップ。神社巡り動画提案、3人で別小江神社撮影。GWまとまった出勤前向き。","approach":"せいや・八谷・幅の体制。長い付き合いだが深い関係じゃないので頻度上げて。牛コロ約束で関係深化中。"}},{"name":"せしる","count":7,"staffs":["せいや","なべ","幅"],"themes":{"日記・コンテンツ":4,"出勤・シフト":2,"プロフィール":1,"撮影":3,"掛け持ち・他店":4,"条件・給与":1},"first_date":"2026-01-12","last_date":"2026-04-25","meetings":[{"date":"2026-01-12","staff":"せいや","comment":"元々関係性あるので電話にて近況伺い。\n月末から出勤予定なので、日記告知しとくねで終話。心身参ってる来だしてから。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-02-01","staff":"せいや","comment":"アネキャンメインだったが近1年ほどしんどそうなので固定客+ででりどすでお姉さんブランディングしていこうということで撮影も終えた。引き続きマネジメントしていく","themes":["プロフィール","撮影","掛け持ち・他店"]},{"date":"2026-03-09","staff":"せいや","comment":"メモ漏れ。\n文句言いながらも服装等もでりどすに合わせてきている。動画も上げていってと。少しずつではあるが客はつき始めている。美意識が上がっている","themes":["日記・コンテンツ","掛け持ち・他店"]},{"date":"2026-03-27","staff":"せいや","comment":"伝えたことしっかりやっている。真面目\n\n最高キャスト・出勤アラート説明\nトラベラーも解禁。\n\n地道に効果は出てるが、結果をすぐに求めるタイプなのでなだめながら","themes":["出勤・シフト"]},{"date":"2026-04-07","staff":"せいや","comment":"迷走期。吐かせるだけ吐かせて寝かしてる","themes":[]},{"date":"2026-04-25","staff":"幅","comment":"再出発の話し　ゴールデンウィークは、旅行などもあり気分を入れ変えて、5／11日ニュースで、アネキャン再出発　6月にYouTube予定など\n撮影の段取りは、なべちゃん含めてバックアップ\n一旦11月まで、全力でやってみよう！で話しまとめて心機一転スタート","themes":["日記・コンテンツ","撮影","条件・給与","掛け持ち・他店"]},{"date":"2026-04-25","staff":"なべ","comment":"・5月3日　撮影(白背景制服　スタジオ＆ロコガーデン)\n・5月11日　ニュース\n※このタイミングでアネキャンの日記代理投稿を止める。\n・GW開けさとみとの2ショット撮影入れる\n・5月強制お気に入り\n・6月YouTube(源氏名をインパクト持たせるために名字付けようか本人悩み中…愛沢えみり？)","themes":["日記・コンテンツ","撮影","掛け持ち・他店"]}],"ai_summary":{"headline":"アネキャンメインから転換、心機一転で5月再出発","themes":["アネ→どす転換","心身フォロー","再出発計画"],"challenges":"1年ほど心身参り、迷走期で吐かせて寝かせる対応。結果すぐ求めるタイプで地道さに耐性低い。","progress":"服装をどすに合わせ動画も上げ始め客がつき始める。5/3制服スタジオ撮影→5/11ニュース→5月強制お気に入り→6月YouTube(源氏名検討中)。アネキャン日記代理投稿は5月で停止。","approach":"せいやと幅が中心、なべがバックアップ。11月まで全力でやってみるで合意。地道に効果出ているのでなだめながら。"}},{"name":"つき","count":7,"staffs":["せいや","幅"],"themes":{"オキニトーク":4,"撮影":2,"出勤・シフト":5,"日記・コンテンツ":2,"プロフィール":2,"業務態度・指導":1},"first_date":"2026-03-18","last_date":"2026-04-14","meetings":[{"date":"2026-03-18","staff":"幅","comment":"オキニトークの返信について、\n新しい撮影の段取り、小橋に指示\n3／末までの出勤予定を聞いて入力","themes":["オキニトーク","撮影","出勤・シフト"]},{"date":"2026-03-20","staff":"幅","comment":"出勤予定を出してもらってるので、パネルの写真が古かったので、大二郎、小橋にてパネル、日記撮影を指示","themes":["日記・コンテンツ","プロフィール","撮影","出勤・シフト"]},{"date":"2026-03-25","staff":"幅","comment":"出勤アラート、最高キャスト、先行予約\n説明済み、オキニトークの返信をするように話し","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-04-06","staff":"幅","comment":"現在、昼職休職の為、シフトを4月末まで、12日間のうち10日間12H40000トータル40万保証でモチベアップ","themes":["出勤・シフト","業務態度・指導"]},{"date":"2026-04-08","staff":"せいや","comment":"保証の内容とオキニトークの説明。腑に落ちたよう。頑張ってるのでしっかりサポートしていきたいですね","themes":["オキニトーク"]},{"date":"2026-04-10","staff":"幅","comment":"PayPay詐欺にあって5万円振り込んでしまったよう　　その分出勤を増やして、オキニトークで呼べるよう提案","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-04-14","staff":"幅","comment":"本指の取り方、リピートに繋げるには、について話し、日記の写真の種類や日常を出していくなど、出来る範囲での提案","themes":["日記・コンテンツ","プロフィール"]}],"ai_summary":{"headline":"昼職休職で集中出勤中、PayPay詐欺被害もカバーへ","themes":["保証付き集中出勤","オキニトーク強化","リピート対策"],"challenges":"PayPay詐欺で5万円被害、その分稼ぎでカバー必要。本指の取り方やリピート定着に課題。","progress":"12日のうち10日12H40000で40万保証中。出勤アラート・最高キャスト・先行予約説明済み。日常写真や日記の種類を増やす提案。","approach":"幅とせいや中心。詐欺被害を出勤増加でカバーする提案で前向きに。本指獲得とリピート対策を継続フォロー。"}},{"name":"なつき","count":7,"staffs":["なべ","幅","成瀬"],"themes":{"集客ツール":1,"オキニトーク":3,"日記・コンテンツ":6,"プロフィール":1,"出勤・シフト":6},"first_date":"2025-12-02","last_date":"2026-04-23","meetings":[{"date":"2025-12-02","staff":"なべ","comment":"写メ日記の基本的な上げ方、\n通常とマイガールの違い、マイガールの意味　までは説明済み\n\nキテネの機能説明とこっちでやる話は済み\n--------\n↑までで反応的に詰め込みすぎるとよくなさそうだったので、オキニトークに関してはこういう機能があるけど今は送れる人がいないから次回説明するねで終わっています。\n\n出勤2日目で初日のお客様リピートあり","themes":["集客ツール","オキニトーク","日記・コンテンツ","プロフィール","出勤・シフト"]},{"date":"2025-12-19","staff":"成瀬","comment":"オキニトークの重要性、稼ぎたいならやった方がいいと思うよ→やりたいです。\n自動承認もOK","themes":["オキニトーク"]},{"date":"2026-01-28","staff":"幅","comment":"オキニトークの出来ていない分送りと、出勤前、出勤時の日記について、出勤が稀にの為\n出勤予定2日前3回.1日前3回.当日5回を事前に予約投稿しましょう、出来ない部分は補助しますの話し","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]},{"date":"2026-02-12","staff":"幅","comment":"ピラティスの方が忙しく、中々出勤出来ないとの事だが、仕事は楽しんでしてるよう\n自分の特徴などを、もっと日記でアピール、また出勤が少ない場合は、出勤じゃない日の日記の重要性についても話し","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-15","staff":"成瀬","comment":"この日が0本だったため、休みの日にこちらで日記を休みの日だけ手伝うと言った所とても助かりますという感じだった。\n本指をしっかり返せれる子なので応援していきたい。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-24","staff":"幅","comment":"せいやと面談説明　出勤アラート、最高キャスト、日記あげるように\n先行予約については不可","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-23","staff":"幅","comment":"出勤がレアの為、出勤を入れる際に必ず出勤アラートも日記アップするように、テンプレートの使い方を説明","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":{"headline":"ピラティス本業の出勤レアキャスト、日記でプレゼンス維持","themes":["出勤稀対応","日記事前予約投稿","本指返し"],"challenges":"ピラティス忙しく出勤稀。先行予約は不可。本指返しは優秀だが新規獲得の機会が限定。","progress":"出勤2日目で初日リピートあり。事前2日前3回・1日前3回・当日5回の予約投稿で補助。出勤じゃない日の日記重要性を強調。","approach":"なべ・幅・成瀬の体制。テンプレート使い方説明で出勤時の運用を効率化。仕事は楽しんでしている本人姿勢を活かす。"}},{"name":"ひなの","count":7,"staffs":["せいや","太田","幅"],"themes":{"集客ツール":1,"日記・コンテンツ":3,"オキニトーク":1,"プロフィール":1,"撮影":1,"出勤・シフト":3,"掛け持ち・他店":2,"条件・給与":1},"first_date":"2025-12-06","last_date":"2026-04-12","meetings":[{"date":"2025-12-06","staff":"太田","comment":"ネット予約+10分、キテネ、限定、動画日記","themes":["集客ツール","日記・コンテンツ"]},{"date":"2026-01-10","staff":"太田","comment":"キャンメイク追加、オキニトークと日記はお店でOK、エロ売り✕、シンプル系◯","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-03-14","staff":"幅","comment":"パネル写真　でりどす、アネ\n今の春撮影、バレンタインが良かったから\n髪色も変わったし撮影して欲しい\n来週の予定を事務所LINEに送ってるが、3／20\n出勤だからその間いつでも⭕️","themes":["プロフィール","撮影","出勤・シフト","掛け持ち・他店"]},{"date":"2026-03-20","staff":"せいや","comment":"実力あるが勤怠不安定なところで停滞気味の為、勤怠改め下地を作っていきましょうと伝え。掛け持ちで時間確保が難しいので日記でのアピールの重要性。シフトは出れる日は全て入力済みとのこと","themes":["日記・コンテンツ","出勤・シフト","掛け持ち・他店"]},{"date":"2026-03-29","staff":"幅","comment":"稼ぎ面での相談があり、せいや同席で説明\n10時間アップから受けに変更　条件は別紙参照\n先行予約・出勤アラート・最高キャストについて説明　画像、テンプレートに登録","themes":["出勤・シフト","条件・給与"]},{"date":"2026-04-04","staff":"幅","comment":"本指名のお客様を大切にしつつ、新学期で、新しい新規客を獲得する提案","themes":[]},{"date":"2026-04-12","staff":"せいや","comment":"お茶だったのでお話。\n凹んでる様子はなかったがフォロー。\n一旦ごめんなさいの感じで提案等は次のターン。接点があまりなかったので話す頻度上げていく","themes":[]}],"ai_summary":{"headline":"実力あるが勤怠不安定、掛け持ち時間制約と新学期で戦う","themes":["勤怠改善","条件変更","シンプル系日記"],"challenges":"実力あるが勤怠不安定で停滞気味。掛け持ちで時間確保が難しい。エロ売り✕でシンプル系のみ。","progress":"1月キャンメイク追加、オキニトーク・日記店側でOK。3月パネル撮影。10時間アップから受けに条件変更。","approach":"せいや・太田・幅の体制。新学期の新規客獲得提案。接点少なかったので話す頻度上げて関係構築。"}},{"name":"まりん","count":7,"staffs":["せいや","ばしこ","幅"],"themes":{"条件・給与":1,"オキニトーク":3,"出勤・シフト":1,"日記・コンテンツ":3,"撮影":1,"業務態度・指導":1},"first_date":"2026-04-07","last_date":"2026-04-20","meetings":[{"date":"2026-04-07","staff":"幅","comment":"グランドOPERAの面接に受かってたが、単価がいいのはいいが、不安で面接に当店へ\n将来の展望や、多方面からのトークで説得\n一旦4月は、保証をつける形で入店しっかりバックアップが必要　全員体制でのバックアップお願いします。","themes":["条件・給与"]},{"date":"2026-04-08","staff":"幅","comment":"オキニトークから、早速予約があり効果に驚き！\n出勤アラートのテンプレートを設定、順に色々教えて行き、やるべき事と、その成果を見せながら提案と説明で、引っ張っていく","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-04-08","staff":"せいや","comment":"精算時もう少し本数欲しいとのこと。\nただ、先述のオキニトークであったりアウトが遅かったりと仕事は全うしている様子。","themes":["オキニトーク"]},{"date":"2026-04-15","staff":"幅","comment":"空き時間が発生すると、不安になるタイプ\n最高キャスト登録、新天地デビュー動画\n大二郎撮影、小橋加工","themes":["日記・コンテンツ","撮影"]},{"date":"2026-04-17","staff":"ばしこ","comment":"本人確認後、加工済みのデータ送信済み","themes":[]},{"date":"2026-04-19","staff":"ばしこ","comment":"動画本人確認後、こちらでも動画UP(＃新天地デビュー)","themes":["日記・コンテンツ"]},{"date":"2026-04-20","staff":"幅","comment":"20日から強制オキニが、入っているので、ｵｷﾆﾄｰｸ・鍵付き日記の強化で、新規顧客獲得について、説明　予約が入ってないと不安になるようなので、やるべき事の再確認とモチベーションのポジティブな考え方を提案","themes":["オキニトーク","日記・コンテンツ","業務態度・指導"]}],"ai_summary":{"headline":"グランドOpera内定後の当店選択、空き時間で不安になるタイプ","themes":["保証付き入店","オキニトーク即効果","新天地デビュー"],"challenges":"空き時間が発生すると不安になる。本数欲しい意識強め。","progress":"4月入店で保証付き全員バックアップ体制。早速オキニトークから予約効果あり驚き。新天地デビュー動画展開、4/20強制オキニ。","approach":"幅・せいや・ばしこ中心。やるべき事と成果を見せながら引っ張る。ポジティブな考え方を提案して不安を緩和。"}},{"name":"ゆずき","count":7,"staffs":["幅","蛍"],"themes":{"日記・コンテンツ":3,"撮影":2,"集客ツール":1,"オキニトーク":1,"プロフィール":1,"出勤・シフト":2},"first_date":"2025-12-06","last_date":"2026-04-03","meetings":[{"date":"2025-12-06","staff":"幅","comment":"12／11日撮影予定、動画の変更についても","themes":["日記・コンテンツ","撮影"]},{"date":"2025-12-09","staff":"蛍","comment":"ネット予約、オキニトーク説明。\n新規獲得の為に力入れてく！","themes":["集客ツール","オキニトーク"]},{"date":"2025-12-28","staff":"蛍","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-01-11","staff":"蛍","comment":"日記の本数アップ・補助","themes":["日記・コンテンツ"]},{"date":"2026-01-16","staff":"幅","comment":"日記用写真、動画撮影","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-17","staff":"蛍","comment":"先月から当欠が多い為理由等聞き当欠をなくしてく方向で話し","themes":["出勤・シフト"]},{"date":"2026-04-03","staff":"蛍","comment":"最高キャスト継続・出勤アラート追加で定期的にアップするように話し","themes":["出勤・シフト"]}],"ai_summary":{"headline":"当欠多めの初期型、最高キャスト継続で立て直し","themes":["当欠改善","撮影更新","ツール基本運用"],"challenges":"2月から当欠が多い。撮影更新で印象更新が必要。","progress":"12月ネット予約・オキニトーク説明から始動。バニラ連携完了。1月日記用写真・動画撮影。最高キャスト継続+出勤アラート追加。","approach":"幅と蛍中心。当欠なくす方向で対話。定期的に最高キャストアップ運用を継続。"}},{"name":"あんじゅ","count":6,"staffs":["せいや","太田","幅"],"themes":{"集客ツール":1,"日記・コンテンツ":2,"撮影":1,"出勤・シフト":3,"条件・給与":2,"掛け持ち・他店":3,"オキニトーク":2},"first_date":"2025-12-06","last_date":"2026-04-15","meetings":[{"date":"2025-12-06","staff":"太田","comment":"12/6　ネット予約+10分、キテネ、日記（趣味が競馬なので趣味を全面に押し出した日記を勧めた）","themes":["集客ツール","日記・コンテンツ"]},{"date":"2026-01-09","staff":"せいや","comment":"バニラ連携、日記サポートOK。\n強い趣味持ってるので当日は自力、休みの日にサポート入れて仕事を安定させていこうと話。なべさんにお願いして撮影ついでに日記用の動画お願いした。サポートはエロ売りでもOK、お昼掛け持ちで出勤頑張ってる方\n希望給与、平日1～2万、週末3万","themes":["日記・コンテンツ","撮影","出勤・シフト","条件・給与","掛け持ち・他店"]},{"date":"2026-02-14","staff":"せいや","comment":"身バレででりどす非掲載。元々アネの方が強いのでこっちで力いれてアネプレミアも視野に入れて頑張っていく、ｷｬﾝﾒｲｸ登録で名古屋仕事もフォロー","themes":["掛け持ち・他店"]},{"date":"2026-04-02","staff":"せいや","comment":"最高キャスト・出勤アラート説明。投稿テンプレート済。\n馬で推してくよう提案、同じ色でやってもジリ貧の為個性出して客を集めるように。\n\nオキニトークも紹介文作らせたので必ず返信するよう伝え済み","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-04-14","staff":"幅","comment":"せいやが、バックアップしてると思うので、ゴールデンウイークの出勤と、オキニトーク先行予約を絡めた方法を提案　また、せいやの方に相談するようにと","themes":["オキニトーク","出勤・シフト","条件・給与"]},{"date":"2026-04-15","staff":"せいや","comment":"親バレによりでりどす非掲載だったが名前変更履歴全削除で掲載。先行予約とセカンドメッセージを説明、ピン留め機能伝え","themes":["掛け持ち・他店"]}],"ai_summary":null},{"name":"しずか","count":6,"staffs":["幅","蛍"],"themes":{"日記・コンテンツ":5,"オキニトーク":2,"出勤・シフト":3,"業務態度・指導":1,"撮影":1,"条件・給与":1},"first_date":"2025-12-04","last_date":"2026-04-02","meetings":[{"date":"2025-12-04","staff":"幅","comment":"面接からの日記、日記の種類について","themes":["日記・コンテンツ"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2026-03-09","staff":"蛍","comment":"親が亡くなり引きこもりだったが少しずつ出勤したいので週3回の出勤予定。日記補助も話しつつモチベーション上げまた頑張ってく方向へ。暫く気にしていきたい。","themes":["日記・コンテンツ","出勤・シフト","業務態度・指導"]},{"date":"2026-03-11","staff":"幅","comment":"3/16～強制お気に入りが、入る話しと\nその際に、鍵付き日記とオキニトークをしっかりやっていく話しで日記用撮影","themes":["オキニトーク","日記・コンテンツ","撮影"]},{"date":"2026-03-13","staff":"幅","comment":"鍵付き動画を2本ずつアップ　蛍がバックアップ\n本人確認からの休み中は、日記本数増やして\n来週は、強化","themes":["日記・コンテンツ","出勤・シフト","条件・給与"]},{"date":"2026-04-02","staff":"幅","comment":"日記エロ動画アップ、本人にも加工済を渡してアップ、最高キャスト、出勤アラート説明テンプレートに登録","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"てんか","count":6,"staffs":["せいや"],"themes":{"集客ツール":1,"オキニトーク":2,"出勤・シフト":2,"日記・コンテンツ":1,"掛け持ち・他店":1,"条件・給与":1},"first_date":"2025-11-25","last_date":"2026-04-25","meetings":[{"date":"2025-11-25","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。ｵｷﾆﾄｰｸはテンプレ作ってもらった、こちらで自動送信して年末のシフトに活かそうと伝えました。","themes":["集客ツール","オキニトーク","出勤・シフト"]},{"date":"2026-01-24","staff":"せいや","comment":"バニラ連携〇\n日記サポ〇\nアンケート送ってもらいました。\n出稼ぎ枠だが、まだまだ売っていけるので当日分はもちろん本人でサポートでアピールしていく","themes":["日記・コンテンツ"]},{"date":"2026-03-24","staff":"せいや","comment":"最高キャスト・出勤アラートの件教えた。\n次回出勤は4/24前後の予定、寮抑えたいから早めにと伝えている","themes":["出勤・シフト"]},{"date":"2026-03-26","staff":"せいや","comment":"定期的に上げてもらうためテンプレに残してもらうように伝え、アネキャンも作ってと言われたので作成。外人受けがいいので、空いた時間でインバウンド向けの話を","themes":["掛け持ち・他店"]},{"date":"2026-03-26","staff":"せいや","comment":"インバウンド向けの件について。\n大丈夫そうなら貸切等OK\n大丈夫というのは本指からOKで初回に就いた後に都度判断もらう形。正式には決まってないので給与等追って伝える形","themes":["条件・給与"]},{"date":"2026-04-25","staff":"せいや","comment":"日程確認の際に\nオキニトーク再度流したので、返信して集客進めて行くよう伝え","themes":["オキニトーク"]}],"ai_summary":null},{"name":"なな","count":6,"staffs":["せいや","幅"],"themes":{"日記・コンテンツ":3,"出勤・シフト":2,"条件・給与":1,"業務態度・指導":1,"掛け持ち・他店":1,"プロフィール":2},"first_date":"2026-02-12","last_date":"2026-03-18","meetings":[{"date":"2026-02-12","staff":"せいや","comment":"バニラ連携〇\n日記サポ〇\n\n稼ぐ必要性が無いため勤怠が落ちている。細く長くスイッチ入り待ち。破天荒すぎて丸め込める案件ではない","themes":["日記・コンテンツ"]},{"date":"2026-02-18","staff":"幅","comment":"自宅待機が出来る、グランドの白玉がクビになり復帰を考えてたようだが、色々話した上で、最終結論までは仕事が入っていかなかったが、思いは伝えておいた。また次のタイミングで相談","themes":[]},{"date":"2026-03-11","staff":"幅","comment":"出勤のタイミングで、少し話し\n一旦夏までは、今のまま頑張って行くとの事\n実家の犬が、危篤状態だから、落ち着いたら待遇面など、しっかり話しましょう","themes":["出勤・シフト"]},{"date":"2026-03-17","staff":"せいや","comment":"移籍話の件について対応。\n一旦残留、以下条件変更↓\n\n8H受付80分までフルバック\n10H受付100分までフルバック\n月50H以上受付が継続条件\n\n上前津自宅待機希望（8H以上受付の場合）\nドライバー及び仕事の確保率で土日に条件受付がメイン、平日は自宅待機無しでショート出勤。条件出勤でもいいが送りが難しくなる旨は伝えてます。\n\nアネキャンに関して遠方の行き来が辛いらしいので、本指のみ尾張春日井エリアそこから近郊で続けばOKだが小牧→ララ→春日井みたいなのが嫌らしい。基本的にララに集める方向。\n\n給料はこちらからの提案で上記二件が移籍要素だったので対応した形です。やる気スイッチも不定期に入るので上手く乗せていきたいですね。","themes":["出勤・シフト","条件・給与","業務態度・指導","掛け持ち・他店"]},{"date":"2026-03-18","staff":"幅","comment":"案内の際に、日記の話しで1回のみだったので、写真をもらって動画を作成して送り返し\n動画マイガール、フリーポスの使用をオススメ","themes":["日記・コンテンツ","プロフィール"]},{"date":"2026-03-18","staff":"幅","comment":"案内の際に、日記の話しで1回のみだったので、写真をもらって動画を作成して送り返し\n動画マイガール、フリーポスの使用をオススメ","themes":["日記・コンテンツ","プロフィール"]}],"ai_summary":null},{"name":"なのか","count":6,"staffs":["せいや","幅"],"themes":{"集客ツール":1,"オキニトーク":3,"日記・コンテンツ":2,"出勤・シフト":4,"業務態度・指導":2},"first_date":"2025-12-11","last_date":"2026-04-16","meetings":[{"date":"2025-12-11","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。頑張り始めたところなので、まずは日記の回数と中身の改善を伝えた。（予約投稿すぐにやり始めた）\n仕事前なのでﾃﾝﾌﾟﾚはまだだが自動承認と店側配信OK。叩けば叩くだけやりそう。","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2026-01-09","staff":"せいや","comment":"バニラ連携がてら、軽く近況。\n節々痛めてるので出勤が辛そう、昼職やっててホストにも今入れ込んでないのでお金には困ってなさそう。日記サポートするので出勤日はやれよとお話。稼がせればついてくるかな。現状弾数要因、とりあえず残しておけば","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-13","staff":"せいや","comment":"昼食のナースに復職。週末が休みとのこと。\n週末頑張ってくるとのこと、フリーを回してることにはありがたみがありそうで、ルックスは元々プレミアなのでやる気煽ってP指取らせていく方針。","themes":["出勤・シフト","業務態度・指導"]},{"date":"2026-04-03","staff":"せいや","comment":"事務所に図々しい連絡してくるので個人教えといた。復職で疲労困憊、出れても週一かなというところで、そこの質を上げるべく接していく","themes":[]},{"date":"2026-04-09","staff":"幅","comment":"出勤アラート、最高キャスト、オキニトークなど説明、顔にやる気、生気が全くなく、ただいるだけ・・・本気で変わらなければ厳しい【本人には言ってないが】","themes":["オキニトーク","出勤・シフト","業務態度・指導"]},{"date":"2026-04-16","staff":"せいや","comment":"先行予約とオキニトーク絡めた提案。\nオキニトーク一斉送信。少ない出勤短い時間１本は指名とって帰れるよう促し","themes":["オキニトーク","出勤・シフト"]}],"ai_summary":null},{"name":"のあ","count":6,"staffs":["せいや","幅"],"themes":{"集客ツール":1,"プロフィール":1,"条件・給与":3,"掛け持ち・他店":1,"日記・コンテンツ":2,"出勤・シフト":3,"撮影":1},"first_date":"2025-11-26","last_date":"2026-04-24","meetings":[{"date":"2025-11-26","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。客付き良好でセルフブランディング出来てるので特に何かは強要していない。掛け持ちなので慎重に、条件出せるレベルなのでジワジワ染めていきたい","themes":["集客ツール","プロフィール","条件・給与","掛け持ち・他店"]},{"date":"2026-01-10","staff":"せいや","comment":"昼の箱を辞めたことでこちら一本で頑張るとのこと、統括と3人で話した結果10H受付80分フルバックに変更。日記は自分のスタイルがあるので完全過去コピペ、ふわっとした日記で。回数フォロー","themes":["日記・コンテンツ","条件・給与"]},{"date":"2026-02-28","staff":"幅","comment":"姫デコブーストのアップ、話し済み\n1.2月の給料は、ほぼ変わらず\n3.4月と出勤が15日くらいだから、少しがんばろうかなぁー？","themes":["出勤・シフト","条件・給与"]},{"date":"2026-03-25","staff":"幅","comment":"先行予約は、予定が分からないようで、分かる範囲でにとどめる　出勤アラート20、最高キャスト7　この数字を伸ばしていくと指名に繋がる話し　画像せいやから","themes":["出勤・シフト"]},{"date":"2026-04-06","staff":"幅","comment":"前回説明した出勤アラートが、上がっていない為、再度説明、目の前でアップ、テンプレートに保存、出勤もわかる範囲でお願い","themes":["出勤・シフト"]},{"date":"2026-04-24","staff":"せいや","comment":"動画バナーを作成したため、動画を送るor投稿ように伝え。相変わらず自発性はないので撮影組んだ方が早そう","themes":["日記・コンテンツ","撮影"]}],"ai_summary":null},{"name":"はな","count":6,"staffs":["幅"],"themes":{"撮影":5,"集客ツール":1,"オキニトーク":2,"日記・コンテンツ":3,"業務態度・指導":1,"出勤・シフト":1,"プロフィール":1},"first_date":"2025-11-24","last_date":"2026-01-22","meetings":[{"date":"2025-11-24","staff":"幅","comment":"YouTube撮影12／9日予定","themes":["撮影"]},{"date":"2025-12-09","staff":"幅","comment":"YouTube撮影　1／7日公開\n12／15日 夜ガイ鉄板嬢インタビュー、撮影","themes":["撮影"]},{"date":"2025-12-09","staff":"幅","comment":"YouTube撮影　1／7日公開\n12／15日 夜ガイ鉄板嬢インタビュー、撮影","themes":["撮影"]},{"date":"2025-12-24","staff":"幅","comment":"オキニトークの　もうワンランク上の使い方\n日記にみたよ！を押してくれてる人へのアプローチ方法について　「みたよ！ありがとう！私の事みてくれてるんだ！こういうさりげないのが、モチベーションになり、キュン♡しちゃうんだよね」狙い撃ちについての話し","themes":["集客ツール","オキニトーク","日記・コンテンツ","業務態度・指導"]},{"date":"2026-01-09","staff":"幅","comment":"アクセスが1000以上来たから、YouTubeで新規も増える　日記は、出勤10 休み5","themes":["日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2026-01-22","staff":"幅","comment":"写メ日記用の外撮影、オキニトークで、見たよを狙い撃ちの話し","themes":["オキニトーク","日記・コンテンツ","プロフィール","撮影"]}],"ai_summary":null},{"name":"まお","count":6,"staffs":["せいや","なべ","太田","幅"],"themes":{"掛け持ち・他店":5,"日記・コンテンツ":4,"プロフィール":1,"撮影":1,"出勤・シフト":4,"オキニトーク":2},"first_date":"2026-01-05","last_date":"2026-03-19","meetings":[{"date":"2026-01-05","staff":"幅","comment":"アバンスにスカウト経由（メンエスから）で入店\n現状1日2.3万で在籍を探して当店へ友達が働いてる　べっぴんコレクションへ面接行くかも？どんな接客か時間で15分単位で動く事など、説明\n1／22.辺りから長野のリピート店に5日間くらい行く予定、それも含めて相談しながらやっていきましょう！うちのグループ内で、でりどす・アネキャン・レミスパで、掛け持ちと一緒だから、決めたら　またどおしていくかなど話しましょう","themes":["掛け持ち・他店"]},{"date":"2026-01-07","staff":"太田","comment":"1/20までに80万必要で体験荒らしっぽい感じ、お金の件が片付いたら落ち着いて働きたい。アバンスの内勤にでりどすが夜は動くよと言われて入店した。（誰にも言わないでと言われたので内緒でお願いします。たぶん自分のことを知ってるっぽい）","themes":["掛け持ち・他店"]},{"date":"2026-01-16","staff":"なべ","comment":"バニラ連携〇、写メ日記代行OK\n9月から休みなしで働いているよう。20日の目標金額が終わってからもでりどすは出勤するとのことだったので明日撮影を入れました。\n現状困っていることはないとのことでした。","themes":["日記・コンテンツ","プロフィール","撮影","出勤・シフト","掛け持ち・他店"]},{"date":"2026-02-06","staff":"幅","comment":"当店以外に、アバンス、メンエス、ぺっぴんコレクションと掛け持ちで、べっぴんコレクションを朝から出て来たり、メンエスへ行った後来たり\n迎えに関して出勤確認の際に確認して下さい。と余裕があれば迎え⭕️だが基本的には、志賀本通までと話し済み　出勤数確保の為にも迎えを出せる時は、お願いします。日記、オキニトークの話しも合わせて説明","themes":["オキニトーク","日記・コンテンツ","出勤・シフト","掛け持ち・他店"]},{"date":"2026-02-18","staff":"幅","comment":"でりどすだけじゃなく、アネキャンも指名があるので、オキニトーク、日記と出勤日、出勤前日は、しっかりやっていくように","themes":["オキニトーク","日記・コンテンツ","出勤・シフト","掛け持ち・他店"]},{"date":"2026-03-19","staff":"せいや","comment":"本指で埋まる日もあったので実力を称えつつ暇が続いてるので日記の先行投資とシフトを叩いてみた、出勤は検討してもらったが今出してる分以外予定埋まってるとのこと。言ったことを次の勤怠見てまた話す","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"もえの","count":6,"staffs":["せいや","なべ","太田","幅"],"themes":{"出勤・シフト":5,"日記・コンテンツ":4,"プロフィール":1,"撮影":1,"掛け持ち・他店":1,"集客ツール":1,"オキニトーク":1},"first_date":"2025-12-14","last_date":"2026-04-24","meetings":[{"date":"2025-12-14","staff":"太田","comment":"昼職が忙しく退店告知が出たが引き止め、年末は保証つけて、年明けは月一でもいいから時間ができた時に出勤でいいよで一旦退店はなくなりました。","themes":["出勤・シフト"]},{"date":"2026-01-19","staff":"なべ","comment":"日記代行OK、バニラ連携完了\n写メが無くて普段困っているとのことで面談後撮影。","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-02-14","staff":"太田","comment":"職場でバレたかもで一旦でりどすはサイト非掲載で2月は一旦出勤しずに、3月からアネキャンとキャンメイクでやっていく。元々アネキャンが強いので特に影響はなさそう。レミスパも勧めたが本人は乗り気じゃなかった","themes":["出勤・シフト","掛け持ち・他店"]},{"date":"2026-04-01","staff":"せいや","comment":"最高キャスト・出勤アラート・インバウンド説明。目の前で1日記分作らせたので明日までに4つ作ってテンプレート活用するように伝えた。ﾄﾗﾍﾞﾗｰ本日からOK。デートコースも説明済み。\n\nニコニコ接客してそうだったので、日記だけでなく客先で案内してみたら？と提案\n\n真面目なのでネット予約のテンプレも作らせる","themes":["集客ツール","日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-06","staff":"幅","comment":"いつも深夜帯の出勤だが、早くから出れる時は、日記を仕込んで予約投稿・フリーポスの使い方など提案","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-04-24","staff":"幅","comment":"今日は、昼職の方が暇だったとの事で、いつもより早めの出勤　こういう時こそ日記やオキニトークなど普段出来ない事をしっかりやって自己アピールをしていくように話し","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"あお","count":5,"staffs":["幅","蛍"],"themes":{"集客ツール":1,"オキニトーク":3,"日記・コンテンツ":2,"撮影":1,"出勤・シフト":1},"first_date":"2025-12-07","last_date":"2026-01-12","meetings":[{"date":"2025-12-07","staff":"幅","comment":"日記の種類、キテネ、オキニトーク、みたよ\n一通り説明\n特にオキニトークは、積極的に使用経験あり","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2025-12-20","staff":"幅","comment":"強制オキニ追加オキニトーク送信","themes":["オキニトーク"]},{"date":"2025-12-29","staff":"幅","comment":"バニラ連携完了☑️1月に動画撮影の話し","themes":["日記・コンテンツ","撮影"]},{"date":"2026-01-12","staff":"蛍","comment":"週に2・3日寮を貸してもらえるかの相談あり\n出勤時に詳細確認","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"あすか","count":5,"staffs":["せいや","幅"],"themes":{"撮影":1,"掛け持ち・他店":2,"オキニトーク":2,"出勤・シフト":1,"日記・コンテンツ":1},"first_date":"2026-02-17","last_date":"2026-04-15","meetings":[{"date":"2026-02-17","staff":"幅","comment":"静岡より引っ越し、東京で経験はあり\n大人エロ売り希望との事、遅めの時間希望で双子ちゃんがシーシャバーをやってるので、手伝いがある時は、時間変更あり","themes":[]},{"date":"2026-02-23","staff":"幅","comment":"深夜帯は、動くがスタートが入ってこない為、\nしずく登録を追加、撮影","themes":["撮影","掛け持ち・他店"]},{"date":"2026-03-16","staff":"幅","comment":"オキニトークが、アネキャン、しずくと溜まってたので、LINEにて返信するように連絡\n最近は、本指名も返ってきてるようだから、オキニトークからの更なる客ゲットをオススメ","themes":["オキニトーク","掛け持ち・他店"]},{"date":"2026-04-08","staff":"幅","comment":"先行予約、出勤アラート、最高キャストの設定と、オキニトークの返信をしていくように\nやりとりが無い方は、事務所から送信","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-04-15","staff":"せいや","comment":"日記が0、本指が取れるため日記活用して出会いの場を作らないとと促し","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"きら","count":5,"staffs":["せいや","ばしこ"],"themes":{"集客ツール":1,"オキニトーク":1,"条件・給与":1,"日記・コンテンツ":4,"プロフィール":2,"出勤・シフト":1},"first_date":"2025-12-19","last_date":"2026-03-27","meetings":[{"date":"2025-12-19","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。\nｵｷﾆﾄｰｸﾃﾝﾌﾟﾚと自動承認OK\n通勤時とお昼時に予約投稿を習慣づけるよう説明。Lv.40で平均給与3-4万と伝えると響いてた。ポテンシャルはある。","themes":["集客ツール","オキニトーク","条件・給与"]},{"date":"2026-01-10","staff":"ばしこ","comment":"写メ日記のサポート説明済み\n露骨なエロ文章はNG、過去参照にテイスト統一。\n稼ぎたい意思は見られるが早退や当欠が目立つので、その辺を減らせるように厳しめに話し済み","themes":["日記・コンテンツ","プロフィール","出勤・シフト"]},{"date":"2026-02-25","staff":"せいや","comment":"不定期だとしんどいよと\n\n軌道に乗せた客も消えたしフラッと来てフリーを回すわけでもないと辛辣気味にお話。\n今回は頑張りますとまた言ってたので、日記頑張って1日1本P指取る努力をしてと伝えた。戦略云々より基礎が無いのでそこから。","themes":["日記・コンテンツ"]},{"date":"2026-03-18","staff":"せいや","comment":"幅さんと面談。\n日記を見て文章が苦手なので写真及び動画で投稿していきましょうと。\nとりあえずあげる物は今日教えたので次回、回数と”仕事”であることを伝えていく","themes":["日記・コンテンツ","プロフィール"]},{"date":"2026-03-27","staff":"せいや","comment":"幅さんと面談。\n前回客先でトラブったのでフォローと様子見、こっちの対応にも詫びを入れて個人間の金銭やり取りは守れないので辞めてくださいと忠告。\n気分が落ちてるので、仕事仕事の話は盛り込んでおらず。\n結論やるとのことで日記以外何したらいいですか？と聞いてきたがまずは日記こなして1つずつやっていきましょうで終話。","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"きらら","count":5,"staffs":["せいや","幅"],"themes":{"日記・コンテンツ":2,"出勤・シフト":4,"撮影":1,"プロフィール":1},"first_date":"2025-12-15","last_date":"2026-04-03","meetings":[{"date":"2025-12-15","staff":"幅","comment":"岡山から昼職（アパレル）の関係で、名古屋へ引っ越し　年明けからスタート予定\n岡山で、デリヘル経験あり\nレギュラー店で、働いてた。その店舗が高級店\n60 26000を出したが失敗して客離れが起こり退店　　昼、夜含めて常に忙しくしていたい模様","themes":[]},{"date":"2026-01-12","staff":"せいや","comment":"バニラ連携、日記サポート〇\n出勤時には真面目にやってくれてるので、日にちの空いた出勤日前等にフォローする形。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-14","staff":"幅","comment":"退院して来て、頑張らないと！\n今月プレミアへ昇格\n3月勤務後半45〜50 H勤務\n4月勤務　100 H勤務\n無理しないように足りない分は、翌月に繰り越しもあり、3月後半に撮影予定で、パネル変更","themes":["撮影","出勤・シフト"]},{"date":"2026-03-25","staff":"せいや","comment":"痛客に当たったついでに会話。\n落ち込んでたが自分の線引きで考えればいいと伝え（守備範囲が既に広い為）切り替えて早退した分明日当日出勤でも大丈夫ですか？と聞いてきた、気にかけていれば売り上げの基盤担える。会えるタイミング無かったので明日にでも最高キャスト等の話を","themes":["出勤・シフト"]},{"date":"2026-04-03","staff":"せいや","comment":"最高キャスト・出勤アラート説明。\n遠方からの本指名等あるので刺さっていた\n\n先月から頑張りますと約束して無事規定時間クリアできたので引き続きプレミアで頑張ってくださいと伝え。\n写メ日記の作業を見ていたが作業が早く頭が回るので定期的に声掛けメンタルサポートが重要。\n全店のスタッフが最悪だった為、今は凄く良い環境で働けてますとのこと","themes":["日記・コンテンツ","プロフィール","出勤・シフト"]}],"ai_summary":null},{"name":"さや","count":5,"staffs":["せいや","幅"],"themes":{"出勤・シフト":4,"日記・コンテンツ":2,"掛け持ち・他店":1,"オキニトーク":1,"条件・給与":1,"プロフィール":1,"撮影":2},"first_date":"2026-04-16","last_date":"2026-04-26","meetings":[{"date":"2026-04-16","staff":"幅","comment":"キャバ1年半、メンエス2年弱、昼職は美容院で、週5働いてる　仕事終わり、休み利用して週4くらいの出勤予定　帰りのみ緑区七海までの送り必要だが、送りをつけても在籍させたいレベル","themes":["出勤・シフト"]},{"date":"2026-04-16","staff":"せいや","comment":"体入→入店、短時間で2本ついて一安心\n鳴海まで送迎。コミュ取れる子で昼と掛け持ちなのでレギュラー出勤は難しいがリピート返してきそう。張り付いて休日ロング出勤も取っていきたい。\n\n本指本指で教育していく\n\n日記の書き方、新天地デビュー用の動画こちらで請け負いで諸々説明。\n\n翌日と以降のシフトもらった","themes":["日記・コンテンツ","出勤・シフト","掛け持ち・他店"]},{"date":"2026-04-17","staff":"幅","comment":"日記、オキニトークの話しをしてあったが、時間が本当になさすぎて、こちらで全面バックアップ　なべちゃんに、テンプレート送ってもらい、キャラを作っていく。","themes":["オキニトーク","日記・コンテンツ","条件・給与"]},{"date":"2026-04-23","staff":"せいや","comment":"出勤告知等はこちらで受け持つため写真送ってください→翌日来てました！\n撮影のスケジュール組んでいち早く完売キャストへ","themes":["プロフィール","撮影","出勤・シフト"]},{"date":"2026-04-26","staff":"せいや","comment":"取り急ぎ直近の出勤は取った。強いので早く出勤日に撮影を","themes":["撮影","出勤・シフト"]}],"ai_summary":null},{"name":"しの","count":5,"staffs":["ばしこ","幅"],"themes":{"日記・コンテンツ":4,"プロフィール":2,"撮影":2,"掛け持ち・他店":3,"出勤・シフト":1},"first_date":"2026-03-14","last_date":"2026-04-15","meetings":[{"date":"2026-03-14","staff":"ばしこ","comment":"19日に写メ用・動画・レミスパ撮影予定。\nれみさんも最近コミニュケーション取れてないとのことで同行。\n\nでりどすの日記に関しては写真のテイストを変えていく方針で進める。","themes":["日記・コンテンツ","プロフィール","撮影","掛け持ち・他店"]},{"date":"2026-03-23","staff":"ばしこ","comment":"日記用動画、レミスパ用動画編集完了","themes":["日記・コンテンツ"]},{"date":"2026-03-23","staff":"幅","comment":"最高キャスト、出勤アラート、先行予約\n説明　合わせて、しずく同時受付に登録","themes":["出勤・シフト","掛け持ち・他店"]},{"date":"2026-03-28","staff":"幅","comment":"テンプレートに登録してアップを提案\nしずく日記をスタッフで一旦アップその間にプライベート写真を撮ってもらいフリーポスでの投稿を提案","themes":["日記・コンテンツ","プロフィール","掛け持ち・他店"]},{"date":"2026-04-15","staff":"幅","comment":"新天地コーナーに上がる動画撮影\n大二郎　10秒程度を沢山　小橋編集","themes":["日記・コンテンツ","撮影"]}],"ai_summary":null},{"name":"たえ","count":5,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":4,"撮影":1},"first_date":"2025-11-27","last_date":"2026-03-21","meetings":[{"date":"2025-11-27","staff":"幅","comment":"日記、動画、オキニトークについて","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2025-12-20","staff":"幅","comment":"パネル撮影、動画、エロ動画撮影\n大二郎\n日記に動画一日1本から、まずは投稿","themes":["日記・コンテンツ","撮影"]},{"date":"2025-12-28","staff":"幅","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-01-21","staff":"幅","comment":"日記に変化をつけていこう\nエロ売りだから、色々な声シリーズを撮ってみてわ？\nプレイ中に、お客様に確認して声を録音するなど","themes":["日記・コンテンツ"]},{"date":"2026-03-21","staff":"幅","comment":"日記のマイガールが、上がってない為\n上げ方の説明　フリーポスの使い方","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"にの","count":5,"staffs":["せいや","なべ"],"themes":{"集客ツール":1,"オキニトーク":2,"掛け持ち・他店":4,"日記・コンテンツ":2,"撮影":1,"出勤・シフト":1,"条件・給与":1,"業務態度・指導":1},"first_date":"2025-12-14","last_date":"2026-04-07","meetings":[{"date":"2025-12-14","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。ｵｷﾆﾄｰｸ自動承認ﾃﾝﾌﾟﾚ作成済み。アネキャンの中心で頑張っていこうと話済み。","themes":["集客ツール","オキニトーク","掛け持ち・他店"]},{"date":"2026-01-14","staff":"なべ","comment":"日記代行OK\nアネむい中心で上げていく","themes":["日記・コンテンツ","掛け持ち・他店"]},{"date":"2026-02-11","staff":"せいや","comment":"アネ撮影、SNS垢作成。メンヘラなので気分上げながらこちらから提案をどんどん投げる方向がいい。","themes":["撮影","掛け持ち・他店"]},{"date":"2026-04-04","staff":"せいや","comment":"掛け持ちのソープを4月で辞めるとのこと。\n向こうの日記からの出勤経緯や前々より目指してたポジションは埋まりつつあるとキツめに忠告。他の店を掛け持ちするつもりなく、25歳でここで上がりたいと。\n1000万貯めたいとのことで生活費合わせて1500万を2年で換算すると月に62万の給与が必要と伝え、可能な数値なのでやる気だけ。温度感見ながらまた次回以降","themes":["日記・コンテンツ","出勤・シフト","条件・給与","業務態度・指導","掛け持ち・他店"]},{"date":"2026-04-07","staff":"せいや","comment":"オキニトーク送信、返事も返してた。\n明日より生理休暇。\n本指を作れるので、すぐにフラフラするが我慢して向き合っていく","themes":["オキニトーク"]}],"ai_summary":null},{"name":"ひなみ","count":5,"staffs":["せいや","幅","成瀬"],"themes":{"集客ツール":1,"オキニトーク":3,"撮影":2,"日記・コンテンツ":2,"プロフィール":1,"出勤・シフト":1},"first_date":"2025-12-14","last_date":"2026-04-13","meetings":[{"date":"2025-12-14","staff":"成瀬","comment":"ネット予約+10分。キテネ説明。\nオキニトークを頑張ってみる方向になったのでこちらで送信と自動承認OK。\nパネル撮影の段取り","themes":["集客ツール","オキニトーク","撮影"]},{"date":"2026-01-11","staff":"せいや","comment":"バニラ連携、写メ日記はサポートOK、過去の投稿をコピペするので写真をどんどん新しくUPしてくださいと伝え、ストック無くなれば撮影するのでお声かけくださいと。\n昼職、子持ち。セクシー売り◎","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-12","staff":"幅","comment":"現状の稼ぎ、待遇は問題ないとの事\n週3くらいは、刈谷からだがしっかり出たい\nオプションに関して前店カラーでやってたので、個人オプションをやっていこうかなぁー\nまた、それについて相談しましょう","themes":[]},{"date":"2026-03-20","staff":"幅","comment":"前回の話しの際に希望があった、個人オプション、ウーマンナイザーを個人オプションとして始める　またオキニトークで希望などを聞いていくのも〇とアドバイス","themes":["オキニトーク"]},{"date":"2026-04-13","staff":"成瀬","comment":"二日連続で0本。知立市から自走なのでガソリンを今度いれてOKとした。\nパネル1枚目を変えてということで順番を変更。\nオキニトークを全くしていないということで重要性を話したのでまた再送信するねで再送信した。マイヘブンは出勤してからしか開かないということ、休みの日は忙しいということで休みの日だけ日記のお手伝いする。","themes":["オキニトーク","日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"ほしな","count":5,"staffs":["幅","蛍"],"themes":{"オキニトーク":1,"日記・コンテンツ":2,"出勤・シフト":1},"first_date":"2025-12-10","last_date":"2026-04-21","meetings":[{"date":"2025-12-10","staff":"幅","comment":"オキニトーク、日記動画、フリーポス、料金説明","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-01-11","staff":"蛍","comment":"日記の本数・アップの仕方・日記補助\nもう一度頑張ってみる","themes":["日記・コンテンツ"]},{"date":"2026-03-28","staff":"蛍","comment":"出勤アラート・最高キャストの話しに加え\n当欠が多い為改善点を話し","themes":["出勤・シフト"]},{"date":"2026-04-03","staff":"蛍","comment":"接客等にも悩み…色々細かい話しをして\n意欲アップ！","themes":[]},{"date":"2026-04-21","staff":"蛍","comment":"3月・4月の稼ぎで悩み\n辞めたくはないし、昼職もあるので今すぐどうこうは考えてないとの事だったので、できる事はやってく。","themes":[]}],"ai_summary":null},{"name":"ゆきＤ","count":5,"staffs":["せいや","幅"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":2,"出勤・シフト":1},"first_date":"2025-12-06","last_date":"2026-03-28","meetings":[{"date":"2025-12-06","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。ｵｷﾆﾄｰｸテンプレ作成してもらった。こちらで配信、自動承認了承済み。本指力あるので新規獲得目指していこうという着地","themes":["集客ツール","オキニトーク"]},{"date":"2026-01-14","staff":"せいや","comment":"バニラ連携〇\n代行、サポート✕ともに不要。","themes":[]},{"date":"2026-02-25","staff":"せいや","comment":"本指メインでP客増やさないといけないので\n動画日記を再度催促、社長に自分が怒られたと言ってみた","themes":["日記・コンテンツ"]},{"date":"2026-03-25","staff":"幅","comment":"最高キャスト、出勤アラート、インバウンド向けの仕事は現在NGだが提案","themes":["出勤・シフト"]},{"date":"2026-03-28","staff":"幅","comment":"テンプレートに登録して繰り返しアップすることを提案　動画のアップがない為、静止画を動画にしてみてわ","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"りんか","count":5,"staffs":["幅"],"themes":{"条件・給与":1,"日記・コンテンツ":3,"撮影":1,"出勤・シフト":1},"first_date":"2025-12-28","last_date":"2026-01-09","meetings":[{"date":"2025-12-28","staff":"幅","comment":"オクテツとの話し合いで引き止めが入ってるが、バックアップ体制などで、アピール　入店になれば80～100の給料予定　売上で130～150アップを見込める　新規をつけてさえいけばリピート80％\n本人もつけてさえくれれば、必ず返します　とのことです。","themes":["条件・給与"]},{"date":"2025-12-29","staff":"幅","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-01-02","staff":"幅","comment":"動画日記のサンプルを渡して参考に\n動画撮影は美容院行った後に撮影予定を決める","themes":["日記・コンテンツ","撮影"]},{"date":"2026-01-07","staff":"幅","comment":"あやめを含めて、動画作成レクチャー声入り動画を朝のルーティンにして、夕方以降にエロ動画","themes":["日記・コンテンツ"]},{"date":"2026-01-09","staff":"幅","comment":"アクセス1000以上来てる、新人日記ランキングにも入ってるから日記の本数を\n出勤7.8 休み3は、やっていこう！声入り動画をもっと上げてくように","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"森本あかり","count":5,"staffs":["せいや","幅"],"themes":{"日記・コンテンツ":1,"プロフィール":1,"条件・給与":2,"業務態度・指導":3,"撮影":2,"出勤・シフト":1,"掛け持ち・他店":1},"first_date":"2026-01-16","last_date":"2026-04-17","meetings":[{"date":"2026-01-16","staff":"せいや","comment":"お金に追われてて心機一転頑張るとのこと。\n写メ日記代行〇\n統括と条件すり合わせて2月より始動","themes":["日記・コンテンツ","プロフィール","条件・給与"]},{"date":"2026-03-19","staff":"幅","comment":"久々に案内で乗せたので、まずは近況から\n綺麗になったねぇー！などのモチベーション上げの会話　引っ越しして環境が変わったとの事","themes":["業務態度・指導"]},{"date":"2026-04-09","staff":"せいや","comment":"幅さんと面談。\nまだガッツリこちらにシフト出来なさそうなので条件見直し等はタイミングで。\nアネキャンをあかりに変更。\nパネルが古いので撮影日程もらった、地力あるので今はコツコツ行きましょうで終話","themes":["撮影","出勤・シフト","条件・給与","掛け持ち・他店"]},{"date":"2026-04-16","staff":"幅","comment":"誕生日に財布を失くす事件で、モチベーションが下げ・・・店から何か誕プレの話しと\n撮影は5月　財布、現金失くしたから働かないと！！！","themes":["撮影","業務態度・指導"]},{"date":"2026-04-17","staff":"幅","comment":"誕プレを、なべちゃんに手配してもらい、本人に2．3日後には、届くとモチベーションアップ作戦","themes":["業務態度・指導"]}],"ai_summary":null},{"name":"いすず","count":4,"staffs":["せいや","幅","成瀬"],"themes":{"オキニトーク":2,"日記・コンテンツ":2,"プロフィール":1,"条件・給与":2,"撮影":1,"出勤・シフト":3},"first_date":"2026-01-31","last_date":"2026-04-15","meetings":[{"date":"2026-01-31","staff":"成瀬","comment":"日記こちらで書いてOK.写真大量にもらった。\n本指の人が一人引っ越しで消えるので写真指名取れるように日記とオキニトークでバックアップしていくと伝えた。","themes":["オキニトーク","日記・コンテンツ","プロフィール","条件・給与"]},{"date":"2026-04-02","staff":"せいや","comment":"幅さんと面談。スタイル抜群なところで顔隠した日記とマイガールで動画や顔出しを提案。本指にする力は多少たりともあるので、入口の強化と見直し。撮影日程調整\n\n最高キャスト・出勤アラートについて説明、目の前で投稿。テンプレートに保存済み。出勤増やしてきたので精度高めて","themes":["日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2026-04-13","staff":"幅","comment":"せいやと、今後について面談\n出勤時間の延長と、託児所代問題の解決\n0本が発生した際のバックアップについては、別紙参照","themes":["出勤・シフト","条件・給与"]},{"date":"2026-04-15","staff":"せいや","comment":"2店舗とも顔隠しスタイル売りで行くためえがちゃんと日付決めてもらった。\n先行予約のメリット説明しシフト催促。\n仕事前の為、オキニトークは次回","themes":["オキニトーク","出勤・シフト"]}],"ai_summary":null},{"name":"ことね","count":4,"staffs":["なべ","八谷","太田"],"themes":{"出勤・シフト":4,"日記・コンテンツ":1,"撮影":1},"first_date":"2025-12-21","last_date":"2026-03-13","meetings":[{"date":"2025-12-21","staff":"なべ","comment":"地下アイドルの追っかけでライブがあるときのみ出勤。\n次回は年始に出勤予定。","themes":["出勤・シフト"]},{"date":"2026-01-09","staff":"太田","comment":"バニラ連携、週末のアイドルライブに合わせて出勤なので、平日は店で日記をあげる、素材が少ないので、撮影した","themes":["日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2026-02-11","staff":"太田","comment":"推し活の知り合いにバレたかもと連絡がありサイトを一旦非掲載、出勤の時だけサイト掲載でもいいよと言ってあります。\n当面、名古屋で推しのライブが無いと言っていたので、それも関係あるかも","themes":["出勤・シフト"]},{"date":"2026-03-13","staff":"八谷","comment":"3月20日18時出勤時に、今後の相談したい。\n身バレでパネルや名前の変更の相談。","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"さくら","count":4,"staffs":["幅","蛍"],"themes":{"日記・コンテンツ":3,"出勤・シフト":2,"条件・給与":3,"オキニトーク":1},"first_date":"2026-04-09","last_date":"2026-04-15","meetings":[{"date":"2026-04-09","staff":"幅","comment":"元かれん　4/14日より出勤予定\n前から期間が空いてるので、色々変わった事を徐々に教えていく　家の事もあるので、日記はバックアップが必要かも","themes":["日記・コンテンツ","出勤・シフト","条件・給与"]},{"date":"2026-04-12","staff":"蛍","comment":"予約が入らず不安にもなっており、日記のバックアップを話し！","themes":["日記・コンテンツ","条件・給与"]},{"date":"2026-04-14","staff":"幅","comment":"本日初出勤、姫デコの使い方、オキニトークの有効活用などの話し","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-04-15","staff":"幅","comment":"新天地バナーの説明、動画アップは、こちらでバックアップしてくので、画像の協力をお願い","themes":["日記・コンテンツ","条件・給与"]}],"ai_summary":null},{"name":"みいひ","count":4,"staffs":["せいや","ばしこ","幅"],"themes":{"日記・コンテンツ":2,"プロフィール":2,"撮影":2,"出勤・シフト":1,"業務態度・指導":1,"オキニトーク":1},"first_date":"2026-03-18","last_date":"2026-04-09","meetings":[{"date":"2026-03-18","staff":"ばしこ","comment":"写メ・動画など撮影予定。\n割とこちらが撮影した写真をよく使ってくれるが、同じ写真を使い回すタイプなので、使ってくれる写真の枚数を増やせれば。","themes":["日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-27","staff":"幅","comment":"先行予約・最高キャスト・出勤アラート説明\nせいや含めて話し　彼との結婚が6月くらいに　　送りの際に自力日記を指摘アップしていくように指導","themes":["日記・コンテンツ","出勤・シフト","業務態度・指導"]},{"date":"2026-04-09","staff":"せいや","comment":"オキニトークでの質問があったので\nコンセプトと効率的な流れを説明。","themes":["オキニトーク"]},{"date":"2026-04-09","staff":"ばしこ","comment":"写メ撮影完了後、本人にデータ渡し済み","themes":["プロフィール","撮影"]}],"ai_summary":null},{"name":"みやび","count":4,"staffs":["幅"],"themes":{"日記・コンテンツ":2,"出勤・シフト":1},"first_date":"2026-02-10","last_date":"2026-04-23","meetings":[{"date":"2026-02-10","staff":"幅","comment":"パネルは、必ず鳴ると思ったが初日指名が、上手く入ってこない為、パネルの順番を入れ替え\n今週2.5万円保証を3日間つけて、再度アタック\n応援日記に関して許可してもらい援護していく話し済み","themes":["日記・コンテンツ"]},{"date":"2026-03-17","staff":"幅","comment":"昼職が忙しかったが、落ち着いて\n火曜、木曜、土曜の出勤で出れるよう\n鍵付きの日記をもっと上げていくように\nガチ恋ロングが多い為、月の回数通ってくれるように誘導していこうと考えてるよう","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-19","staff":"幅","comment":"2件ロングが入ると痛くなっちゃうとの事だが、お客様に気持ち良く遊んでいただく為にも伝える事は、必要　それで休む事のが痛手などの話し\n予約次第で、迎えか志賀本通かスムーズな方の為、連絡は密にする事","themes":[]},{"date":"2026-04-23","staff":"幅","comment":"先週、体調崩して寝込んでたようだが、体調も戻り復調　新規指名を確実にリピートに出来るよう接客を頑張るとの事","themes":[]}],"ai_summary":null},{"name":"みゆ","count":4,"staffs":["せいや","なべ","ばしこ","幅"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":2,"出勤・シフト":3,"掛け持ち・他店":1},"first_date":"2025-12-10","last_date":"2026-03-26","meetings":[{"date":"2025-12-10","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。勤怠の割にアクセスがあることから、日記が不十分なので、動画で魅力を伝え限定日記でマイガールを増やそうと話した。順番的には日記からと話したがｵｷﾆﾃﾝﾌﾟﾚ作ってくれて自動承認OKです。本指タイプで早退が多いので裏を返せば伸びしろしかない","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2026-01-14","staff":"なべ","comment":"日記の代行OK。休みの日上げれないので助かりますとのことでした。\n刺さる層が多いはずなので休みの日にこちらで種まきをする。\n本人的にもアネキャンでうけるタイプと理解しているのでアネキャンを重点的に。\n日記のポロリOK","themes":["日記・コンテンツ","出勤・シフト","掛け持ち・他店"]},{"date":"2026-02-03","staff":"ばしこ","comment":"風俗嬢アイドルをやりたいと本人から申し込み有り。具体的な構想などいろいろとあるみたいですが身バレなどのリスク警戒をしているためまずは具体的なコンテンツなど何をつくるか出勤時などで応相談。","themes":["出勤・シフト"]},{"date":"2026-03-26","staff":"幅","comment":"出勤アラート・最高キャスト・先行予約について説明　せいやも出勤できないかの話しを勧める","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"やよい","count":4,"staffs":["幅"],"themes":{"日記・コンテンツ":2,"出勤・シフト":2,"オキニトーク":3,"プロフィール":1,"撮影":1},"first_date":"2026-01-27","last_date":"2026-04-17","meetings":[{"date":"2026-01-27","staff":"幅","comment":"アパレルの仕事をしながら、週2くらいの出勤予定、電話で男性相手に話してポイントを稼ぐ経験ある為、日記にて声、動画で仕掛けていく、初出勤までに自撮りで送ってもらい作成予定","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-02-07","staff":"幅","comment":"本人から、自撮り声入り写メをもらい遅い時間にアップして、エロ売り　オキニトークにも反響ありで土曜日曜完売の為、方向を本人と連携して継続して行く話し済み","themes":["オキニトーク","プロフィール"]},{"date":"2026-02-24","staff":"幅","comment":"パネル撮影、動画　大二郎撮影　日記用も合わせ撮影　　今の稼ぎや働く上での話しの中から、ガチ恋への対処の話しあり　その他でオキニトークへの返信についてアドバイス","themes":["オキニトーク","日記・コンテンツ","撮影"]},{"date":"2026-04-17","staff":"幅","comment":"出勤アラート設定、ゴールデンウイークの出勤を早めに入れていこう！直近は、ほぼ完売が多く仕事的には、満足　更なるステップでオキニトークの細かな使用方法を提案","themes":["オキニトーク","出勤・シフト"]}],"ai_summary":null},{"name":"ゆり","count":4,"staffs":["幅","蛍"],"themes":{"オキニトーク":1,"業務態度・指導":1,"掛け持ち・他店":1,"出勤・シフト":1},"first_date":"2025-11-29","last_date":"2026-04-04","meetings":[{"date":"2025-11-29","staff":"幅","comment":"オキニトークについて","themes":["オキニトーク"]},{"date":"2025-12-29","staff":"幅","comment":"バニラ連携完了☑️","themes":[]},{"date":"2026-03-21","staff":"幅","comment":"以前　しずくの店電話に、お金・直会いをした件でのクレームがあり、本人確認したところ別の女とごっちゃになってるものの大筋認めたうえで注意　尚その客は、受付禁止　本名、住所も分かってるよう","themes":["業務態度・指導","掛け持ち・他店"]},{"date":"2026-04-04","staff":"蛍","comment":"母親が亡くなった為当面休み\n落ち着いたら連絡入ります","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"るる","count":4,"staffs":["せいや","幅"],"themes":{"日記・コンテンツ":2,"出勤・シフト":1,"オキニトーク":1,"条件・給与":1},"first_date":"2026-02-01","last_date":"2026-04-23","meetings":[{"date":"2026-02-01","staff":"せいや","comment":"バニラ連携〇\n日記サポ〇\n↑成瀬さんに話してもらった","themes":["日記・コンテンツ"]},{"date":"2026-03-26","staff":"幅","comment":"レア出勤のため、特に出勤アラート重要\n現在10　30目指して、現場でも積極的に進めてくださいと、合わせて最高キャストも10目指すよう　体調戻ってきたら週3、4に戻せる","themes":["出勤・シフト"]},{"date":"2026-04-10","staff":"幅","comment":"オキニトークからの予約について、色々な例を説明　基本リピートが多いキャストだが、予約が空いてる時に使用するなど提案","themes":["オキニトーク"]},{"date":"2026-04-23","staff":"幅","comment":"口コミお礼日記の溜まってた部分を書いてもらい、次回からはすぐに書いてからこそ効果があると説明、またプラス条件に関しては、やるべき事をやらないといけない理由など説明、本人も甘えてましたとの事","themes":["日記・コンテンツ","条件・給与"]}],"ai_summary":null},{"name":"月城れお","count":4,"staffs":["せいや"],"themes":{"日記・コンテンツ":1,"プロフィール":1,"条件・給与":1,"出勤・シフト":1,"オキニトーク":1},"first_date":"2026-01-08","last_date":"2026-04-13","meetings":[{"date":"2026-01-08","staff":"せいや","comment":"猫の事情もあり2月までは名古屋メイン、写メ日記は極度に嫌いなのでこちらで請け負うのは追い風、写真等は送ってくれる。\n10H受付80分までフルバック\n月100H受付が継続条件。\n月城れおに源氏名変更希望。\n店との関係性は良好。","themes":["日記・コンテンツ","プロフィール","条件・給与"]},{"date":"2026-03-10","staff":"せいや","comment":"遅めの誕プレ買いにパルコへ。サルート。\nさらっと来月の予定とかも言っていたのでまだ名古屋にいそう。関係性も売り上げも良好。","themes":[]},{"date":"2026-03-23","staff":"せいや","comment":"最高キャスト、出勤アラート、先行予約\n説明　ゴールデンウイークまで出勤予定出せるとの事　幅さんと説明","themes":["出勤・シフト"]},{"date":"2026-04-13","staff":"せいや","comment":"オキニトークと伝えるとやってるらしい。来そうな雰囲気ある客にはピン留めすることをオススメ","themes":["オキニトーク"]}],"ai_summary":null},{"name":"あやか","count":3,"staffs":["幅","蛍"],"themes":{"撮影":1,"出勤・シフト":2,"条件・給与":1,"掛け持ち・他店":1,"プロフィール":1},"first_date":"2025-11-26","last_date":"2026-03-24","meetings":[{"date":"2025-11-26","staff":"幅","comment":"YouTube熟女屋　白石にて12／15日撮影予定","themes":["撮影"]},{"date":"2026-03-19","staff":"幅","comment":"他店掛け持ちの相談あったが、一旦3月は、25000円×出勤日数での保証で様子見\n条件については、別紙参照","themes":["出勤・シフト","条件・給与","掛け持ち・他店"]},{"date":"2026-03-24","staff":"蛍","comment":"保証は付けたものの仕事の入り悪く\n写真変更し個人イベントなどをするように話し。出勤アラート・最高キャストも説明済","themes":["プロフィール","出勤・シフト"]}],"ai_summary":null},{"name":"うしお","count":3,"staffs":["幅","蛍"],"themes":{"集客ツール":1,"オキニトーク":2,"日記・コンテンツ":2},"first_date":"2025-12-11","last_date":"2026-01-19","meetings":[{"date":"2025-12-11","staff":"幅","comment":"キテネ、ファーストオキニトーク⭕️\n料金変更説明済み","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2026-01-19","staff":"蛍","comment":"日記補助OK\n1月は体調不良続きだったが2月からは週2・3ペースで復活予定！","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"かおり","count":3,"staffs":["幅","蛍"],"themes":{"集客ツール":1,"オキニトーク":2,"日記・コンテンツ":2},"first_date":"2025-12-11","last_date":"2026-01-18","meetings":[{"date":"2025-12-11","staff":"幅","comment":"キテネ、ファーストオキニトーク⭕️、料金変更説明済み","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2026-01-18","staff":"蛍","comment":"日記補助してく","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"かのん","count":3,"staffs":["せいや","幅","成瀬"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":1,"プロフィール":1,"撮影":1,"出勤・シフト":1},"first_date":"2025-12-01","last_date":"2026-03-28","meetings":[{"date":"2025-12-01","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。特に凝った話はしてないです。","themes":["集客ツール"]},{"date":"2026-02-14","staff":"成瀬","comment":"本当に本指の多い子なので本指がなくてたまに空いてる日を狙って写真指名がくるようにしたいので協力させて欲しという話。パネル撮影2/16、本日写メ用撮影\nオキニトークと日記のサポートもしてOK。\nオキニトークは来たら返信してたのでこちらからファーストメッセージを送ることにした。","themes":["オキニトーク","日記・コンテンツ","プロフィール","撮影"]},{"date":"2026-03-28","staff":"幅","comment":"先行予約・出勤アラート・最高キャストについて、説明　画像渡し　4月よりシフト1ヶ月単位の説明","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"かんな","count":3,"staffs":["太田","幅"],"themes":{"オキニトーク":1,"出勤・シフト":2,"日記・コンテンツ":1},"first_date":"2025-12-16","last_date":"2026-03-27","meetings":[{"date":"2025-12-16","staff":"太田","comment":"オキニトーク、年末年始の出勤","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-01-21","staff":"太田","comment":"バニラ連携◎\n日記サポートの話、今はあまりお金に困ってないらしい","themes":["日記・コンテンツ"]},{"date":"2026-03-27","staff":"幅","comment":"先行予約、出勤アラート・最高キャスト\nせいや、説明　飲みすぎ・・・って聞いてたので、アップしてるかをチェック","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"こころ","count":3,"staffs":["幅"],"themes":{"オキニトーク":2},"first_date":"2025-12-10","last_date":"2025-12-30","meetings":[{"date":"2025-12-10","staff":"幅","comment":"オキニトークについて、料金変更の話し","themes":["オキニトーク"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2025-12-30","staff":"幅","comment":"バニラ連携完了☑️","themes":[]}],"ai_summary":null},{"name":"こはる","count":3,"staffs":["せいや","幅"],"themes":{"集客ツール":1,"出勤・シフト":3,"日記・コンテンツ":1},"first_date":"2025-12-01","last_date":"2026-03-25","meetings":[{"date":"2025-12-01","staff":"せいや","comment":"ｷﾃﾈ・ﾈｯﾄ予約説明。+10は反応悪い。出勤日数が酷いので徐々に伸ばしていきたい。","themes":["集客ツール","出勤・シフト"]},{"date":"2026-02-01","staff":"せいや","comment":"バニラ連携〇\n日記サポ〇\n出勤時は真面目にやっているので、急なショートシフトの時などに宣伝するぐらいと説明。都度出勤の話をするしかないが、月1.2になってきているので会った時にしつこく顔合わせていくしかない。関係性はある","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-25","staff":"幅","comment":"せいやと、二人で挟み撃ち、出勤アラート38人居て出勤を待ってる人が多い事、最高キャストが未だないため、やり方を説明、先行予約について出勤を先まで出してもらう事でメリットを説明","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"しずく","count":3,"staffs":["幅"],"themes":{"オキニトーク":2,"日記・コンテンツ":3,"撮影":2,"出勤・シフト":3,"掛け持ち・他店":1,"業務態度・指導":1},"first_date":"2025-12-19","last_date":"2026-01-14","meetings":[{"date":"2025-12-19","staff":"幅","comment":"オキニトーク、料金変更、撮影、動画、出勤に関して話し","themes":["オキニトーク","日記・コンテンツ","撮影","出勤・シフト"]},{"date":"2025-12-19","staff":"幅","comment":"オキニトーク、料金変更、撮影、動画、出勤に関して話し\nでりどす　こはく追加登録","themes":["オキニトーク","日記・コンテンツ","撮影","出勤・シフト","掛け持ち・他店"]},{"date":"2026-01-14","staff":"幅","comment":"出勤が稀の為、日記の補助の件\nモチベーションを上げて行くなど、以前のやる気に戻る話し","themes":["日記・コンテンツ","出勤・シフト","業務態度・指導"]}],"ai_summary":null},{"name":"つむぎ","count":3,"staffs":["八谷","幅"],"themes":{"日記・コンテンツ":1,"出勤・シフト":2,"掛け持ち・他店":2,"オキニトーク":1,"撮影":1},"first_date":"2026-01-12","last_date":"2026-03-23","meetings":[{"date":"2026-01-12","staff":"八谷","comment":"日記代行OK。メインはでりどすとアネキャンで今まで通りあげる。でりどすとアネは手伝い程度。しずくは出勤時に一本はあげる。","themes":["日記・コンテンツ","出勤・シフト","掛け持ち・他店"]},{"date":"2026-02-20","staff":"幅","comment":"撮影の予定を決めて撮り直し、オキニトークの返信がよく溜まってるので、時間の許す限り返信お願い　また、しずくの方でオキニトークから指名が取れてる話し","themes":["オキニトーク","撮影","掛け持ち・他店"]},{"date":"2026-03-23","staff":"幅","comment":"出勤アラート、最高キャスト、先行予約を説明　先の予定は出せない感じでした。","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"なぎさ","count":3,"staffs":["幅","蛍"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":2},"first_date":"2025-12-10","last_date":"2026-04-21","meetings":[{"date":"2025-12-10","staff":"幅","comment":"キテネ、オキニトーク店からファースト送るが返信？　料金変更説明済み","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2026-04-18","staff":"蛍","comment":"胸元の化膿してたとこが再発\n水曜日迄は休みその後報告待ち","themes":["出勤・シフト"]},{"date":"2026-04-21","staff":"蛍","comment":"最低でもあと1週間は休みとの事\n金曜日に再度病院でいつから出勤できるかわかるとの事","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"ななせ","count":3,"staffs":["太田","幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":2,"条件・給与":1},"first_date":"2025-12-22","last_date":"2026-01-16","meetings":[{"date":"2025-12-22","staff":"幅","comment":"現在ロマネ在籍中　週末以外で2.3出勤してる\n完全S売りリピートは限定されるかも\n日記の種類、オキニトークバックアップ説明済み","themes":["オキニトーク","日記・コンテンツ","出勤・シフト","条件・給与"]},{"date":"2025-12-29","staff":"幅","comment":"面接時の保証の件で本人から連絡があり電話にて話をしたが現状の勤怠では出せない年明けにしっかりとした出勤計画を話したうえで最低限の出来ることは協力する話で終了","themes":["出勤・シフト"]},{"date":"2026-01-16","staff":"太田","comment":"ビジホのロングコースNGで今日自宅もNGと言ってきたので、事務所で面談。\nアルコールが苦手でビジホ、自宅だと飲んでる人が多いからという理由だった。\n稼ぎたいのか仕事を制限してゆるく自分に合う客だけにするのかを話した結果、ビジホはコースの制限無し、自宅NGになった。\nアルコール苦手の文言をサイトに掲載。\nけっこう話したが、正直なぜデリで働きたいか謎。","themes":[]}],"ai_summary":null},{"name":"なみえ","count":3,"staffs":["幅"],"themes":{"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2025-12-15","last_date":"2026-03-10","meetings":[{"date":"2025-12-15","staff":"幅","comment":"12／22日に韓国へ鼻の整形の為に行って\n1月いっぱいは、ダウンタイムで✖️出勤は、2月になる予定の為、日記更新の話ししたが、1月は、定期連絡をした方が○","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-01-06","staff":"幅","comment":"まだまだ万全ではないですが、ゆっくり回復しています🙇‍♀️  \nとの連絡あり　定期的に連絡","themes":[]},{"date":"2026-03-10","staff":"幅","comment":"引き続き、復帰伺いのライン送ってるが、返信はなし","themes":[]}],"ai_summary":null},{"name":"にいな","count":3,"staffs":["せいや","太田"],"themes":{"出勤・シフト":3,"日記・コンテンツ":1,"プロフィール":1,"撮影":1,"業務態度・指導":1},"first_date":"2025-12-18","last_date":"2026-03-31","meetings":[{"date":"2025-12-18","staff":"太田","comment":"出勤を頑張って増やそう","themes":["出勤・シフト"]},{"date":"2026-01-08","staff":"せいや","comment":"駅チカ連携。日記サポートOKエロ売り×\nこちらで投稿するための写真・動画をバレンタイン撮影の続きで取る運び。出勤は元々不安定で当日出勤にしてるので一旦そのままで。","themes":["日記・コンテンツ","プロフィール","撮影","出勤・シフト"]},{"date":"2026-03-31","staff":"せいや","comment":"チャットに嫌がらせが来たので幅さんと対応。事実として店外2～3回があったそうで遠方住みで執着されてるわけではなさそうだが厳重注意。目標決めて出勤増やそうと伝えたが男できて無欲なのでどうかなといったところ","themes":["出勤・シフト","業務態度・指導"]}],"ai_summary":null},{"name":"はるな","count":3,"staffs":["幅","蛍"],"themes":{"日記・コンテンツ":3,"撮影":2},"first_date":"2025-12-09","last_date":"2025-12-19","meetings":[{"date":"2025-12-09","staff":"幅","comment":"まっちゃん絡み動画撮影","themes":["日記・コンテンツ","撮影"]},{"date":"2025-12-15","staff":"蛍","comment":"個人オプション開始・日記でもアピール","themes":["日記・コンテンツ"]},{"date":"2025-12-19","staff":"幅","comment":"パネル、日記用撮影　大二郎","themes":["日記・コンテンツ","撮影"]}],"ai_summary":null},{"name":"ひなた","count":3,"staffs":["幅"],"themes":{"出勤・シフト":1,"条件・給与":2,"日記・コンテンツ":2,"プロフィール":1,"撮影":1},"first_date":"2026-03-03","last_date":"2026-04-02","meetings":[{"date":"2026-03-03","staff":"幅","comment":"昼職との兼ね合いで、遅番中心だが休みの際は、早番からのロングタイムも🉑1日2万がボーダーラインのようなので、まずはお気に入りを強制で入れてバックアップ","themes":["出勤・シフト","条件・給与"]},{"date":"2026-03-20","staff":"幅","comment":"日記は、やってるが動画がまだ上げた事なかったので、説明　時代ですねぇーの反応\n静止画を組み合わせて、動画にすれば〇も説明","themes":["日記・コンテンツ"]},{"date":"2026-04-02","staff":"幅","comment":"もらい写メから大二郎撮影に変更\n予約がないと休んでしまうとの事だったので、仕事がつかない日が発生したら80分までで、1本フルバックする　昼職もしてるので、引き続き日記サポートしていく","themes":["日記・コンテンツ","プロフィール","撮影","条件・給与"]}],"ai_summary":null},{"name":"ひらり","count":3,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":2},"first_date":"2025-12-15","last_date":"2026-03-27","meetings":[{"date":"2025-12-15","staff":"幅","comment":"料金変更、オキニトーク説明","themes":["オキニトーク"]},{"date":"2026-03-19","staff":"幅","comment":"空き時間に次回の日記を書いていく\n出勤して来てからでは、遅番出勤では\n、遅れたり家で日記は書けないので、待機時間に前もって予約投稿をするように説明","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-27","staff":"幅","comment":"先行予約・出勤アラート・最高キャスト\n画像渡しテンプレートに登録してアップ","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"まい","count":3,"staffs":["せいや","八谷","成瀬"],"themes":{"条件・給与":1,"掛け持ち・他店":1,"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2025-11-30","last_date":"2026-02-14","meetings":[{"date":"2025-11-30","staff":"成瀬","comment":"アネキャンの客層が嫌で、特別指名料をあげたいと相談に乗りました。特別指名料+3000円にしレギュラーバックに変更。","themes":["条件・給与","掛け持ち・他店"]},{"date":"2026-01-10","staff":"八谷","comment":"オキニトークの一斉送信しない。\n日記のフォローもいらない。\n全部自分でやりますとのこと。\n昼職やってる都合でオキニトークも都度できない。日記も文面などにこだわりがある。\nこちらで日記回数などチェックして、都度コミュニケーションが必要。","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-02-14","staff":"せいや","comment":"心身共に参っていてこの仕事がしんどいそう。ブッチもあるので無理ないように伝え週一でもいいから事前シフトで客選んでもいいから無理ないようにマイペースで良いと伝えた。外見もやつれていて厳しそう","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"まなか","count":3,"staffs":["なべ"],"themes":{"出勤・シフト":1,"撮影":2,"掛け持ち・他店":1},"first_date":"2025-12-13","last_date":"2026-03-10","meetings":[{"date":"2025-12-13","staff":"なべ","comment":"12月中旬復活を目標にしていたが持病の数値が悪くなった＆生理が来そうで1週間様子見。\n26日からが本番だからそこからは出勤してほしい旨を伝えたました。\n\nもし復活しにくいなら最初は本指のみで初めてもいいよと伝えてます。\n\n12月中復活しなかったら姫デコブースト剝奪の話をタイミング見てします。","themes":["出勤・シフト"]},{"date":"2026-03-09","staff":"なべ","comment":"春撮影呼び出しました。\n10日来るので終わってからせいやくんにご飯連れてって貰います。","themes":["撮影"]},{"date":"2026-03-10","staff":"なべ","comment":"春撮影来ました。体調の状態に波があるようで復帰撮影用の下着は買ったが復活はまだとのこと。\n\n\n※以下本人から報告があるまでシークレットでお願いします。\n----------------------------------\n彼氏がいるそうで交際して1年程。\n濁してはいたが恐らくアネキャンの客。(年下で小牧が職場)\nもちろんこの仕事も知っている。\n\n同棲するために小牧の新築新居を借り引っ越すそうで現在荷造り中。\n事務所には復活のタイミングで報告をするとのことでした。\n\n貯蓄と彼のお金で生活してる感じ。\nそれで生活に困っていないのもあり復帰しない感じがしました。\n\n退店はしないし復帰にも前向きだが復活してからは少し頻度が落ちるかもとのこと。\n\n妹夫婦とご飯に行ったり結婚前提にお付き合いしてるようなので復帰せず寿引退も無きにしもあらずな匂いも。。。","themes":["撮影","掛け持ち・他店"]}],"ai_summary":null},{"name":"みほ","count":3,"staffs":["幅"],"themes":{"オキニトーク":2,"日記・コンテンツ":2},"first_date":"2025-12-10","last_date":"2025-12-29","meetings":[{"date":"2025-12-10","staff":"幅","comment":"オキニトーク、日記動画、料金変更説明","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2025-12-10","staff":"幅","comment":"オキニトーク、日記動画、料金変更説明","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2025-12-29","staff":"幅","comment":"バニラ連携完了☑️","themes":[]}],"ai_summary":null},{"name":"めめ","count":3,"staffs":["せいや","幅"],"themes":{"出勤・シフト":1,"条件・給与":1,"オキニトーク":1,"日記・コンテンツ":1,"撮影":1},"first_date":"2026-03-14","last_date":"2026-03-18","meetings":[{"date":"2026-03-14","staff":"幅","comment":"親とは、縁切り状態　横浜でストーカー事件にあったが警察が対応してもらえず2年勤めたソープを退店して名古屋へ学園系のイメージから背伸びして当店へ週5.6 12時間勤務のレギュラー候補\n3月の勤怠で、4月よりフルバックの話し済み\n完全マークで、売り上げを作りに行きます。","themes":["出勤・シフト","条件・給与"]},{"date":"2026-03-17","staff":"幅","comment":"オキニトーク手伝い、日記アドバイス、\n撮影を大二郎に、撮影予定も入れて\n本格始動","themes":["オキニトーク","日記・コンテンツ","撮影"]},{"date":"2026-03-18","staff":"せいや","comment":"送迎にて会話。\n半年以上完売の全店は川崎の激安ソープ。当店入店きっかけはみらいちゃんに惹かれたそう。ビジュアルはやや物足りないがスタイルと接客は自信満々。強引にでも仕事つけてみる価値はありそう","themes":[]}],"ai_summary":null},{"name":"やえ","count":3,"staffs":["せいや","八谷","太田"],"themes":{"日記・コンテンツ":1,"出勤・シフト":2},"first_date":"2026-01-21","last_date":"2026-03-12","meetings":[{"date":"2026-01-21","staff":"せいや","comment":"バニラ電話認証届かず未連携。\n日記サポ〇\nお金が必要なときに備えてマイペースに頑張っていきましょうと着地。催促もしないしと説明し自主性試してみる。来た時に何気ない会話続けて行ってこっちのペースへ。真相は分からないが一生家に居る、今お金にも困ってないとのこと。\n\n関係性できるまではフラットで","themes":["日記・コンテンツ"]},{"date":"2026-01-22","staff":"太田","comment":"24年12月に韓国で鼻の整形したけど、自分的に気に入らなくて引きこもりに、今月末に韓国に整形のカウンセリングに行く、今はお金に困ってないが名古屋に引っ越しと整形がきまればお金が必要になるので出勤するようになるかも。とにかく適当な子なので根気よく。","themes":["出勤・シフト"]},{"date":"2026-03-12","staff":"八谷","comment":"今日の出勤予定、15日にスライド。\nこれで7回連続当日欠勤。次回出勤時に再度話したほうが良いかと。\nポテンシャルは高いので根気よく。","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"らな","count":3,"staffs":["幅"],"themes":{"出勤・シフト":2},"first_date":"2026-03-24","last_date":"2026-04-24","meetings":[{"date":"2026-03-24","staff":"幅","comment":"2年前に愛エンジェルで半年経験あり、彼氏バレで退店したが、奨学金が300万あり看護師の仕事だけでは、返していけないので、キャバやっていたが酒が苦手の為デリへ、月10日位で20万　彼氏から毎日夜電話がある為23時の確実な時間で翌日昼が休みの前日に出勤予定","themes":["出勤・シフト"]},{"date":"2026-03-27","staff":"幅","comment":"昨日、本日と働いて、稼ぎなど問題なし\n彼氏から連絡が入ってくる場合は、急遽上がりになる場合もあり　来週シフトだし\n最高キャスト、出勤アラート説明済み","themes":["出勤・シフト"]},{"date":"2026-04-24","staff":"幅","comment":"彼氏バレで前店を退店している為、バレない事が前提だが、彼氏からの電話で仕事とばすなど再三あり、本日も彼との電話でと予定より15分遅れ、仕事が大事なのは分かっているが、優先順位が彼氏優先のキャストと思い対応していく","themes":[]}],"ai_summary":null},{"name":"るか","count":3,"staffs":["せいや","太田"],"themes":{"オキニトーク":1,"日記・コンテンツ":2,"出勤・シフト":1},"first_date":"2026-01-04","last_date":"2026-04-01","meetings":[{"date":"2026-01-04","staff":"太田","comment":"次回リピート時に合わせてオキニトーク送信\n動画日記を頑張ってほしい\n次回2/25～2/28でリピート","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-03-30","staff":"せいや","comment":"出勤アラート・最高キャスト・インバウンドを一応説明。満枠かつ終わりが遅いので隙間時間でしか話せなかった。意図と方法は伝え、LINEを交換したので画像サンプルと内容を改めて落とし込む。","themes":["出勤・シフト"]},{"date":"2026-04-01","staff":"せいや","comment":"個人LINEで素材送信とお礼日記の催促、次回は5月の予定","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"れいな","count":3,"staffs":["幅"],"themes":{"オキニトーク":2},"first_date":"2025-11-29","last_date":"2025-12-29","meetings":[{"date":"2025-11-29","staff":"幅","comment":"オキニトークについて","themes":["オキニトーク"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]},{"date":"2025-12-29","staff":"幅","comment":"バニラ連携完了☑️","themes":[]}],"ai_summary":null},{"name":"あやな","count":2,"staffs":["幅"],"themes":{"集客ツール":2,"オキニトーク":2},"first_date":"2025-12-10","last_date":"2025-12-10","meetings":[{"date":"2025-12-10","staff":"幅","comment":"キテネ、オキニトーク説明","themes":["集客ツール","オキニトーク"]},{"date":"2025-12-10","staff":"幅","comment":"キテネ、オキニトーク説明","themes":["集客ツール","オキニトーク"]}],"ai_summary":null},{"name":"えいる","count":2,"staffs":["幅"],"themes":{"出勤・シフト":2,"掛け持ち・他店":2},"first_date":"2026-03-16","last_date":"2026-04-14","meetings":[{"date":"2026-03-16","staff":"幅","comment":"四日市しずくへも行ってるので、名古屋出勤の際は、しずく登録を増やして、仕事行けるようにしましょう","themes":["出勤・シフト","掛け持ち・他店"]},{"date":"2026-04-14","staff":"幅","comment":"出勤アラートをでりどすを作成テンプレート\nアネキャン、しずくを同じ手順で作成して、定期的にアップするように","themes":["出勤・シフト","掛け持ち・他店"]}],"ai_summary":null},{"name":"かすみ","count":2,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":2,"プロフィール":1},"first_date":"2026-02-03","last_date":"2026-02-04","meetings":[{"date":"2026-02-03","staff":"幅","comment":"職場が小牧のため、平日は家に帰らずに車中泊のよう　工場終わりに来て1.2時までで、週4日遅番で来る予定　日記、オキニトークの重要性を説明","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-02-04","staff":"幅","comment":"日記の写真をあげる際に、見て来たくなる　動画の口だけのシリーズをやってみますとのこと","themes":["日記・コンテンツ","プロフィール"]}],"ai_summary":null},{"name":"かなで","count":2,"staffs":["なべ","幅"],"themes":{"日記・コンテンツ":1,"出勤・シフト":2},"first_date":"2026-03-20","last_date":"2026-03-29","meetings":[{"date":"2026-03-20","staff":"なべ","comment":"旧ことね\n\n地下アイドルの追っかけをしているが同担ファンがしつこく特定してくるため身バレ。風俗してる子がいてそいつがしつこいらしい。\n名前とパネルの雰囲気も一気に変更して別人でアップ。\n\nライブの日程と被る出勤のため、シフト以外の日に適当にダミー入れてください。日記もそれっぽくこちらで上げてOK。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-29","staff":"幅","comment":"源氏名を変更して、お気に入りも白紙になっているため、先行予約・出勤アラート・最高キャストを定期的にアップするように提案","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"きほ","count":2,"staffs":["太田","幅"],"themes":{"日記・コンテンツ":2,"プロフィール":1,"出勤・シフト":1},"first_date":"2026-01-07","last_date":"2026-03-31","meetings":[{"date":"2026-01-07","staff":"太田","comment":"写メ日記、過去の日記をコピペでアップするのはOK、エロ売りとかの日記はやってほしくない","themes":["日記・コンテンツ","プロフィール"]},{"date":"2026-03-31","staff":"幅","comment":"先行予約・出勤アラート・最高キャストについて説明　定型文の修正で使えるので、他の日記にも適用できるなどの提案","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"ここ","count":2,"staffs":["八谷","幅"],"themes":{"日記・コンテンツ":2,"出勤・シフト":2},"first_date":"2026-01-11","last_date":"2026-03-18","meetings":[{"date":"2026-01-11","staff":"八谷","comment":"出勤時日記サポートOK。","themes":["日記・コンテンツ","出勤・シフト"]},{"date":"2026-03-18","staff":"幅","comment":"深夜からの出勤の場合、出勤前から日記が上がっていないと指名が取りにくいから、日記を上げるタイミングのルーティンを飲食店の仕込みを例えて説明","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"ここあ","count":2,"staffs":["せいや","幅"],"themes":{"日記・コンテンツ":1},"first_date":"2026-04-03","last_date":"2026-04-07","meetings":[{"date":"2026-04-03","staff":"幅","comment":"出稼ぎ5日間、1年ぶりの夜との事、定期もないためリピートさせたいレベル　途中声をかけて日記などの上げ方など、チェック","themes":["日記・コンテンツ"]},{"date":"2026-04-07","staff":"せいや","comment":"5日間の中でリピートもあったので、片道支給。5日間片道1週間往復と伝えた\n\n反応は読めなかったが来てほしい","themes":[]}],"ai_summary":null},{"name":"さら","count":2,"staffs":["幅","蛍"],"themes":{"日記・コンテンツ":1,"撮影":2,"出勤・シフト":1},"first_date":"2026-01-20","last_date":"2026-03-31","meetings":[{"date":"2026-01-20","staff":"幅","comment":"パネル用撮影及び日記に使えるように！まずは、自分で加工してアップできるよう説明","themes":["日記・コンテンツ","撮影"]},{"date":"2026-03-31","staff":"蛍","comment":"膝を痛め病院通ってる為中々出勤できない。\n出勤時は一本目迄自宅待機で対応\n時期をみて撮影も検討","themes":["撮影","出勤・シフト"]}],"ai_summary":null},{"name":"しおり","count":2,"staffs":["幅","蛍"],"themes":{"オキニトーク":2,"出勤・シフト":1,"日記・コンテンツ":1},"first_date":"2026-03-17","last_date":"2026-03-18","meetings":[{"date":"2026-03-17","staff":"蛍","comment":"帰りは岩塚の駅まで（友人宅）なので23時台の電車に乗れれば大丈夫との事。今後それを踏まえシフトをくむ予定。早速オキニトークで19日のリクエストが来ており19日のシフトも検討中。","themes":["オキニトーク","出勤・シフト"]},{"date":"2026-03-18","staff":"幅","comment":"オキニトークの使用を上手く使う方法と、マイガール限定が、日記で上げてなかったので、合わせて説明　夜スタッフ蕪岡を紹介","themes":["オキニトーク","日記・コンテンツ"]}],"ai_summary":null},{"name":"しろ","count":2,"staffs":["幅"],"themes":{"出勤・シフト":2,"オキニトーク":1,"撮影":1},"first_date":"2026-03-10","last_date":"2026-03-13","meetings":[{"date":"2026-03-10","staff":"幅","comment":"前回の時は、ホストにボケてて、勤怠もままならいからの歳を重ねて、箱ヘルで働いたが箱が合わずに当店へ今は、休む事もなく出来ますの期待でプレミア採用、当欠が続けばレギュラーに変更\nまた、昼職をしてるが辞める可能性も含めて話し","themes":["出勤・シフト"]},{"date":"2026-03-13","staff":"幅","comment":"本日初出勤、大二郎撮影\n明日から来週の出勤出してもらい、空いてる日も連絡すれば、出てくれるよう　\nオキニトークも送って返信もやって⭕️\nレギュラーとして様子見ていきたい","themes":["オキニトーク","撮影","出勤・シフト"]}],"ai_summary":null},{"name":"つばさ","count":2,"staffs":["八谷"],"themes":{"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2026-01-10","last_date":"2026-03-10","meetings":[{"date":"2026-01-10","staff":"八谷","comment":"日記のお手伝いはOK！\n新しいはどんどん撮ってと伝えてあります。","themes":["日記・コンテンツ"]},{"date":"2026-03-10","staff":"八谷","comment":"最近プチ整形や自分磨きに目覚めた模様。\n出勤日数も増やし、出勤時間も長くして、ある程度の稼ぎは欲しいみたい。\n本指名もしっかりいるので、稼ぎは安定している。\nピークから8キロ痩せたみたいで、美意識が高まっている。","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"ななか","count":2,"staffs":["幅"],"themes":{"プロフィール":2,"出勤・シフト":1,"日記・コンテンツ":1},"first_date":"2026-02-07","last_date":"2026-02-14","meetings":[{"date":"2026-02-07","staff":"幅","comment":"美濃加茂の人妻店に10～14日出勤\n名古屋へシフトしたくて応募\n写メが岐阜と名古屋で当たりが違うので当たりを探しながら様子見","themes":["プロフィール","出勤・シフト"]},{"date":"2026-02-14","staff":"幅","comment":"日記の補助の話し、美濃加茂の店との関係で、\n補助を3回程度　写真もらい済み","themes":["日記・コンテンツ","プロフィール"]}],"ai_summary":null},{"name":"ななみ","count":2,"staffs":["幅"],"themes":{"日記・コンテンツ":1,"プロフィール":1,"出勤・シフト":2},"first_date":"2026-03-21","last_date":"2026-03-24","meetings":[{"date":"2026-03-21","staff":"幅","comment":"3月初めての出勤で日記が1回も上がってなかった為、日記の重要性を説明　写真がないとの事だったから、まずはスタジオで自撮りしてもらうよう指示","themes":["日記・コンテンツ","プロフィール","出勤・シフト"]},{"date":"2026-03-24","staff":"幅","comment":"出勤アラート、先行予約4月に入ったら1ヶ月の予定お願いしますm(__)mの話し","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"まりあ","count":2,"staffs":["せいや"],"themes":{"日記・コンテンツ":1,"出勤・シフト":1,"条件・給与":1},"first_date":"2026-01-21","last_date":"2026-04-16","meetings":[{"date":"2026-01-21","staff":"せいや","comment":"バニラ連携、日記サポ〇\n日記やらないのでサポートはするけど当日分は頑張って閑散期乗り越えようと話、といっても自発性はあまりなく、やらないと思うので引き続きの案件、ポテンシャルはあるので安定させていきたい。","themes":["日記・コンテンツ"]},{"date":"2026-04-16","staff":"せいや","comment":"立場的にフリーも回らない、受付終了時にやればやるだけ給料上がるシステムを説明、出稼ぎ族で困ってなさそうなので手ごたえはない。来週出勤予定","themes":["出勤・シフト","条件・給与"]}],"ai_summary":null},{"name":"みおな","count":2,"staffs":["なべ","太田"],"themes":{"日記・コンテンツ":2,"出勤・シフト":1},"first_date":"2025-12-18","last_date":"2026-01-14","meetings":[{"date":"2025-12-18","staff":"太田","comment":"限定日記と動画日記でマイガールをアップさせる。動画は撮ってあるけど編集ができなくてスクショで日記に上げてると言っていたのでこちらで編集すると伝えた","themes":["日記・コンテンツ"]},{"date":"2026-01-14","staff":"なべ","comment":"バニラ連携完了、日記代行OK\nソープのことはまだ突っ込んでないです。今日はこの後飲み屋に出勤すると言っていました。","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"みき","count":2,"staffs":["幅","蛍"],"themes":{"集客ツール":1,"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2025-12-18","last_date":"2026-01-09","meetings":[{"date":"2025-12-18","staff":"蛍","comment":"本日より復帰！　姫予約もネット予約推奨","themes":["集客ツール"]},{"date":"2026-01-09","staff":"幅","comment":"日記について、本人は遠慮してたが、リミッター解除で出勤10休み5くらいでいきましょう！","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"みずほ","count":2,"staffs":["幅"],"themes":{"オキニトーク":2,"掛け持ち・他店":1},"first_date":"2025-12-10","last_date":"2025-12-17","meetings":[{"date":"2025-12-10","staff":"幅","comment":"しずくは、オキニトーク送らないように","themes":["オキニトーク","掛け持ち・他店"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]}],"ai_summary":null},{"name":"みなこ","count":2,"staffs":["幅"],"themes":{"オキニトーク":2},"first_date":"2025-11-29","last_date":"2025-12-17","meetings":[{"date":"2025-11-29","staff":"幅","comment":"オキニトークについて","themes":["オキニトーク"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]}],"ai_summary":null},{"name":"もも","count":2,"staffs":["太田"],"themes":{"日記・コンテンツ":1,"掛け持ち・他店":2,"出勤・シフト":1},"first_date":"2026-01-23","last_date":"2026-02-20","meetings":[{"date":"2026-01-23","staff":"太田","comment":"栄エリアがNGのため、アネキャンで推していく事を提案して本人も納得。\nとりあえず、稼がせて店と信頼関係を構築。\n日記サポートもOK","themes":["日記・コンテンツ","掛け持ち・他店"]},{"date":"2026-02-20","staff":"太田","comment":"最近、出勤が不安定だったので事情聴取。原因不明の発熱や足が腫れたりもしかしたら難病かもとのこと。検査が怖くて大きい病院に行ってない。病院はすぐに行くように言った。貯金を崩しながら生活してて、出勤はしたいらしいが体調が追いつかない。病院行ってちゃんと出勤できそうならアネキャンでバナー作って推していきたいと伝えた","themes":["出勤・シフト","掛け持ち・他店"]}],"ai_summary":null},{"name":"らん","count":2,"staffs":["幅"],"themes":{"集客ツール":1,"オキニトーク":2,"日記・コンテンツ":1},"first_date":"2025-12-11","last_date":"2025-12-17","meetings":[{"date":"2025-12-11","staff":"幅","comment":"キテネ、ファーストオキニトーク⭕️\n料金変更説明済み","themes":["集客ツール","オキニトーク","日記・コンテンツ"]},{"date":"2025-12-17","staff":"幅","comment":"新規追加分オキニトーク送信済み","themes":["オキニトーク"]}],"ai_summary":null},{"name":"らんD","count":2,"staffs":["せいや","幅"],"themes":{"条件・給与":1,"出勤・シフト":1},"first_date":"2026-03-21","last_date":"2026-03-29","meetings":[{"date":"2026-03-21","staff":"幅","comment":"リスケ4回目だが、普段は吉原で月1回北海道の定期に、新しい所をで名古屋は初\n条件はリスケがあった為、下げての採用です。様子見ていく","themes":["条件・給与"]},{"date":"2026-03-29","staff":"せいや","comment":"無事完走。微妙な感じだったが客先を早く出るとかもなく保証もクリア。またまとまった出勤もらえるなら片道交通費出すのでまた良ければと伝え、前向きそうではあった。幅さんでも事務所でも連絡くださいと終話。","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"りま","count":2,"staffs":["八谷","太田"],"themes":{"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2026-01-11","last_date":"2026-03-10","meetings":[{"date":"2026-01-11","staff":"太田","comment":"2月頃を目処に大曽根に引っ越し予定、名古屋を拠点に全国各地に出稼ぎに行く予定。\n日記に関しては自分で考えてこだわってやっていきたいので、サポートは不要。\nオキニトークは助かってる","themes":["オキニトーク","日記・コンテンツ"]},{"date":"2026-03-10","staff":"八谷","comment":"志賀本通近くに引っ越し予定。\n物件決まってるらしく、不動産屋紹介済。\nクラミジア陽性で当欠。","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"るみ","count":2,"staffs":["幅","蛍"],"themes":{"日記・コンテンツ":2,"撮影":1},"first_date":"2026-03-30","last_date":"2026-04-13","meetings":[{"date":"2026-03-30","staff":"蛍","comment":"動画も自分で撮るそうなのでエロさ重視で売り出し。\nできない部分はフォローする","themes":["日記・コンテンツ"]},{"date":"2026-04-13","staff":"幅","comment":"売り出し方について、提案\nプレイ玩具を自分で用意して、動画撮影も可能の為、合わせて個人オプションで売り出し撮影も予定を組んで、絡み動画も撮る予定","themes":["日記・コンテンツ","撮影"]}],"ai_summary":null},{"name":"れいか","count":2,"staffs":["なべ","幅"],"themes":{"掛け持ち・他店":2,"プロフィール":1},"first_date":"2025-12-28","last_date":"2026-01-15","meetings":[{"date":"2025-12-28","staff":"幅","comment":"しずく　バニラ連携完了☑️","themes":["掛け持ち・他店"]},{"date":"2026-01-15","staff":"なべ","comment":"写メ代行OK\n特にこだわりもない\nどすとしずくで写真も分けてないのでお任せとのことです。","themes":["プロフィール","掛け持ち・他店"]}],"ai_summary":null},{"name":"あいな","count":1,"staffs":["幅"],"themes":{"掛け持ち・他店":1},"first_date":"2026-03-26","last_date":"2026-03-26","meetings":[{"date":"2026-03-26","staff":"幅","comment":"普段は、女子大でスナックで働いてる\n5年まえの高岳事務所の際に、しずく在籍\n29歳のため、でりどす・しずく同時受け","themes":["掛け持ち・他店"]}],"ai_summary":null},{"name":"あずさ","count":1,"staffs":["幅"],"themes":{"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2026-01-16","last_date":"2026-01-16","meetings":[{"date":"2026-01-16","staff":"幅","comment":"箱アバンチュールに3年ほど在籍、11月くらいから、東京へ出稼ぎ20回程度出勤\nやりたい事が、出来て再度業界へ\n特に他はしていない為、稼ぎ次第で出勤は増えてくる　顔隠しの為、日記が重要","themes":["日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"えま","count":1,"staffs":["幅"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":1,"プロフィール":1,"掛け持ち・他店":1},"first_date":"2025-12-06","last_date":"2025-12-06","meetings":[{"date":"2025-12-06","staff":"幅","comment":"夜、でりどす　昼、しずく　の割合が多い\nオキニトーク、日記のタイミング、種類、\nみたよを20回\n※でりどすのプロフィールコメントを変えて欲しい","themes":["集客ツール","オキニトーク","日記・コンテンツ","プロフィール","掛け持ち・他店"]}],"ai_summary":null},{"name":"えみ","count":1,"staffs":["なべ"],"themes":{"出勤・シフト":1,"条件・給与":1},"first_date":"2025-12-22","last_date":"2025-12-22","meetings":[{"date":"2025-12-22","staff":"なべ","comment":"メルトアップを11月に退店。ルックスだけで言ったら高級店レベルの子ですがメルトアップで60分1万、70分フリー8000円で半年やっていたそうです。\n\nその前がクラッシーで出勤日数に応じてのバックシステムが嫌で退店。\n\nルックスは◎だがつかみどころのない感じの性格。\n週3勤務、基本早番で1日8時間程、1日5万持って帰りたい。\n年末はたくさん出勤したい。","themes":["出勤・シフト","条件・給与"]}],"ai_summary":null},{"name":"える","count":1,"staffs":["太田"],"themes":{},"first_date":"2026-02-11","last_date":"2026-02-11","meetings":[{"date":"2026-02-11","staff":"太田","comment":"2/24に風俗を卒業","themes":[]}],"ai_summary":null},{"name":"こい","count":1,"staffs":["幅"],"themes":{"日記・コンテンツ":1,"撮影":1},"first_date":"2026-01-06","last_date":"2026-01-06","meetings":[{"date":"2026-01-06","staff":"幅","comment":"昨年A V出演一本　プロダクションには、入っているが時間と東京で今は、考えてないとの事\n当店で、色々動画撮影して売り込んで行きましょう！　年末年始キャバが振るわす、知り合いがデリ、ハコをやってるのもあり、応募\n日記の重要性などを説明したが、理解あり\nエロ売りで、どこまで予約を取っていけなど、相談しながら関係を作っていけば、売れるのでわ","themes":["日記・コンテンツ","撮影"]}],"ai_summary":null},{"name":"このみ","count":1,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1,"プロフィール":1,"撮影":1,"出勤・シフト":1},"first_date":"2026-01-31","last_date":"2026-01-31","meetings":[{"date":"2026-01-31","staff":"幅","comment":"出勤前日、出勤時間前の日記が重要\nオキニトーク、マイガール限定日記を更新、日記用写真撮影","themes":["オキニトーク","日記・コンテンツ","プロフィール","撮影","出勤・シフト"]}],"ai_summary":null},{"name":"さいか","count":1,"staffs":["幅"],"themes":{"撮影":1,"出勤・シフト":1},"first_date":"2026-01-06","last_date":"2026-01-06","meetings":[{"date":"2026-01-06","staff":"幅","comment":"セレブ宮殿在籍、撮影時に口、下からの匂いがヤバいとの事で、性病検査してからの入店\nそこをクリアすれば、週5出勤可能なキャスト","themes":["撮影","出勤・シフト"]}],"ai_summary":null},{"name":"さえ","count":1,"staffs":["蛍"],"themes":{"オキニトーク":1,"日記・コンテンツ":1},"first_date":"2026-03-15","last_date":"2026-03-15","meetings":[{"date":"2026-03-15","staff":"蛍","comment":"旦那さんやお仕事の関係で日記を中々アップできないとの事だったので店側でもフォローしてく話し、オキニトークのファーストトークも送信説明。\n仕事のつきが弱い為店からもフォローするから頑張っていこうねって軽く話し。","themes":["オキニトーク","日記・コンテンツ"]}],"ai_summary":null},{"name":"さゆり","count":1,"staffs":["幅"],"themes":{"出勤・シフト":1,"掛け持ち・他店":1},"first_date":"2026-04-02","last_date":"2026-04-02","meetings":[{"date":"2026-04-02","staff":"幅","comment":"在宅勤務との掛け持ち、時間の融通はきくようだから、連絡をとりながらの、様子見","themes":["出勤・シフト","掛け持ち・他店"]}],"ai_summary":null},{"name":"しあ","count":1,"staffs":["幅"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2025-11-29","last_date":"2025-11-29","meetings":[{"date":"2025-11-29","staff":"幅","comment":"デリヘルで、やるべき事\n出勤前、待機時間、日記、オキニトーク、みたよについて","themes":["集客ツール","オキニトーク","日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"せいや","count":1,"staffs":["成瀬"],"themes":{},"first_date":"2026-03-10","last_date":"2026-03-10","meetings":[{"date":"2026-03-10","staff":"成瀬","comment":"お腹減ってそうだったので山岡家に連れていきました。\nとても喜んでくれたのでまた連れて行こうと思いました。\n店長としてとても頑張ってるのでこれからも応援していきたい。","themes":[]}],"ai_summary":null},{"name":"せん","count":1,"staffs":["幅"],"themes":{"条件・給与":1},"first_date":"2026-04-03","last_date":"2026-04-03","meetings":[{"date":"2026-04-03","staff":"幅","comment":"レミスパを退店の際は、家庭で色々あったようだが、精神面が弱いので、定期的なバックアップが必要","themes":["条件・給与"]}],"ai_summary":null},{"name":"とき","count":1,"staffs":["せいや"],"themes":{"撮影":1,"出勤・シフト":1},"first_date":"2026-04-07","last_date":"2026-04-07","meetings":[{"date":"2026-04-07","staff":"せいや","comment":"二年ほど前に愛らぶで経験あり。\n17－3の間で８時間勤務。本人は５万と言っていたが４万円目標で着地、伸び代として上積みが見えてくるよう説明。\n\n面接日に撮影済み\n4/13（月）体験保証３万円","themes":["撮影","出勤・シフト"]}],"ai_summary":null},{"name":"なの","count":1,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1},"first_date":"2026-04-09","last_date":"2026-04-09","meetings":[{"date":"2026-04-09","staff":"幅","comment":"出戻り、月2回くらい九州へ行ってる\n1年の間に色々変わったので、日記・オキニトーク・勤怠をしっかりやっていかないと、仕事取れないなど、前回が適当だったので、厳しめの面接","themes":["オキニトーク","日記・コンテンツ"]}],"ai_summary":null},{"name":"なほ","count":1,"staffs":["幅"],"themes":{"出勤・シフト":1,"掛け持ち・他店":1},"first_date":"2025-12-16","last_date":"2025-12-16","meetings":[{"date":"2025-12-16","staff":"幅","comment":"メインがメンエス週6くらいの出勤から稼ぎが落ちてきて一宮リメイクに掛け持ちしたが思うような稼ぎに至らず当店へ。\nメンエスの稼ぎがオープンラストで4～5本\nデリヘルとメンエスの掛け持ちをして平均5万になることが希望。","themes":["出勤・シフト","掛け持ち・他店"]}],"ai_summary":null},{"name":"ひめか","count":1,"staffs":["幅"],"themes":{"プロフィール":1,"業務態度・指導":1,"掛け持ち・他店":1},"first_date":"2026-02-12","last_date":"2026-02-12","meetings":[{"date":"2026-02-12","staff":"幅","comment":"カラーとの掛け持ち➕出稼ぎ\n名古屋で、当たった事がない、最初から否定が多かったが、パネル指名は取れる写真\n本人にやる気ぐ感じられないが、根気よく","themes":["プロフィール","業務態度・指導","掛け持ち・他店"]}],"ai_summary":null},{"name":"ほの","count":1,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1,"撮影":1,"出勤・シフト":1,"条件・給与":1},"first_date":"2026-02-06","last_date":"2026-02-06","meetings":[{"date":"2026-02-06","staff":"幅","comment":"寮を使用してから、初出勤　寮費について出勤日給料から1万円だけは、必要との事、不動産も話しを進めてる様子　まずは、2月中に引っ越し出来るように本人は、頑張るとの事\n日記のフォローの為、撮影またオキニトークについても話したが、日々話しかけて行った方がよい","themes":["オキニトーク","日記・コンテンツ","撮影","出勤・シフト","条件・給与"]}],"ai_summary":null},{"name":"まいか","count":1,"staffs":["せいや"],"themes":{"日記・コンテンツ":1},"first_date":"2026-01-23","last_date":"2026-01-23","meetings":[{"date":"2026-01-23","staff":"せいや","comment":"さな、前在籍さえの友人\nサバサバしてて手はかかりそうだが、シャブールでランカーやってたみたいで実力はありそう。コミニュケーション取れないタイプではないのでしっかり取って行ってアクセスとれれば鳴らせるかと、P指以上しか行かず厳しいので規定回数とは別に日記サポートでどんどん投げていく方向。一応さなが誘ったみたいなのでメンツ的にもしっかり走り抜けさせたい\n\n希望はアベ7万円","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"みあ","count":1,"staffs":["幅"],"themes":{},"first_date":"2026-04-25","last_date":"2026-04-25","meetings":[{"date":"2026-04-25","staff":"幅","comment":"当日面接、体験　エデンに1年在籍\n大分から上京してフィリピンとのハーフ\n若干説明してても、大丈夫？な部分あり\n理解するまで、説明をしないといけない","themes":[]}],"ai_summary":null},{"name":"みお","count":1,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1,"プロフィール":1,"撮影":1},"first_date":"2026-02-14","last_date":"2026-02-14","meetings":[{"date":"2026-02-14","staff":"幅","comment":"メルトアップで1年くらいの経験あり、携帯会社を一時休職して、当店へ　透明感ある素人売りで行ける予感！日記、オキニトークなど説明した上で、写真がないので、日記用撮影も必要\nパネルの鳴りなど見ながら、相談","themes":["オキニトーク","日記・コンテンツ","プロフィール","撮影"]}],"ai_summary":null},{"name":"みくる","count":1,"staffs":["幅"],"themes":{},"first_date":"2026-01-06","last_date":"2026-01-06","meetings":[{"date":"2026-01-06","staff":"幅","comment":"月一で、兵庫まで、出稼ぎ\n体力がないので、週2くらいが良いとの事\n稼ぎは、安定して3万くらい\nリスカあり　ファンデーションテープ使用","themes":[]}],"ai_summary":null},{"name":"みさき","count":1,"staffs":["蛍"],"themes":{},"first_date":"2025-12-20","last_date":"2025-12-20","meetings":[{"date":"2025-12-20","staff":"蛍","comment":"料金変更説明","themes":[]}],"ai_summary":null},{"name":"みなみ","count":1,"staffs":["幅"],"themes":{"日記・コンテンツ":1,"撮影":1,"出勤・シフト":1},"first_date":"2026-04-17","last_date":"2026-04-17","meetings":[{"date":"2026-04-17","staff":"幅","comment":"昼職をやめたので、出勤しつつ日記用撮影などをしたらどうか？の提案","themes":["日記・コンテンツ","撮影","出勤・シフト"]}],"ai_summary":null},{"name":"みるく","count":1,"staffs":["幅"],"themes":{"出勤・シフト":1},"first_date":"2026-03-21","last_date":"2026-03-21","meetings":[{"date":"2026-03-21","staff":"幅","comment":"出張面接からの本日出勤予定が、前在籍ラブココと揉めていると、解消してからの出勤\n連絡待ち","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"めい","count":1,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1},"first_date":"2025-12-20","last_date":"2025-12-20","meetings":[{"date":"2025-12-20","staff":"幅","comment":"オキニトーク説明　文章もらい済\n動画一旦5本もらって、こちらでアップ\n昨年デリカのNO3に入ってリピートしていたとの事","themes":["オキニトーク","日記・コンテンツ"]}],"ai_summary":null},{"name":"もな","count":1,"staffs":["幅"],"themes":{"出勤・シフト":1,"業務態度・指導":1},"first_date":"2026-04-22","last_date":"2026-04-22","meetings":[{"date":"2026-04-22","staff":"幅","comment":"松葉杖もとれて、今月いっぱいで、一宮アバンスを退店して、昼職もやってるので出勤に関しては、昼職シフトの空きで決まる\n超おっとり系なので、焦らせないよう注意","themes":["出勤・シフト","業務態度・指導"]}],"ai_summary":null},{"name":"ゆう","count":1,"staffs":["幅"],"themes":{"出勤・シフト":1},"first_date":"2026-04-26","last_date":"2026-04-26","meetings":[{"date":"2026-04-26","staff":"幅","comment":"飲み屋クラブでの経験豊富、ゴールデンウイーク出稼ぎに行く予定をキャンセルしてもらい、当店で10日間50万で保証、その後は様子を見て月100万目標、週4，5日出勤で稼ぎたいとの事でしたので、一緒に頑張りましょう談　やるべき事をしっかり伝えて引っぱっていく","themes":["出勤・シフト"]}],"ai_summary":null},{"name":"ゆうか","count":1,"staffs":["蛍"],"themes":{"オキニトーク":1,"日記・コンテンツ":1},"first_date":"2026-01-18","last_date":"2026-01-18","meetings":[{"date":"2026-01-18","staff":"蛍","comment":"日記補助してく\nオキニトーク送信477件","themes":["オキニトーク","日記・コンテンツ"]}],"ai_summary":null},{"name":"ゆの","count":1,"staffs":["幅"],"themes":{"撮影":1,"業務態度・指導":1},"first_date":"2026-04-22","last_date":"2026-04-22","meetings":[{"date":"2026-04-22","staff":"幅","comment":"前店の大門ソープで、スタッフ・キャストに嫌がらせを受けクビになったと話しは聞いたが自分の前の態度と撮影の際に大二郎の前とでは、別人だったとの事、自己主張が強いと思うので、要注意","themes":["撮影","業務態度・指導"]}],"ai_summary":null},{"name":"ゆん","count":1,"staffs":["なべ"],"themes":{"集客ツール":1,"オキニトーク":1,"日記・コンテンツ":1,"出勤・シフト":1},"first_date":"2026-01-19","last_date":"2026-01-19","meetings":[{"date":"2026-01-19","staff":"なべ","comment":"11月ぶりの出勤\n膣炎が治らなかったので韓国に行ったり御朱印巡りをしていた。1回10日間出稼ぎに行ったとのこと。\n\n日記代行OKで本人も助かると言っていたけど個性のある日記なので慎重にやった方がいい。\nオキニトーク、ネット予約、キテネなどいない間に変わったことも一通り話しました。\n\nXにプレイ動画を載せたりしているしポテンシャルはある子なので定期的に声かけます。","themes":["集客ツール","オキニトーク","日記・コンテンツ","出勤・シフト"]}],"ai_summary":null},{"name":"らて","count":1,"staffs":["幅"],"themes":{},"first_date":"2026-04-04","last_date":"2026-04-04","meetings":[{"date":"2026-04-04","staff":"幅","comment":"今　病院で股関節の検査をセカンドオピニオンまで、行っていて手術するか、どうか？\nまた手術になると松葉杖になり1.2ヶ月　働けなるから、今は負担ない程度に働いてる\n来週に検査結果ぎ出るようです","themes":[]}],"ai_summary":null},{"name":"りおん","count":1,"staffs":["せいや"],"themes":{},"first_date":"2026-02-01","last_date":"2026-02-01","meetings":[{"date":"2026-02-01","staff":"せいや","comment":"話したのは1月。\n退店がチラついたので社長に投げた\n社長が対応してくれた。\n希望に沿う分より協力的にお願いしていく","themes":[]}],"ai_summary":null},{"name":"りこ","count":1,"staffs":["幅"],"themes":{"日記・コンテンツ":1,"出勤・シフト":1,"業務態度・指導":1},"first_date":"2026-04-23","last_date":"2026-04-23","meetings":[{"date":"2026-04-23","staff":"幅","comment":"JKで3か月の経験あり、日記回数が出勤20休み10と無理になり、退店　その経験を生かして自分の為に出来る範囲でアップで大丈夫と正し様子みながら、上がってなければ注意　おとなしめに見えるが謎な印象\n早目の時間希望だが、週末は遅い時間も出勤可能との事","themes":["日記・コンテンツ","出勤・シフト","業務態度・指導"]}],"ai_summary":null},{"name":"りゅうこ","count":1,"staffs":["せいや"],"themes":{"プロフィール":1,"出勤・シフト":1},"first_date":"2026-01-17","last_date":"2026-01-17","meetings":[{"date":"2026-01-17","staff":"せいや","comment":"電話にて確認。写メサポ〇\nLINEで素材もらった。\n休日の出勤宣伝や当日の回数フォロー","themes":["プロフィール","出勤・シフト"]}],"ai_summary":null},{"name":"りん","count":1,"staffs":["幅"],"themes":{"出勤・シフト":1,"掛け持ち・他店":1},"first_date":"2026-04-26","last_date":"2026-04-26","meetings":[{"date":"2026-04-26","staff":"幅","comment":"元でりどす　ゆり\nゴールデンウイーク期間は、旦那が見てくれるので、ある程度出勤出来そう、その期間は保証で応援　その後は保育園問題などの事情を聞いて相談","themes":["出勤・シフト","掛け持ち・他店"]}],"ai_summary":null},{"name":"れあ","count":1,"staffs":["なべ"],"themes":{"出勤・シフト":1,"条件・給与":1,"掛け持ち・他店":1},"first_date":"2025-12-14","last_date":"2025-12-14","meetings":[{"date":"2025-12-14","staff":"なべ","comment":"18歳未経験\n現在エステを3つ掛け持ちしているがオーラス待機でお茶の日や入っても2本が続き、友達がグランドオペラで働きだしたこともありでりどすへ応募。\nきっかけはのあちゃんを見つけて可愛くて。\n\n同居人の(これからホスト？)あいくんの整形費用も必要で1日5～8万稼ぎたい。\n週3～4日出勤希望。エステをすぐは辞めないが様子見てデリが稼げたら生理の時だけにしようと思うとのことだったので、レミスパもある話は済み。\n\n見た目は地雷系ですが意外としっかりしていて真面目かも。笑った顔が可愛いのでメイクを直せば素材は良いと思います。\n\n勤怠等もしっかりしたら1ヶ月後給料見直しで上がるシステムと説明済み。\n\n3POK","themes":["出勤・シフト","条件・給与","掛け持ち・他店"]}],"ai_summary":null},{"name":"れい","count":1,"staffs":["幅"],"themes":{"オキニトーク":1,"日記・コンテンツ":1},"first_date":"2025-12-22","last_date":"2025-12-22","meetings":[{"date":"2025-12-22","staff":"幅","comment":"出戻り　以前は、集団待機が×だったが、待機所が個室になり〇に\n日記、オキニトーク説明","themes":["オキニトーク","日記・コンテンツ"]}],"ai_summary":null},{"name":"れな","count":1,"staffs":["せいや"],"themes":{"日記・コンテンツ":1},"first_date":"2026-01-24","last_date":"2026-01-24","meetings":[{"date":"2026-01-24","staff":"せいや","comment":"バニラ連携〇\n日記サポ〇\nアンケート書いてもらいました。\n話が入っていかないので結果に伴い話続けていく。","themes":["日記・コンテンツ"]}],"ai_summary":null},{"name":"ろあ","count":1,"staffs":["なべ"],"themes":{},"first_date":"2026-03-20","last_date":"2026-03-20","meetings":[{"date":"2026-03-20","staff":"なべ","comment":"彼氏ができたそうで全隠しに変更","themes":[]}],"ai_summary":null},{"name":"わこ","count":1,"staffs":["幅"],"themes":{"出勤・シフト":1},"first_date":"2026-03-13","last_date":"2026-03-13","meetings":[{"date":"2026-03-13","staff":"幅","comment":"2023年に広告ナビから、紹介ありだがブッチ（当時、実は未成年でした）その後エーゲ海にて未成年から勤務💦\n面接時に、出勤予定、時間を守れない場合は予約が取れない旨伝えて、厳しめの面接　後は本人次第","themes":["出勤・シフト"]}],"ai_summary":null}]}
+</script>
+
+<script>
+'use strict';
+
+// ──────── データ読み込み ────────
+const DATA = JSON.parse(document.getElementById('data-blob').textContent);
+const SUMMARY = DATA.summary;
+const CASTS = DATA.casts;
+
+// テーマ別カラー(積み上げ棒グラフ用)
+const THEME_COLORS = {
+  '日記・コンテンツ': '#8a2e1c',
+  '出勤・シフト':     '#a87c2e',
+  'オキニトーク':     '#355a7a',
+  '撮影':             '#4a6b3a',
+  'プロフィール':     '#6a4a7a',
+  '掛け持ち・他店':   '#b85a47',
+  '条件・給与':       '#2e5a5a',
+  '集客ツール':       '#7a5a2e',
+  '業務態度・指導':   '#4a3f30',
+};
+function themeColor(t) { return THEME_COLORS[t] || '#87796a'; }
+
+// ──────── 期間表示 ────────
+function formatDate(d) {
+  if (!d || d.length < 10) return d;
+  return d.replace(/-/g, '.');
+}
+document.getElementById('period-line').textContent =
+  `— 期間  ${formatDate(SUMMARY.period.start)}  ▸  ${formatDate(SUMMARY.period.end)}  /  全 ${SUMMARY.total_records} 件 —`;
+
+// ──────── サマリーストリップ ────────
+document.getElementById('s-records').innerHTML = `${SUMMARY.total_records}<span class="unit">件</span>`;
+document.getElementById('s-casts').innerHTML = `${SUMMARY.total_casts}<span class="unit">人</span>`;
+document.getElementById('s-staff').innerHTML = `${Object.keys(SUMMARY.staffs).length}<span class="unit">名</span>`;
+const summarizedCount = CASTS.filter(c => c.ai_summary).length;
+document.getElementById('s-summarized').innerHTML = `${summarizedCount}<span class="unit">人</span>`;
+
+// ──────── テーマ分布 ────────
+const themesList = Object.entries(SUMMARY.themes).sort((a,b)=>b[1]-a[1]);
+const maxTheme = themesList[0][1];
+const themeBars = document.getElementById('theme-bars');
+themesList.forEach(([name, n]) => {
+  const w = (n / maxTheme * 100).toFixed(1);
+  themeBars.insertAdjacentHTML('beforeend',
+    `<div class="theme-bar"><span class="name">${name}</span>` +
+    `<span class="track"><span class="fill" style="width:${w}%;background:${themeColor(name)}"></span></span>` +
+    `<span class="num">${n}</span></div>`);
+});
+
+// ──────── スタッフ別 ────────
+const staffs = Object.entries(SUMMARY.staffs);
+const maxStaff = staffs[0][1];
+const staffList = document.getElementById('staff-list');
+staffs.forEach(([name, n]) => {
+  const w = (n / maxStaff * 100).toFixed(1);
+  staffList.insertAdjacentHTML('beforeend',
+    `<div class="staff-row"><span class="name">${name}</span>` +
+    `<span class="track"><span class="fill" style="width:${w}%"></span></span>` +
+    `<span class="num">${n}</span></div>`);
+});
+
+// ──────── 月次推移 ────────
+const monthlyData = SUMMARY.monthly_chart;
+const themesOrder = SUMMARY.themes_order;
+const maxMonthTotal = Math.max(...monthlyData.map(m => themesOrder.reduce((s,t)=>s+(m[t]||0),0)));
+const monthlyBars = document.getElementById('monthly-bars');
+monthlyData.forEach(m => {
+  const total = themesOrder.reduce((s,t)=>s+(m[t]||0), 0);
+  const heightPx = total / maxMonthTotal * 168; // 168px = max bar height
+  let segs = '';
+  themesOrder.forEach(t => {
+    const v = m[t] || 0;
+    if (v > 0) {
+      const segH = (v / total * heightPx).toFixed(2);
+      segs += `<span class="seg" style="height:${segH}px;background:${themeColor(t)}" title="${t}: ${v}件"></span>`;
+    }
+  });
+  const monthLabel = m.month.slice(2).replace('-', '/');
+  monthlyBars.insertAdjacentHTML('beforeend',
+    `<div class="month-col">` +
+    `<span class="total">${total}</span>` +
+    `<div class="stack" style="height:${heightPx}px">${segs}</div>` +
+    `<span class="lbl">${monthLabel}</span></div>`);
+});
+const monthLegend = document.getElementById('month-legend');
+themesOrder.forEach(t => {
+  monthLegend.insertAdjacentHTML('beforeend',
+    `<span class="item"><span class="swatch" style="background:${themeColor(t)}"></span>${t}</span>`);
+});
+
+// ──────── フィルター用データ ────────
+const allStaffs = new Set();
+const allThemes = new Set();
+CASTS.forEach(c => {
+  c.staffs.forEach(s => allStaffs.add(s));
+  Object.keys(c.themes).forEach(t => allThemes.add(t));
+});
+const qStaff = document.getElementById('q-staff');
+[...allStaffs].sort().forEach(s => {
+  qStaff.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`);
+});
+const qTheme = document.getElementById('q-theme');
+[...allThemes].sort().forEach(t => {
+  qTheme.insertAdjacentHTML('beforeend', `<option value="${t}">${t}</option>`);
+});
+
+// ──────── 曜日表示 ────────
+const DAYS = ['日','月','火','水','木','金','土'];
+function getDayJP(dateStr) {
+  if (!dateStr || dateStr.length < 10) return '';
+  const d = new Date(dateStr);
+  return DAYS[d.getDay()];
+}
+
+// ──────── キャストカードHTML ────────
+function escHTML(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function renderAISummary(s) {
+  if (!s) return '';
+  const themes = (s.themes || []).map(t => `<span class="tag">${escHTML(t)}</span>`).join('');
+  return `<div class="ai-section">
+    <div class="ai-headline">${escHTML(s.headline || '')}</div>
+    <div class="ai-meta-themes">${themes}</div>
+    <div class="ai-grid">
+      <div class="ai-block"><div class="head">CHALLENGES</div><div class="head-jp">課題</div><div class="text">${escHTML(s.challenges || '—')}</div></div>
+      <div class="ai-block"><div class="head">PROGRESS</div><div class="head-jp">進捗・状況</div><div class="text">${escHTML(s.progress || '—')}</div></div>
+      <div class="ai-block"><div class="head">APPROACH</div><div class="head-jp">育成方針</div><div class="text">${escHTML(s.approach || '—')}</div></div>
+    </div>
+  </div>`;
+}
+
+function renderMeeting(m) {
+  const tags = (m.themes || []).map(t => `<span class="mtag">${escHTML(t)}</span>`).join('');
+  const day = getDayJP(m.date);
+  return `<div class="meeting">
+    <span class="date">${escHTML(m.date)}<span class="day">(${day})</span></span>
+    <span class="staff">${escHTML(m.staff)}</span>
+    <span class="comment">${tags}${escHTML(m.comment)}</span>
+  </div>`;
+}
+
+function renderCast(c) {
+  const sortedThemes = Object.entries(c.themes).sort((a,b)=>b[1]-a[1]).slice(0, 4);
+  const tagsHTML = sortedThemes.map(([t,n]) => `<span class="theme-tag">${escHTML(t)} ${n}</span>`).join('');
+  const featured = c.count >= 7 ? ' featured' : '';
+  const badge = c.count >= 10 ? '<span class="badge">CORE</span>' : (c.count >= 7 ? '<span class="badge" style="background:var(--gold)">KEY</span>' : '');
+
+  return `<div class="cast${featured}" data-name="${escHTML(c.name)}" data-count="${c.count}">
+    <div class="cast-head" onclick="toggleCast(this)">
+      <div class="cast-name">${escHTML(c.name)}${badge}</div>
+      <div class="cast-themes">${tagsHTML}</div>
+      <div class="cast-staff">${c.staffs.join(' / ')}</div>
+      <div class="cast-meta">
+        <span class="count">${c.count}</span><span class="count-jp">回</span><br>
+        <span style="font-size:11px">${formatDate(c.first_date)} → ${formatDate(c.last_date)}</span>
+      </div>
+      <div class="toggle-icon">▾</div>
+    </div>
+    <div class="cast-body" data-loaded="false"></div>
+  </div>`;
+}
+
+function buildCastBody(cast) {
+  let html = '';
+  if (cast.ai_summary) {
+    html += renderAISummary(cast.ai_summary);
+  } else {
+    html += `<div class="ai-section" data-cast="${escHTML(cast.name)}">
+      <div class="generate-empty" data-status="empty">
+        <p>このキャストの事前AI要約はありません。<br>「AI要約を生成」を押すと、面談履歴を元に要約を作成します。</p>
+        <button class="generate-btn" onclick="generateForCast('${escHTML(cast.name)}', this)">✦ AI要約を生成</button>
+      </div>
+    </div>`;
+  }
+  html += `<div class="meetings-head"><h4>面談履歴</h4><span class="en">Meeting Log &mdash; ${cast.count} entries</span></div>`;
+  html += `<div class="meetings">${cast.meetings.map(renderMeeting).join('')}</div>`;
+  return html;
+}
+
+function toggleCast(headEl) {
+  const card = headEl.parentElement;
+  const body = card.querySelector('.cast-body');
+  if (!card.classList.contains('open')) {
+    if (body.dataset.loaded === 'false') {
+      const name = card.dataset.name;
+      const cast = CASTS.find(c => c.name === name);
+      body.innerHTML = buildCastBody(cast);
+      body.dataset.loaded = 'true';
+      // 動的要約のキャッシュ復元
+      restoreCachedSummary(name, body);
+    }
+    card.classList.add('open');
+  } else {
+    card.classList.remove('open');
+  }
+}
+
+// ──────── 動的AI要約生成 ────────
+async function getCachedSummary(name) {
+  try {
+    const r = await window.storage.get('summary:' + name);
+    return r ? JSON.parse(r.value) : null;
+  } catch (e) { return null; }
+}
+
+async function setCachedSummary(name, sum) {
+  try {
+    await window.storage.set('summary:' + name, JSON.stringify(sum));
+  } catch (e) { /* storage fail OK */ }
+}
+
+async function restoreCachedSummary(name, bodyEl) {
+  const cached = await getCachedSummary(name);
+  if (cached) {
+    const aiSection = bodyEl.querySelector('.ai-section');
+    if (aiSection) {
+      aiSection.outerHTML = renderAISummary(cached) + 
+        `<div style="font-family:var(--serif-en);font-style:italic;font-size:11px;color:var(--ink-mute);text-align:right;margin-top:-16px;margin-bottom:14px;">cached on this device</div>`;
+    }
+  }
+}
+
+async function generateForCast(name, btnEl) {
+  const cast = CASTS.find(c => c.name === name);
+  if (!cast) return;
+  const aiSection = btnEl.closest('.ai-section');
+  const emptyEl = aiSection.querySelector('.generate-empty');
+
+  btnEl.disabled = true;
+  btnEl.innerHTML = '<span class="spinner"></span>生成中…';
+  const errMsg = aiSection.querySelector('.err-msg');
+  if (errMsg) errMsg.remove();
+
+  const meetings = cast.meetings.map(m => `[${m.date}] ${m.staff}\n${m.comment}`).join('\n\n');
+  const prompt = `以下は風俗店キャスト「${name}」さん(面談${cast.count}回)の面談履歴です。担当スタッフが今後の対応に活かせるよう、業務的かつ簡潔に要約してください。\n\n${meetings}\n\n以下のJSON形式のみで返答してください。前後にコードフェンスや説明文は一切不要です。\n{\n  "headline": "1文での要約(30〜45文字)",\n  "themes": ["主要テーマ", "主要テーマ", "主要テーマ"],\n  "challenges": "抱えている課題や懸念点(60〜100文字)",\n  "progress": "最近の進捗・状況(60〜100文字)",\n  "approach": "推奨される育成方針・対応スタイル(60〜100文字)"\n}`;
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const data = await resp.json();
+    const text = data.content.filter(b => b.type === "text").map(b => b.text).join("");
+    const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    const parsed = JSON.parse(clean);
+
+    aiSection.outerHTML = renderAISummary(parsed);
+    await setCachedSummary(name, parsed);
+  } catch (err) {
+    btnEl.disabled = false;
+    btnEl.innerHTML = '✦ AI要約を生成';
+    const msg = document.createElement('div');
+    msg.className = 'err-msg';
+    msg.textContent = '⚠ 生成に失敗しました: ' + (err.message || err);
+    emptyEl.appendChild(msg);
+  }
+}
+
+// ──────── フィルター&ソート ────────
+const qSearch = document.getElementById('q-search');
+const qStaffEl = document.getElementById('q-staff');
+const qThemeEl = document.getElementById('q-theme');
+const qCountEl = document.getElementById('q-count');
+const qSortEl = document.getElementById('q-sort');
+const castListEl = document.getElementById('cast-list');
+const resultInfo = document.getElementById('result-info');
+
+function applyFilters() {
+  const search = qSearch.value.trim();
+  const staff = qStaffEl.value;
+  const theme = qThemeEl.value;
+  const minCount = parseInt(qCountEl.value) || 0;
+  const sort = qSortEl.value;
+
+  let filtered = CASTS.filter(c => {
+    if (c.count < minCount) return false;
+    if (search && !c.name.includes(search)) return false;
+    if (staff && !c.staffs.includes(staff)) return false;
+    if (theme && !c.themes[theme]) return false;
+    return true;
+  });
+
+  filtered.sort((a, b) => {
+    if (sort === 'count') return b.count - a.count || a.name.localeCompare(b.name, 'ja');
+    if (sort === 'last') return b.last_date.localeCompare(a.last_date);
+    if (sort === 'first') return b.first_date.localeCompare(a.first_date);
+    if (sort === 'name') return a.name.localeCompare(b.name, 'ja');
+    return 0;
+  });
+
+  resultInfo.textContent = `表示 ${filtered.length} 名 / 全 ${CASTS.length} 名`;
+  castListEl.innerHTML = filtered.map(renderCast).join('');
+}
+
+[qSearch, qStaffEl, qThemeEl, qCountEl, qSortEl].forEach(el => {
+  el.addEventListener('input', applyFilters);
+  el.addEventListener('change', applyFilters);
+});
+
+applyFilters();
+</script>
+
+</body>
+</html>
