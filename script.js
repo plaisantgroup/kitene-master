@@ -105,8 +105,7 @@ function showView(viewName) {
         document.querySelector('.nav-btn:nth-child(3)').classList.add('active');
         renderInterviewList();
         updateJumpButtons('interview');
-        // 全カードの最新コメントを読み込む（アコーディオン状態も復元）
-        setTimeout(() => loadAllLatestComments(), 100);
+        // ★コメントロードはrenderInterviewList内で実行（レイアウトシフト防止）
     } else if (viewName === 'url') {
         document.getElementById('url-view').classList.add('active');
         document.querySelector('.nav-btn:nth-child(4)').classList.add('active');
@@ -1789,7 +1788,7 @@ function showToast(message, type = 'success') {
 /**
  * 面談リストを描画
  */
-function renderInterviewList() {
+async function renderInterviewList() {
     console.log('renderInterviewList: 面談リスト描画開始');
     cardIdCounter = 0;  // カウンターリセット
     // ★注意: historyCacheとopenedCardNamesはクリアしない（自動更新で状態保持）
@@ -1801,6 +1800,17 @@ function renderInterviewList() {
     if (!listElement) {
         console.error('interview-list要素が見つかりません');
         return;
+    }
+    
+    // ★★★ レイアウトシフト防止: コメントキャッシュが空なら先にロード ★★★
+    if (Object.keys(commentCache).length === 0) {
+        listElement.innerHTML = '<div style="text-align:center; padding:60px 20px; color:var(--text-secondary, #999); font-size:0.95rem;">面談データを読み込み中...</div>';
+        if (emptyElement) emptyElement.style.display = 'none';
+        try {
+            await loadAllLatestComments();
+        } catch (e) {
+            console.error('renderInterviewList: コメント読み込みエラー', e);
+        }
     }
     
     // ★★★ 店舗フィルターを適用 ★★★
@@ -1883,23 +1893,12 @@ function renderInterviewList() {
     
     listElement.innerHTML = html;
     
-    // コメントを非同期で読み込み
-    loadAllLatestComments().then(() => {
-        // コメント部分を更新
-        const cards = listElement.querySelectorAll('.interview-card');
-        cards.forEach(card => {
-            const name = card.dataset.name;
-            const section = card.querySelector('.comment-section');
-            if (section && commentCache[name]) {
-                section.outerHTML = renderCommentSection(name);
-            }
-        });
-        // 省略判定を実行
-        setTimeout(checkCommentOverflow, 500);
-        
-        // 新着コメントバーを更新
-        setTimeout(renderNewCommentBar, 600);
-    });
+    // ★★★ レイアウトシフト防止: コメントは既にcommentCacheから描画済みのため、差し替え不要 ★★★
+    // 省略判定を実行
+    setTimeout(checkCommentOverflow, 100);
+    
+    // 新着コメントバーを更新
+    setTimeout(renderNewCommentBar, 100);
     
     console.log('renderInterviewList: 描画完了');
 }
