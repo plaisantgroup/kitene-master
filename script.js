@@ -67,9 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('初期データをロード中...');
     loadAllData();
     
-    // ★★★ デフォルトで自動更新を開始 ★★★
-    startAutoRefresh();
-    document.querySelector('.auto-refresh').classList.add('active');
+    // ★★★ 自動更新の自動起動を無効化（スマホ画面リセット・メモリ対策）★★★
+    // startAutoRefresh();
+    // document.querySelector('.auto-refresh').classList.add('active');
     
     // トップに戻るボタンのスクロール監視
     window.addEventListener('scroll', handleScroll);
