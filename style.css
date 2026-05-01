@@ -42,6 +42,9 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
+    /* ★ iOS Safari レイアウト安定化（pull-to-refresh無効・バウンス抑制） */
+    overscroll-behavior-y: contain;
+    -webkit-text-size-adjust: 100%;
 }
 
 .container {
@@ -2034,7 +2037,7 @@ body {
     align-items: center;
     gap: 8px;
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-    animation: slideDown 0.3s ease;
+    /* ★ アニメーション削除: 出現時の視覚的な動きを消す（スマホレイアウトシフト対策） */
 }
 
 @keyframes slideDown {
