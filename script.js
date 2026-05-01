@@ -3188,10 +3188,18 @@ function renderNewCommentBar() {
         return;
     }
     
+    // ★★★ スクロール補正: 表示前の高さを記録 ★★★
+    const oldHeight = bar.style.display === 'none' ? 0 : bar.offsetHeight;
+    const oldScrollY = window.scrollY;
+    
     const newCommentsByDate = getNewCommentsByDate();
     
     if (Object.keys(newCommentsByDate).length === 0) {
         bar.style.display = 'none';
+        // ★ 非表示にする時：高さがあった分、上にスクロール補正
+        if (oldHeight > 0 && oldScrollY > 0) {
+            window.scrollBy(0, -oldHeight);
+        }
         return;
     }
     
@@ -3213,7 +3221,15 @@ function renderNewCommentBar() {
     listEl.innerHTML = dateGroups;
     bar.style.display = 'flex';
     
-    console.log('renderNewCommentBar: 新着表示完了');
+    // ★★★ スクロール補正: 表示後の高さ変化分だけスクロール位置を補正 ★★★
+    // ユーザーが最上部にいる時は補正しない（バーが自然に見えるように）
+    const newHeight = bar.offsetHeight;
+    const heightDiff = newHeight - oldHeight;
+    if (heightDiff !== 0 && oldScrollY > 0) {
+        window.scrollBy(0, heightDiff);
+    }
+    
+    console.log('renderNewCommentBar: 新着表示完了 (oldH=' + oldHeight + ', newH=' + newHeight + ', diff=' + heightDiff + ')');
 }
 
 /**
