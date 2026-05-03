@@ -119,13 +119,27 @@ function showView(viewName) {
 // ===============================
 
 async function loadAllData() {
-    console.log('loadAllData: 全データロード開始');
-    await loadShiftDate();
-    await loadShiftData();
-    await loadUrlData();
-    await loadOkiniData();  // ★★★ v3.5追加 ★★★
-    await loadAllLatestComments();
-    console.log('loadAllData: 全データロード完了');
+    console.log('loadAllData: 全データロード開始（並列実行）');
+    const startTime = Date.now();
+    
+    // ★★★ 並列実行で起動時間を大幅短縮（5秒→1-2秒目標）★★★
+    // 4つのAPIを同時に呼び出し、全部揃うまで待つ
+    await Promise.all([
+        loadShiftDate(),
+        loadShiftData(),
+        loadUrlData(),
+        loadOkiniData()
+    ]);
+    
+    // ★ 全データ揃った状態で再描画（チェック表示・オキニ全て正しい状態で表示）
+    renderShiftList();
+    
+    console.log(`loadAllData: 主要データロード完了 (${Date.now() - startTime}ms)`);
+    
+    // ★ コメントは面談タブで使うため、シフト表示を待たせずバックグラウンド取得
+    loadAllLatestComments().then(() => {
+        console.log(`loadAllData: 全データロード完了 (${Date.now() - startTime}ms)`);
+    });
 }
 
 async function loadShiftData() {
