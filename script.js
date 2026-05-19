@@ -20,24 +20,150 @@ let autoRefreshInterval = null;  // 自動リロードのインターバルID
 let autoRefreshSeconds = 300;     // 自動リロードの間隔(秒)
 let cardIdCounter = 0;      // カードID用カウンター
 let historyCache = {};      // 履歴キャッシュ
-let openedCardNames = [];   // ★開いているアコーディオンの源氏名リスト
 let commentCache = {};           // コメントキャッシュ { 源氏名: [コメント配列] }
 let openAccordions = new Set();  // 開いているアコーディオンの源氏名
 let expandedComments = new Set(); // 展開中のコメントを記録
 let currentCommentName = null;   // コメント編集中の源氏名
 let currentCommentRowIndex = null; // コメント編集中の行番号
 
+// ★★★ デバッグログ制御 ★★★
+// 本番運用時は false、開発時は true でログ詳細表示
+const DEV_MODE = false;
+
+/**
+ * 開発時のみ出力するログ（DEV_MODE=falseで本番ではサイレント）
+ * エラーログは console.error / console.warn を使うこと（こちらは常に出力）
+ */
+function devLog(...args) {
+    if (DEV_MODE) console.log(...args);
+}
+
 // ★★★ v3.5追加: オキニトークデータ ★★★
 let okiniData = [];
+
+// ===============================
+// localStorageキャッシュ（体感高速化用）
+// ===============================
+const CACHE_KEY = 'kitenemaster_cache_v1';
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1時間
+
+/**
+ * 全データをlocalStorageにキャッシュ保存
+ */
+function saveCache() {
+    try {
+        const cacheData = {
+            timestamp: Date.now(),
+            currentShiftDate: currentShiftDate,
+            shiftData: shiftData,
+            urlData: urlData,
+            okiniData: okiniData,
+            commentCache: commentCache
+        };
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    } catch (e) {
+        console.warn('saveCache: 保存失敗', e);
+    }
+}
+
+/**
+ * localStorageからキャッシュを読み込み、グローバル変数に復元
+ * @returns {boolean} 復元成功時 true、キャッシュなし・期限切れ・エラー時 false
+ */
+function loadCache() {
+    try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (!cached) return false;
+        
+        const cacheData = JSON.parse(cached);
+        
+        // 期限切れチェック
+        if (!cacheData.timestamp || Date.now() - cacheData.timestamp > CACHE_TTL_MS) {
+            devLog('loadCache: キャッシュ期限切れ');
+            return false;
+        }
+        
+        // グローバル変数に復元
+        currentShiftDate = cacheData.currentShiftDate || '';
+        shiftData = cacheData.shiftData || [];
+        urlData = cacheData.urlData || [];
+        okiniData = cacheData.okiniData || [];
+        commentCache = cacheData.commentCache || {};
+        
+        devLog('loadCache: キャッシュから復元完了', {
+            シフト件数: shiftData.length,
+            URL件数: urlData.length,
+            コメント件数: Object.keys(commentCache).length
+        });
+        return true;
+    } catch (e) {
+        console.warn('loadCache: 読み込み失敗', e);
+        return false;
+    }
+}
+
+/**
+ * キャッシュを削除（強制最新化したいときに呼ぶ）
+ */
+function clearCache() {
+    try {
+        localStorage.removeItem(CACHE_KEY);
+        devLog('clearCache: キャッシュ削除完了');
+    } catch (e) {
+        console.warn('clearCache: 削除失敗', e);
+    }
+}
+
+// ===============================
+// API共通ヘルパー（fetch呼び出しの統一・エラー処理強化）
+// ===============================
+
+/**
+ * GAS APIへの統一的な呼び出し関数
+ * @param {string} action - APIアクション名
+ * @param {object} options - { method, body, query } の組み合わせ
+ * @returns {Promise<object>} レスポンス（失敗時は { success: false, error: '...' }）
+ */
+async function apiCall(action, options = {}) {
+    const { method = 'GET', body = null, query = null } = options;
+    
+    try {
+        let url = `${API_URL}?action=${encodeURIComponent(action)}`;
+        // GETパラメータ追加
+        if (query && typeof query === 'object') {
+            for (const key in query) {
+                if (query[key] !== undefined && query[key] !== null) {
+                    url += `&${encodeURIComponent(key)}=${encodeURIComponent(query[key])}`;
+                }
+            }
+        }
+        
+        const fetchOptions = { method };
+        if (body && method !== 'GET') {
+            fetchOptions.headers = { 'Content-Type': 'text/plain' };
+            fetchOptions.body = JSON.stringify(body);
+        }
+        
+        const response = await fetch(url, fetchOptions);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error(`apiCall(${action}) エラー:`, error);
+        return { success: false, error: error.message };
+    }
+}
 
 // ===============================
 // 初期化
 // ===============================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('=== キテネマスター 初期化開始 ===');
-    console.log('API URL:', API_URL);
-    console.log('XLSXライブラリ:', typeof XLSX !== 'undefined' ? '読み込み済み' : '未読み込み');
+    devLog('=== キテネマスター 初期化開始 ===');
+    devLog('API URL:', API_URL);
+    devLog('XLSXライブラリ:', typeof XLSX !== 'undefined' ? '読み込み済み' : '未読み込み');
     
     // Excelアップロードイベント
     document.getElementById('excel-upload').addEventListener('change', (event) => {
@@ -64,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // データの読み込み
-    console.log('初期データをロード中...');
+    devLog('初期データをロード中...');
     loadAllData();
     
     // ★★★ 自動更新の自動起動を無効化（スマホ画面リセット・メモリ対策）★★★
@@ -119,93 +245,164 @@ function showView(viewName) {
 // ===============================
 
 async function loadAllData() {
-    console.log('loadAllData: 全データロード開始（並列実行）');
+    devLog('loadAllData: 全データロード開始');
     const startTime = Date.now();
     
-    // ★★★ 並列実行で起動時間を大幅短縮（5秒→1-2秒目標）★★★
-    // 4つのAPIを同時に呼び出し、全部揃うまで待つ
-    await Promise.all([
-        loadShiftDate(),
-        loadShiftData(),
-        loadUrlData(),
-        loadOkiniData()
-    ]);
+    // ★★★ Phase 1: localStorage から即時表示（体感速度0ms）★★★
+    const hasCacheData = loadCache();
+    if (hasCacheData) {
+        // 日付表示
+        if (currentShiftDate) {
+            const dateDisplay = document.getElementById('date-display');
+            if (dateDisplay) {
+                dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
+                dateDisplay.classList.add('has-date');
+            }
+        }
+        // 即座に画面描画
+        renderShiftList();
+        devLog(`loadAllData: キャッシュから即時表示 (${Date.now() - startTime}ms)`);
+    }
     
-    // ★ 全データ揃った状態で再描画（チェック表示・オキニ全て正しい状態で表示）
+    // ★★★ Phase 2: APIから最新データ取得 ★★★
+    // まず統合API（高速・1往復）を試行、失敗時は並列ロードにフォールバック
+    const unifiedSuccess = await loadAllDataUnified();
+    
+    if (!unifiedSuccess) {
+        // フォールバック：従来の並列ロード
+        devLog('loadAllData: 統合API失敗のため並列ロードにフォールバック');
+        await Promise.all([
+            loadShiftDate(),
+            loadShiftData(),
+            loadUrlData(),
+            loadOkiniData()
+        ]);
+    }
+    
+    // ★ 全データ揃った状態で再描画
     renderShiftList();
+    renderUrlList();
     
-    console.log(`loadAllData: 主要データロード完了 (${Date.now() - startTime}ms)`);
+    // ★ Phase 3: キャッシュ保存（次回起動時に使用）
+    saveCache();
     
-    // ★ コメントは面談タブで使うため、シフト表示を待たせずバックグラウンド取得
-    loadAllLatestComments().then(() => {
-        console.log(`loadAllData: 全データロード完了 (${Date.now() - startTime}ms)`);
-    });
+    devLog(`loadAllData: 主要データロード完了 (${Date.now() - startTime}ms)`);
+    
+    // ★ コメントは統合APIで取得済みかチェック、未取得なら追加で取得
+    if (unifiedSuccess && Object.keys(commentCache).length > 0) {
+        // 統合APIでコメントも取得済み
+        setTimeout(renderNewCommentBar, 100);
+        devLog(`loadAllData: 全データロード完了 (${Date.now() - startTime}ms)`);
+    } else {
+        // 統合API未使用時：コメントをバックグラウンド取得
+        loadAllLatestComments().then(() => {
+            saveCache();
+            devLog(`loadAllData: 全データロード完了 (${Date.now() - startTime}ms)`);
+        });
+    }
+}
+
+/**
+ * GAS統合API版：1回のリクエストで全データを取得（最大の高速化）
+ * GAS側に getInitialData アクションが必要
+ * @returns {Promise<boolean>} 成功時true、失敗時false（呼び出し側でフォールバック）
+ */
+async function loadAllDataUnified() {
+    const result = await apiCall('getInitialData');
+    
+    if (!result || result.success !== true) {
+        // 失敗時はフォールバック（呼び出し側で並列ロードに切り替え）
+        return false;
+    }
+    
+    try {
+        // 全データを一括代入
+        if (result.shiftDate) {
+            currentShiftDate = formatShiftDate(result.shiftDate);
+            const dateDisplay = document.getElementById('date-display');
+            if (dateDisplay) {
+                dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
+                dateDisplay.classList.add('has-date');
+            }
+        }
+        if (Array.isArray(result.shiftData)) shiftData = result.shiftData;
+        if (Array.isArray(result.urlData)) urlData = result.urlData;
+        if (Array.isArray(result.okiniData)) okiniData = result.okiniData;
+        if (result.comments && typeof result.comments === 'object') {
+            // コメントの整形（loadAllLatestCommentsと同じソート）
+            for (const name in result.comments) {
+                commentCache[name] = (result.comments[name] || []).map(item => ({
+                    rowIndex: item.rowIndex,
+                    name: item.name,
+                    date: item.interviewDate || item.date,
+                    staff: item.staff,
+                    comment: item.comment,
+                    createdAt: item.createdAt
+                })).sort((a, b) => {
+                    const dateA = new Date(a.date || 0);
+                    const dateB = new Date(b.date || 0);
+                    if (dateB - dateA !== 0) return dateB - dateA;
+                    return b.rowIndex - a.rowIndex;
+                });
+            }
+        }
+        
+        devLog('loadAllDataUnified: 統合API成功', {
+            シフト件数: shiftData.length,
+            URL件数: urlData.length,
+            オキニ件数: okiniData.length,
+            コメント対象: Object.keys(commentCache).length
+        });
+        return true;
+    } catch (error) {
+        console.warn('loadAllDataUnified: 統合API失敗（フォールバックします）', error);
+        return false;
+    }
 }
 
 async function loadShiftData() {
-    try {
-        console.log('loadShiftData: シフトデータ取得中...');
-        const response = await fetch(`${API_URL}?action=getShiftData`);
-        console.log('loadShiftData: レスポンス受信', response.status);
+    const result = await apiCall('getShiftData');
+    
+    if (result.success) {
+        // ★★★ 時刻データをformatTimeで変換 ★★★
+        shiftData = result.data.map(shift => ({
+            ...shift,
+            time: formatTime(shift.time),
+            originalTime: shift.originalTime ? formatTime(shift.originalTime) : ''
+        }));
+        devLog('loadShiftData: データ件数', shiftData.length);
         
-        const result = await response.json();
-        console.log('loadShiftData: レスポンス:', result);
-        
-        if (result.success) {
-            // ★★★ 時刻データをformatTimeで変換 ★★★
-            shiftData = result.data.map(shift => ({
-                ...shift,
-                time: formatTime(shift.time),
-                originalTime: shift.originalTime ? formatTime(shift.originalTime) : ''
+        // ★★★ v3.5改善: シフトデータからオキニデータを生成 ★★★
+        okiniData = shiftData
+            .filter(s => s.okiniDelidosu || s.okiniAnecan || s.okiniAinoshizuku ||
+                         s.talkedDelidosu || s.talkedAnecan || s.talkedAinoshizuku)
+            .map(s => ({
+                name: s.name,
+                delidosu: s.okiniDelidosu || '',
+                anecan: s.okiniAnecan || '',
+                ainoshizuku: s.okiniAinoshizuku || '',
+                delidosuTalked: s.talkedDelidosu || '',
+                anecanTalked: s.talkedAnecan || '',
+                ainoshizukuTalked: s.talkedAinoshizuku || ''
             }));
-            console.log('loadShiftData: データ件数', shiftData.length);
-            console.log('loadShiftData: 時刻変換後の最初のデータ:', shiftData[0]);
-            
-            // ★★★ v3.5改善: シフトデータからオキニデータを生成 ★★★
-            okiniData = shiftData
-                .filter(s => s.okiniDelidosu || s.okiniAnecan || s.okiniAinoshizuku ||
-                             s.talkedDelidosu || s.talkedAnecan || s.talkedAinoshizuku)
-                .map(s => ({
-                    name: s.name,
-                    delidosu: s.okiniDelidosu || '',
-                    anecan: s.okiniAnecan || '',
-                    ainoshizuku: s.okiniAinoshizuku || '',
-                    delidosuTalked: s.talkedDelidosu || '',
-                    anecanTalked: s.talkedAnecan || '',
-                    ainoshizukuTalked: s.talkedAinoshizuku || ''
-                }));
-            console.log('loadShiftData: オキニデータ', okiniData.length, '件');
-            
-            renderShiftList();
-        } else {
-            console.error('loadShiftData: エラー:', result.error);
-        }
-    } catch (error) {
-        console.error('loadShiftData: 例外:', error);
+        
+        renderShiftList();
+    } else {
+        console.error('loadShiftData: エラー:', result.error);
     }
 }
 
 async function loadUrlData() {
-    try {
-        console.log('loadUrlData: URL管理データ取得中...');
-        const response = await fetch(`${API_URL}?action=getUrlData`);
-        console.log('loadUrlData: レスポンス受信', response.status);
-        
-        const result = await response.json();
-        console.log('loadUrlData: レスポンス:', result);
-        
-        if (result.success) {
-            urlData = result.data;
-            console.log('loadUrlData: データ件数', urlData.length);
-            renderUrlList();
-            return result.data; // 戻り値を追加
-        } else {
-            console.error('loadUrlData: エラー:', result.error);
-            return []; // エラー時は空配列を返す
-        }
-    } catch (error) {
-        console.error('loadUrlData: 例外:', error);
-        return []; // 例外時も空配列を返す
+    const result = await apiCall('getUrlData');
+    
+    if (result.success) {
+        urlData = result.data;
+        devLog('loadUrlData: データ件数', urlData.length);
+        renderUrlList();
+        return result.data;
+    } else {
+        console.error('loadUrlData: エラー:', result.error);
+        return [];
     }
 }
 
@@ -215,17 +412,17 @@ async function loadUrlData() {
 
 async function handleExcelUpload(file) {
     try {
-        console.log('=== デバッグ: Excelアップロード開始 ===');
-        console.log('ファイル名:', file.name);
-        console.log('ファイルサイズ:', file.size, 'bytes');
+        devLog('=== デバッグ: Excelアップロード開始 ===');
+        devLog('ファイル名:', file.name);
+        devLog('ファイルサイズ:', file.size, 'bytes');
         
         showLoading();
         
         // ステップ1: Excelファイルを読み込み
-        console.log('ステップ1: Excelファイルを読み込み中...');
+        devLog('ステップ1: Excelファイルを読み込み中...');
         const shiftData = await readExcelFile(file);
-        console.log('ステップ1完了: データ件数', shiftData.length);
-        console.log('読み込んだデータ:', shiftData);
+        devLog('ステップ1完了: データ件数', shiftData.length);
+        devLog('読み込んだデータ:', shiftData);
         
         if (!shiftData || shiftData.length === 0) {
             throw new Error('出勤予定のデータが見つかりませんでした');
@@ -235,7 +432,7 @@ async function handleExcelUpload(file) {
         const dateMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
         if (dateMatch) {
             const [, year, month, day] = dateMatch;
-            console.log('日付抽出:', year, month, day);
+            devLog('日付抽出:', year, month, day);
             currentShiftDate = `${year}年${month}月${day}日`;
             
             // ★★★ 日付表示を更新 ★★★
@@ -248,25 +445,25 @@ async function handleExcelUpload(file) {
         }
         
         // ★★★ チェックを全リセット ★★★
-        console.log('チェック状態をリセット中...');
+        devLog('チェック状態をリセット中...');
         await resetAllChecks();
-        console.log('チェック状態リセット完了');
+        devLog('チェック状態リセット完了');
         
         // ★★★ ステップ2: URL管理データを取得（追加） ★★★
-        console.log('ステップ2: URL管理データを取得中...');
+        devLog('ステップ2: URL管理データを取得中...');
         const urlData = await loadUrlData();
-        console.log('ステップ2完了: URL管理データ取得完了', urlData.length, '件');
+        devLog('ステップ2完了: URL管理データ取得完了', urlData.length, '件');
         
         // ★★★ ステップ3: URL照合（追加） ★★★
-        console.log('ステップ3: URL照合中...');
+        devLog('ステップ3: URL照合中...');
         const dataWithUrls = shiftData.map(employee => {
             // 源氏名で照合
             const urlInfo = urlData.find(u => u.name === employee.name);
             
             if (urlInfo) {
-                console.log(`URL照合成功: ${employee.name} → でりどす: ${urlInfo.delidosuUrl ? 'あり' : 'なし'}, アネキャン: ${urlInfo.anecanUrl ? 'あり' : 'なし'}, 愛のしずく: ${urlInfo.ainoshizukuUrl ? 'あり' : 'なし'}`);
+                devLog(`URL照合成功: ${employee.name} → でりどす: ${urlInfo.delidosuUrl ? 'あり' : 'なし'}, アネキャン: ${urlInfo.anecanUrl ? 'あり' : 'なし'}, 愛のしずく: ${urlInfo.ainoshizukuUrl ? 'あり' : 'なし'}`);
             } else {
-                console.log(`URL照合失敗: ${employee.name} → URL管理に未登録`);
+                devLog(`URL照合失敗: ${employee.name} → URL管理に未登録`);
             }
             
             return {
@@ -276,28 +473,28 @@ async function handleExcelUpload(file) {
                 ainoshizukuUrl: urlInfo?.ainoshizukuUrl || ''
             };
         });
-        console.log('ステップ3完了: URL照合完了');
-        console.log('URL付きデータ:', dataWithUrls);
+        devLog('ステップ3完了: URL照合完了');
+        devLog('URL付きデータ:', dataWithUrls);
         
         // ステップ4: Googleスプレッドシートにアップロード（URL情報も含む）
-        console.log('ステップ4: Googleスプレッドシートにアップロード中...');
-        console.log('API URL:', API_URL);
+        devLog('ステップ4: Googleスプレッドシートにアップロード中...');
+        devLog('API URL:', API_URL);
         await uploadShiftData(dataWithUrls);
-        console.log('ステップ4完了: アップロード成功');
+        devLog('ステップ4完了: アップロード成功');
         
         // ★★★ ステップ4.5: 最終出勤日を自動更新 ★★★
-        console.log('ステップ4.5: 最終出勤日を更新中...');
+        devLog('ステップ4.5: 最終出勤日を更新中...');
         const shiftNames = dataWithUrls.map(d => d.name);
         if (currentShiftDate && shiftNames.length > 0) {
             await updateLastWorkDate(shiftNames, currentShiftDate);
-            console.log('ステップ4.5完了: 最終出勤日を更新しました');
+            devLog('ステップ4.5完了: 最終出勤日を更新しました');
         }
         
         // ステップ5: データをリロード
         await loadShiftData();
         
         hideLoading();
-        console.log('=== デバッグ: アップロード完了 ===');
+        devLog('=== デバッグ: アップロード完了 ===');
         
     } catch (error) {
         console.error('Excelアップロードエラー:', error);
@@ -308,23 +505,23 @@ async function handleExcelUpload(file) {
 
 function readExcelFile(file) {
     return new Promise((resolve, reject) => {
-        console.log('readExcelFile: ファイル読み込み開始');
+        devLog('readExcelFile: ファイル読み込み開始');
         const reader = new FileReader();
         
         reader.onload = (e) => {
             try {
-                console.log('readExcelFile: FileReader onload実行');
+                devLog('readExcelFile: FileReader onload実行');
                 const data = new Uint8Array(e.target.result);
-                console.log('readExcelFile: データサイズ', data.length);
+                devLog('readExcelFile: データサイズ', data.length);
                 
                 const workbook = XLSX.read(data, { type: 'array', cellDates: false });
-                console.log('readExcelFile: ワークブック読み込み完了（シリアル値モード）');
-                console.log('シート名:', workbook.SheetNames);
+                devLog('readExcelFile: ワークブック読み込み完了（シリアル値モード）');
+                devLog('シート名:', workbook.SheetNames);
                 
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                console.log('readExcelFile: JSON変換完了、行数:', jsonData.length);
-                console.log('最初の3行:', jsonData.slice(0, 3));
+                devLog('readExcelFile: JSON変換完了、行数:', jsonData.length);
+                devLog('最初の3行:', jsonData.slice(0, 3));
                 
                 // 「出勤予」と「出勤確」のデータを抽出
                 const filteredData = jsonData
@@ -332,14 +529,14 @@ function readExcelFile(file) {
                         const status = row['シフト状態'];
                         const isMatch = status === '出勤予' || status === '出勤確';
                         if (!isMatch) {
-                            console.log('❌ フィルタアウト:', {
+                            devLog('❌ フィルタアウト:', {
                                 name: row['源氏名'],
                                 time: row['出勤時間'],
                                 status: status,
                                 statusType: typeof status
                             });
                         } else {
-                            console.log('✅ OK:', {
+                            devLog('✅ OK:', {
                                 name: row['源氏名'],
                                 time: row['出勤時間'],
                                 status: status
@@ -366,18 +563,18 @@ function readExcelFile(file) {
                 const seenNames = {};
                 const uniqueData = filteredData.filter(item => {
                     if (seenNames[item.name]) {
-                        console.log('⚠️ 重複排除:', item.name);
+                        devLog('⚠️ 重複排除:', item.name);
                         return false;
                     }
                     seenNames[item.name] = true;
                     return true;
                 });
                 if (filteredData.length !== uniqueData.length) {
-                    console.log('★ 重複排除: ' + filteredData.length + '件 → ' + uniqueData.length + '件');
+                    devLog('★ 重複排除: ' + filteredData.length + '件 → ' + uniqueData.length + '件');
                 }
                 
-                console.log('readExcelFile: フィルタ後の件数', uniqueData.length);
-                console.log('フィルタ後のデータ:', uniqueData);
+                devLog('readExcelFile: フィルタ後の件数', uniqueData.length);
+                devLog('フィルタ後のデータ:', uniqueData);
                 resolve(uniqueData);
             } catch (error) {
                 console.error('readExcelFile: エラー', error);
@@ -397,7 +594,7 @@ function readExcelFile(file) {
 function formatTime(timeValue) {
     if (!timeValue) return '';
     
-    console.log('formatTime: 入力値 =', timeValue, '型 =', typeof timeValue);
+    devLog('formatTime: 入力値 =', timeValue, '型 =', typeof timeValue);
     
     // 既に "HH:MM" 形式の場合はそのまま返す
     if (typeof timeValue === 'string' && /^\d{1,2}:\d{2}$/.test(timeValue)) {
@@ -417,7 +614,7 @@ function formatTime(timeValue) {
             const hours = date.getHours().toString().padStart(2, '0');
             const minutes = date.getMinutes().toString().padStart(2, '0');
             const result = `${hours}:${minutes}`;
-            console.log('formatTime: ISO形式 → JST変換 =', result);
+            devLog('formatTime: ISO形式 → JST変換 =', result);
             return result;
         } catch (e) {
             console.error('formatTime: ISO形式の変換エラー', e);
@@ -430,12 +627,12 @@ function formatTime(timeValue) {
         const hours = Math.floor(totalMinutes / 60) % 24;
         const minutes = totalMinutes % 60;
         const result = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        console.log('formatTime: シリアル値変換 =', result);
+        devLog('formatTime: シリアル値変換 =', result);
         return result;
     }
     
     // それ以外は文字列化
-    console.log('formatTime: 文字列化 =', String(timeValue));
+    devLog('formatTime: 文字列化 =', String(timeValue));
     return String(timeValue);
 }
 
@@ -472,7 +669,7 @@ function parseTime(timeStr) {
     }
     
     const totalMinutes = adjustedHours * 60 + minutes;
-    console.log(`parseTime: ${timeStr} → ${adjustedHours}:${minutes} (${totalMinutes}分)`);
+    devLog(`parseTime: ${timeStr} → ${adjustedHours}:${minutes} (${totalMinutes}分)`);
     return totalMinutes;
 }
 
@@ -521,7 +718,7 @@ function getMainStoreBadgeForUrl(url) {
  * 店舗フィルターを切り替え
  */
 function filterByStore(store) {
-    console.log('filterByStore:', store);
+    devLog('filterByStore:', store);
     currentStoreFilter = store;
     
     // フィルターボタンのアクティブ状態を更新
@@ -578,7 +775,7 @@ function filterUrlDataByStore(data, store) {
  * ★v3.5 オキニフィルター切り替え
  */
 function filterByOkini(level) {
-    console.log('filterByOkini:', level);
+    devLog('filterByOkini:', level);
     currentOkiniFilter = level;
     
     // ボタンのアクティブ状態を更新
@@ -668,8 +865,8 @@ function getKanaGroup(name) {
 
 async function uploadShiftData(data) {
     try {
-        console.log('uploadShiftData: リクエスト送信中...');
-        console.log('送信データ件数:', data.length);
+        devLog('uploadShiftData: リクエスト送信中...');
+        devLog('送信データ件数:', data.length);
         
         // シンプルリクエストにするため、Content-Type: text/plain を使用
         const response = await fetch(`${API_URL}?action=updateShiftData`, {
@@ -680,17 +877,17 @@ async function uploadShiftData(data) {
             body: JSON.stringify({ data: data })
         });
         
-        console.log('uploadShiftData: レスポンス受信');
-        console.log('ステータスコード:', response.status);
+        devLog('uploadShiftData: レスポンス受信');
+        devLog('ステータスコード:', response.status);
         
         const resultText = await response.text();
-        console.log('レスポンステキスト:', resultText);
+        devLog('レスポンステキスト:', resultText);
         
         const result = JSON.parse(resultText);
-        console.log('パース済みレスポンス:', result);
+        devLog('パース済みレスポンス:', result);
         
         if (result.success) {
-            console.log('uploadShiftData: 成功');
+            devLog('uploadShiftData: 成功');
             await loadShiftData();
         } else {
             console.error('uploadShiftData: APIエラー', result.error);
@@ -707,8 +904,8 @@ async function uploadShiftData(data) {
 // ===============================
 
 function renderShiftList() {
-    console.log('renderShiftList: シフトリスト描画開始');
-    console.log('シフトデータ件数:', shiftData.length);
+    devLog('renderShiftList: シフトリスト描画開始');
+    devLog('シフトデータ件数:', shiftData.length);
     
     const listElement = document.getElementById('shift-list');
     const emptyElement = document.getElementById('empty-state');
@@ -723,7 +920,7 @@ function renderShiftList() {
     
     // ★★★ v3.5: オキニフィルターを適用 ★★★
     const filteredData = filterDataByOkini(storeFiltered, currentOkiniFilter);
-    console.log('フィルター後のデータ件数:', filteredData.length, '(店舗:', currentStoreFilter, ', オキニ:', currentOkiniFilter, ')');
+    devLog('フィルター後のデータ件数:', filteredData.length, '(店舗:', currentStoreFilter, ', オキニ:', currentOkiniFilter, ')');
     
     // ★★★ v3.5: 出勤人数カウンターを更新 ★★★
     updateShiftCounter(storeFiltered);
@@ -834,7 +1031,7 @@ function renderShiftList() {
     
     // 日付表示（handleExcelUpload関数で設定済みなので、ここでは何もしない）
     
-    console.log('renderShiftList: 描画完了');
+    devLog('renderShiftList: 描画完了');
 }
 
 /**
@@ -872,8 +1069,8 @@ function updateShiftCounter(storeFilteredData) {
 // ===============================
 
 function renderAllCastList() {
-    console.log('renderAllCastList: 全キャストリスト描画開始');
-    console.log('URLデータ件数:', urlData.length);
+    devLog('renderAllCastList: 全キャストリスト描画開始');
+    devLog('URLデータ件数:', urlData.length);
     
     const listElement = document.getElementById('all-cast-list');
     const emptyElement = document.getElementById('all-empty-state');
@@ -885,7 +1082,7 @@ function renderAllCastList() {
     
     // ★★★ 店舗フィルターを適用 ★★★
     const filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);
-    console.log('フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
+    devLog('フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
     
     if (filteredUrlData.length === 0) {
         listElement.style.display = 'none';
@@ -961,7 +1158,7 @@ function renderAllCastList() {
     }
     
     listElement.innerHTML = html;
-    console.log('renderAllCastList: 描画完了');
+    devLog('renderAllCastList: 描画完了');
 }
 
 /**
@@ -1096,7 +1293,7 @@ async function saveShiftDate(date) {
         });
         
         const result = await response.json();
-        console.log('saveShiftDate: 結果', result);
+        devLog('saveShiftDate: 結果', result);
         return result;
     } catch (error) {
         console.error('saveShiftDate: 例外', error);
@@ -1108,24 +1305,19 @@ async function saveShiftDate(date) {
  * シフト日付を取得（API呼び出し）
  */
 async function loadShiftDate() {
-    try {
-        const response = await fetch(`${API_URL}?action=getShiftDate`);
-        const result = await response.json();
-        console.log('loadShiftDate: 結果', result);
-        
-        if (result.success && result.date) {
-            // ★★★ 日付をフォーマット ★★★
-            currentShiftDate = formatShiftDate(result.date);
-            const dateDisplay = document.getElementById('date-display');
+    const result = await apiCall('getShiftDate');
+    
+    if (result.success && result.date) {
+        // ★★★ 日付をフォーマット ★★★
+        currentShiftDate = formatShiftDate(result.date);
+        const dateDisplay = document.getElementById('date-display');
+        if (dateDisplay) {
             dateDisplay.textContent = `📅 ${currentShiftDate}のシフト`;
             dateDisplay.classList.add('has-date');
         }
-        
-        return result;
-    } catch (error) {
-        console.error('loadShiftDate: 例外', error);
-        return { success: false, error: error.message };
     }
+    
+    return result;
 }
 
 /**
@@ -1169,7 +1361,7 @@ async function resetAllChecks() {
         });
         
         const result = await response.json();
-        console.log('resetAllChecks: 結果', result);
+        devLog('resetAllChecks: 結果', result);
         
         if (result.success) {
             // メモリ上のurlDataもリセット
@@ -1194,7 +1386,7 @@ async function resetAllChecks() {
  * 店舗別チェック状態を切り替え
  */
 async function toggleStoreCheck(name, store, isChecked) {
-    console.log('toggleStoreCheck:', name, store, isChecked);
+    devLog('toggleStoreCheck:', name, store, isChecked);
     
     // メモリ上のurlDataを更新
     const person = urlData.find(p => p.name === name);
@@ -1240,7 +1432,7 @@ async function toggleStoreCheck(name, store, isChecked) {
         });
         
         const result = await response.json();
-        console.log('toggleStoreCheck: 保存結果', result);
+        devLog('toggleStoreCheck: 保存結果', result);
         
         if (!result.success) {
             console.error('toggleStoreCheck: 保存失敗', result.error);
@@ -1261,7 +1453,7 @@ function renderUrlList() {
     
     // ★★★ 店舗フィルターを適用 ★★★
     const filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);
-    console.log('renderUrlList: フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
+    devLog('renderUrlList: フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
     
     if (filteredUrlData.length === 0) {
         listElement.style.display = 'none';
@@ -1722,7 +1914,7 @@ function startAutoRefresh() {
     
     // 新しいインターバルを設定
     autoRefreshInterval = setInterval(async () => {
-        console.log('自動リロード実行:', new Date().toLocaleTimeString());
+        devLog('自動リロード実行:', new Date().toLocaleTimeString());
         
         try {
             await loadUrlData();
@@ -1750,7 +1942,7 @@ function startAutoRefresh() {
         }
     }, autoRefreshSeconds * 1000);
     
-    console.log(`自動リロード開始: ${autoRefreshSeconds}秒間隔`);
+    devLog(`自動リロード開始: ${autoRefreshSeconds}秒間隔`);
 }
 
 /**
@@ -1760,7 +1952,7 @@ function stopAutoRefresh() {
     if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
         autoRefreshInterval = null;
-        console.log('自動リロード停止');
+        devLog('自動リロード停止');
     }
 }
 
@@ -1803,10 +1995,10 @@ function showToast(message, type = 'success') {
  * 面談リストを描画
  */
 async function renderInterviewList() {
-    console.log('renderInterviewList: 面談リスト描画開始');
+    devLog('renderInterviewList: 面談リスト描画開始');
     cardIdCounter = 0;  // カウンターリセット
-    // ★注意: historyCacheとopenedCardNamesはクリアしない（自動更新で状態保持）
-    console.log('URLデータ件数:', urlData.length);
+    // ★注意: historyCacheとopenAccordionsはクリアしない（自動更新で状態保持）
+    devLog('URLデータ件数:', urlData.length);
     
     const listElement = document.getElementById('interview-list');
     const emptyElement = document.getElementById('interview-empty-state');
@@ -1833,7 +2025,7 @@ async function renderInterviewList() {
     // ★★★ スタッフを除外 ★★★
     filteredUrlData = filteredUrlData.filter(cast => cast.class !== 'スタッフ');
     
-    console.log('フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
+    devLog('フィルター後のデータ件数:', filteredUrlData.length, '(フィルター:', currentStoreFilter, ')');
     
     if (filteredUrlData.length === 0) {
         listElement.style.display = 'none';
@@ -1914,7 +2106,7 @@ async function renderInterviewList() {
     // 新着コメントバーを更新
     setTimeout(renderNewCommentBar, 100);
     
-    console.log('renderInterviewList: 描画完了');
+    devLog('renderInterviewList: 描画完了');
 }
 
 /**
@@ -2244,7 +2436,7 @@ async function updateLastWorkDate(names, date) {
         });
         
         const result = await response.json();
-        console.log('updateLastWorkDate: 結果', result);
+        devLog('updateLastWorkDate: 結果', result);
         return result;
     } catch (error) {
         console.error('updateLastWorkDate: 例外', error);
@@ -2285,57 +2477,6 @@ function scrollToTop() {
 // ===============================
 // 面談履歴機能 v5.1完全版
 // ===============================
-
-/**
- * 全カードの最新コメントを読み込み
- */
-async function loadAllLatestComments() {
-    const cards = document.querySelectorAll('.interview-card');
-    
-    for (const card of cards) {
-        const cardId = card.dataset.cardId;
-        const name = card.dataset.name;
-        
-        if (cardId && name) {
-            await loadLatestComment(cardId, name);
-        }
-    }
-    
-    // アコーディオン状態を復元
-    restoreOpenedAccordions();
-}
-
-/**
- * 自動更新後にアコーディオンの開閉状態を復元
- */
-function restoreOpenedAccordions() {
-    if (openedCardNames.length === 0) return;
-    
-    openedCardNames.forEach(name => {
-        // 該当する名前のカードを探す
-        const cards = document.querySelectorAll('.interview-card');
-        for (const card of cards) {
-            if (card.dataset.name === name) {
-                const cardId = card.dataset.cardId;
-                const historyList = document.getElementById(`${cardId}-history-list`);
-                const toggleText = document.getElementById(`${cardId}-toggle-text`);
-                
-                if (historyList && !historyList.classList.contains('expanded')) {
-                    // アコーディオンを開く
-                    historyList.classList.remove('collapsed');
-                    historyList.classList.add('expanded');
-                    
-                    if (toggleText) {
-                        const cache = historyCache[cardId];
-                        const count = cache ? cache.data.length - 1 : 0;
-                        toggleText.textContent = `▲ 過去の履歴を閉じる (${count}件)`;
-                    }
-                }
-                break;
-            }
-        }
-    });
-}
 
 /**
  * カードの最新コメントを読み込み
@@ -2442,11 +2583,6 @@ function toggleHistory(cardId, name) {
         historyList.classList.remove('collapsed');
         historyList.classList.add('expanded');
         
-        // ★ 開いた状態を記録
-        if (!openedCardNames.includes(name)) {
-            openedCardNames.push(name);
-        }
-        
         // キャッシュから過去履歴を表示
         const cache = historyCache[cardId];
         if (cache && cache.data.length > 1) {
@@ -2462,9 +2598,6 @@ function toggleHistory(cardId, name) {
         // 閉じる
         historyList.classList.remove('expanded');
         historyList.classList.add('collapsed');
-        
-        // ★ 閉じた状態を記録
-        openedCardNames = openedCardNames.filter(n => n !== name);
         
         if (toggleText) {
             const cache = historyCache[cardId];
@@ -3198,7 +3331,7 @@ function renderNewCommentBar() {
     const listEl = document.getElementById('new-comment-list');
     
     if (!bar || !listEl) {
-        console.log('renderNewCommentBar: バー要素が見つかりません');
+        devLog('renderNewCommentBar: バー要素が見つかりません');
         return;
     }
     
@@ -3243,7 +3376,7 @@ function renderNewCommentBar() {
         window.scrollBy(0, heightDiff);
     }
     
-    console.log('renderNewCommentBar: 新着表示完了 (oldH=' + oldHeight + ', newH=' + newHeight + ', diff=' + heightDiff + ')');
+    devLog('renderNewCommentBar: 新着表示完了 (oldH=' + oldHeight + ', newH=' + newHeight + ', diff=' + heightDiff + ')');
 }
 
 /**
@@ -3275,7 +3408,7 @@ function scrollToInterview(name) {
             retryCount++;
             setTimeout(tryScroll, 200);
         } else {
-            console.log('scrollToInterview: カードが見つかりません', name);
+            devLog('scrollToInterview: カードが見つかりません', name);
         }
     };
     
@@ -3305,17 +3438,12 @@ async function loadOkiniData() {
                 anecanTalked: s.talkedAnecan || '',
                 ainoshizukuTalked: s.talkedAinoshizuku || ''
             }));
-        console.log('loadOkiniData: シフトデータから', okiniData.length, '件取得');
+        devLog('loadOkiniData: シフトデータから', okiniData.length, '件取得');
     } else {
-        try {
-            const response = await fetch(`${API_URL}?action=getOkiniData`);
-            const result = await response.json();
-            if (result.success) {
-                okiniData = result.data;
-                console.log('loadOkiniData: API経由', okiniData.length, '件取得');
-            }
-        } catch (error) {
-            console.error('loadOkiniData: エラー:', error);
+        const result = await apiCall('getOkiniData');
+        if (result.success) {
+            okiniData = result.data;
+            devLog('loadOkiniData: API経由', okiniData.length, '件取得');
         }
     }
 }
@@ -3387,7 +3515,7 @@ async function toggleOkiniTalked(name, store) {
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ name: name, store: store, talked: newTalked })
         });
-        console.log('話したよ更新:', name, store, newTalked);
+        devLog('話したよ更新:', name, store, newTalked);
     } catch (error) {
         console.error('話したよ保存エラー:', error);
     }
@@ -3426,10 +3554,10 @@ async function toggleTouketu(name) {
                 originalTime: shift.originalTime || ''
             })
         });
-        console.log('当欠更新:', name, shift.time);
+        devLog('当欠更新:', name, shift.time);
         showToast(isCurrentlyTouketu ? name + ' の当欠を解除しました' : name + ' を当欠にしました', 'success');
     } catch (error) {
         console.error('当欠保存エラー:', error);
         showToast('当欠の保存に失敗しました', 'error');
     }
-}
+}
