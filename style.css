@@ -2599,17 +2599,24 @@ html, body {
     .pub-row {
         gap: 6px 8px;
     }
-    .pub-category {
+    /* 1段目：日付〜日付・カテゴリ・× */
+    .pub-date-wrap,
+    .pub-tilde,
+    .pub-category,
+    .pub-del-btn {
         order: 1;
+    }
+    .pub-category {
         flex: 1 1 auto;
         min-width: 0;
     }
     .pub-del-btn {
-        order: 2;
+        flex-shrink: 0;
     }
+    /* 2段目：内容を全幅で */
     .pub-content {
-        order: 3;
-        flex-basis: 100%;
+        order: 2;
+        flex: 1 1 100%;
         min-width: 0;
     }
 }
