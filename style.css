@@ -2599,7 +2599,8 @@ html, body {
     .pub-row {
         gap: 6px 8px;
     }
-    /* 1段目：日付〜日付・カテゴリ・× */
+    /* 1段目：並べ替え・日付〜日付・カテゴリ・× */
+    .pub-move,
     .pub-date-wrap,
     .pub-tilde,
     .pub-category,
@@ -2619,4 +2620,28 @@ html, body {
         flex: 1 1 100%;
         min-width: 0;
     }
+}
+
+/* 掲載の並べ替えボタン（▲▼） */
+.pub-move {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+.pub-move-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    width: 28px;
+    height: 17px;
+    font-size: 9px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+}
+.pub-move-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }

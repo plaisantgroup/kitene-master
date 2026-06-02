@@ -3796,6 +3796,21 @@ function createPublicationRow(data) {
     const row = document.createElement('div');
     row.className = 'pub-row';
 
+    const move = document.createElement('div');
+    move.className = 'pub-move';
+    const moveUp = document.createElement('button');
+    moveUp.type = 'button';
+    moveUp.className = 'pub-move-btn';
+    moveUp.textContent = '▲';
+    moveUp.onclick = function () { movePublicationRow(row, 'up'); };
+    const moveDown = document.createElement('button');
+    moveDown.type = 'button';
+    moveDown.className = 'pub-move-btn';
+    moveDown.textContent = '▼';
+    moveDown.onclick = function () { movePublicationRow(row, 'down'); };
+    move.appendChild(moveUp);
+    move.appendChild(moveDown);
+
     const start = createPubDateField('pub-start', data.start);
 
     const tilde = document.createElement('span');
@@ -3832,6 +3847,7 @@ function createPublicationRow(data) {
     del.textContent = '✕';
     del.onclick = function () { row.remove(); };
 
+    row.appendChild(move);
     row.appendChild(start);
     row.appendChild(tilde);
     row.appendChild(end);
@@ -3854,6 +3870,21 @@ function renderPublications(items, categories) {
         container.appendChild(createPublicationRow({}));
     } else {
         list.forEach((it) => container.appendChild(createPublicationRow(it)));
+    }
+}
+
+/**
+ * 行を上下に移動（並べ替え）
+ */
+function movePublicationRow(row, dir) {
+    const container = row.parentElement;
+    if (!container) return;
+    if (dir === 'up') {
+        const prev = row.previousElementSibling;
+        if (prev) container.insertBefore(row, prev);
+    } else {
+        const next = row.nextElementSibling;
+        if (next) container.insertBefore(next, row);
     }
 }
 
