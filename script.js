@@ -3908,3 +3908,69 @@ async function savePublicationsData() {
         if (btn) btn.disabled = false;
     }
 }
+
+
+// ===============================
+// ★ スマホ：下にスワイプで更新（プルトゥリフレッシュ）
+// ===============================
+(function setupPullToRefresh() {
+    let startY = 0;
+    let pulling = false;
+    let refreshing = false;
+    const THRESHOLD = 70;   // この距離を超えて離すと更新
+    const SHOW_AT = 20;     // この距離から説明を表示
+
+    function indicator() {
+        return document.getElementById('ptr-indicator');
+    }
+
+    document.addEventListener('touchstart', function (e) {
+        if (refreshing) return;
+        // ページ最上部のときだけ反応
+        if (window.scrollY <= 0) {
+            startY = e.touches[0].clientY;
+            pulling = true;
+        } else {
+            pulling = false;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function (e) {
+        if (!pulling || refreshing) return;
+        const dy = e.touches[0].clientY - startY;
+        const ind = indicator();
+        if (!ind) return;
+        if (dy > SHOW_AT && window.scrollY <= 0) {
+            ind.classList.add('visible');
+            ind.textContent = (dy > THRESHOLD) ? '指を離して更新' : '↓ 下に引っ張って更新';
+        } else {
+            ind.classList.remove('visible');
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', async function (e) {
+        if (!pulling || refreshing) return;
+        pulling = false;
+        const dy = e.changedTouches[0].clientY - startY;
+        const ind = indicator();
+        if (!ind) return;
+        if (dy > THRESHOLD && window.scrollY <= 0) {
+            refreshing = true;
+            ind.classList.add('visible');
+            ind.textContent = '🔄 更新中...';
+            try {
+                await loadAllData();
+                ind.textContent = '✅ 更新しました';
+            } catch (err) {
+                console.error('プルトゥリフレッシュ更新エラー:', err);
+                ind.textContent = '更新に失敗しました';
+            }
+            setTimeout(function () {
+                ind.classList.remove('visible');
+                refreshing = false;
+            }, 800);
+        } else {
+            ind.classList.remove('visible');
+        }
+    }, { passive: true });
+})();
