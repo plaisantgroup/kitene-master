@@ -14,6 +14,7 @@ let urlData = [];
 let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
+let strategyFilledByUnified = false;  // 戦略フォームを相乗りで反映済みか
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
 let currentOkiniFilter = 'all'; // ★v3.5 オキニフィルター（all/danger/warn/clear）
 let autoRefreshInterval = null;  // 自動リロードのインターバルID
@@ -247,6 +248,7 @@ function showView(viewName) {
 async function loadAllData() {
     devLog('loadAllData: 全データロード開始');
     const startTime = Date.now();
+    strategyFilledByUnified = false;
     
     // ★★★ Phase 1: localStorage から即時表示（体感速度0ms）★★★
     const hasCacheData = loadCache();
@@ -288,8 +290,9 @@ async function loadAllData() {
     
     devLog(`loadAllData: 主要データロード完了 (${Date.now() - startTime}ms)`);
     
-    // ★ 明日の戦略：統合API成功時はgetInitialDataに相乗り済み。失敗時のみ個別取得
-    if (!unifiedSuccess) {
+    // ★ 明日の戦略：見出しは手元の日付で即更新。中身は相乗りで来ていなければ個別取得
+    updateStrategyTitle(getStrategyTargetDate());
+    if (!strategyFilledByUnified) {
         loadStrategyData();
     }
     
@@ -339,6 +342,7 @@ async function loadAllDataUnified() {
             fillStrategyForm('delidosu', result.strategy.stores.delidosu);
             fillStrategyForm('anecan', result.strategy.stores.anecan);
             fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
+            strategyFilledByUnified = true;
         }
         if (result.comments && typeof result.comments === 'object') {
             // コメントの整形（loadAllLatestCommentsと同じソート）
