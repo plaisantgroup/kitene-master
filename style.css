@@ -2593,3 +2593,23 @@ html, body {
     cursor: pointer;
     color-scheme: dark;
 }
+
+/* スマホ：掲載の行を「日付〜日付・カテゴリ・×＝1段目／内容＝2段目(全幅)」にまとめる */
+@media (max-width: 768px) {
+    .pub-row {
+        gap: 6px 8px;
+    }
+    .pub-category {
+        order: 1;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .pub-del-btn {
+        order: 2;
+    }
+    .pub-content {
+        order: 3;
+        flex-basis: 100%;
+        min-width: 0;
+    }
+}
