@@ -47,6 +47,20 @@
             <span id="new-comment-list" class="new-comment-list"></span>
         </div>
 
+        <!-- 商品・イベント掲載 -->
+        <div id="publication-space" class="publication-space">
+            <div class="publication-header">
+                <span class="publication-icon">📢</span>
+                <span class="publication-title">商品・イベント掲載</span>
+            </div>
+            <div id="publication-rows" class="publication-rows"></div>
+            <div class="publication-footer">
+                <button type="button" class="pub-add-btn" onclick="addPublicationRow()">＋ 行を追加</button>
+                <button type="button" id="pub-save-btn" class="pub-save-btn" onclick="savePublicationsData()">💾 掲載を保存</button>
+                <span id="pub-save-status" class="pub-save-status"></span>
+            </div>
+        </div>
+
         <!-- 明日の戦略スペース -->
         <div id="strategy-space" class="strategy-space">
             <div class="strategy-header">

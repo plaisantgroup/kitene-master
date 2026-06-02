@@ -15,6 +15,8 @@ let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
 let strategyFilledByUnified = false;  // 戦略フォームを相乗りで反映済みか
+let publicationCategories = [];  // 掲載カテゴリ（プルダウン選択肢）
+let publicationsFilledByUnified = false;  // 掲載を相乗りで反映済みか
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
 let currentOkiniFilter = 'all'; // ★v3.5 オキニフィルター（all/danger/warn/clear）
 let autoRefreshInterval = null;  // 自動リロードのインターバルID
@@ -249,6 +251,7 @@ async function loadAllData() {
     devLog('loadAllData: 全データロード開始');
     const startTime = Date.now();
     strategyFilledByUnified = false;
+    publicationsFilledByUnified = false;
     
     // ★★★ Phase 1: localStorage から即時表示（体感速度0ms）★★★
     const hasCacheData = loadCache();
@@ -294,6 +297,10 @@ async function loadAllData() {
     updateStrategyTitle(getStrategyTargetDate());
     if (!strategyFilledByUnified) {
         loadStrategyData();
+    }
+    // ★ 商品・イベント掲載：相乗りで来ていなければ個別取得
+    if (!publicationsFilledByUnified) {
+        loadPublicationsData();
     }
     
     // ★ コメントは統合APIで取得済みかチェック、未取得なら追加で取得
@@ -343,6 +350,11 @@ async function loadAllDataUnified() {
             fillStrategyForm('anecan', result.strategy.stores.anecan);
             fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
             strategyFilledByUnified = true;
+        }
+        // ★ 商品・イベント掲載も相乗りで反映
+        if (result.publications) {
+            renderPublications(result.publications.items, result.publications.categories);
+            publicationsFilledByUnified = true;
         }
         if (result.comments && typeof result.comments === 'object') {
             // コメントの整形（loadAllLatestCommentsと同じソート）
@@ -3712,4 +3724,152 @@ async function saveStrategyData() {
 function toggleStrategyAccordion(storeKey) {
     const el = document.getElementById('strategy-store-' + storeKey);
     if (el) el.classList.toggle('open');
+}
+
+
+// ===============================
+// ★ 商品・イベント掲載
+// ===============================
+
+/**
+ * 掲載1行のDOMを生成して返す
+ */
+function createPublicationRow(data) {
+    data = data || {};
+    const row = document.createElement('div');
+    row.className = 'pub-row';
+
+    const start = document.createElement('input');
+    start.type = 'date';
+    start.className = 'pub-date pub-start';
+    if (data.start) start.value = data.start;
+
+    const tilde = document.createElement('span');
+    tilde.className = 'pub-tilde';
+    tilde.textContent = '〜';
+
+    const end = document.createElement('input');
+    end.type = 'date';
+    end.className = 'pub-date pub-end';
+    if (data.end) end.value = data.end;
+
+    const sel = document.createElement('select');
+    sel.className = 'pub-category';
+    const optEmpty = document.createElement('option');
+    optEmpty.value = '';
+    optEmpty.textContent = '（選択）';
+    sel.appendChild(optEmpty);
+    const cats = publicationCategories.slice();
+    if (data.category && cats.indexOf(data.category) === -1) cats.push(data.category);
+    cats.forEach((c) => {
+        const o = document.createElement('option');
+        o.value = c;
+        o.textContent = c;
+        sel.appendChild(o);
+    });
+    if (data.category) sel.value = data.category;
+
+    const content = document.createElement('input');
+    content.type = 'text';
+    content.className = 'pub-content';
+    content.placeholder = '内容';
+    if (data.content) content.value = data.content;
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'pub-del-btn';
+    del.textContent = '✕';
+    del.onclick = function () { row.remove(); };
+
+    row.appendChild(start);
+    row.appendChild(tilde);
+    row.appendChild(end);
+    row.appendChild(sel);
+    row.appendChild(content);
+    row.appendChild(del);
+    return row;
+}
+
+/**
+ * 掲載一覧を描画（カテゴリ選択肢も更新）
+ */
+function renderPublications(items, categories) {
+    if (Array.isArray(categories)) publicationCategories = categories;
+    const container = document.getElementById('publication-rows');
+    if (!container) return;
+    container.innerHTML = '';
+    const list = Array.isArray(items) ? items : [];
+    if (list.length === 0) {
+        container.appendChild(createPublicationRow({}));
+    } else {
+        list.forEach((it) => container.appendChild(createPublicationRow(it)));
+    }
+}
+
+/**
+ * 行を1つ追加
+ */
+function addPublicationRow() {
+    const container = document.getElementById('publication-rows');
+    if (container) container.appendChild(createPublicationRow({}));
+}
+
+/**
+ * 掲載一覧を読み込み（相乗りで来なかった場合の個別取得）
+ */
+async function loadPublicationsData() {
+    const result = await apiCall('getPublications');
+    if (!result || result.success !== true) {
+        devLog('loadPublicationsData: 取得失敗', result);
+        return;
+    }
+    renderPublications(result.items, result.categories);
+}
+
+/**
+ * 掲載一覧をまとめて保存
+ */
+async function savePublicationsData() {
+    const container = document.getElementById('publication-rows');
+    if (!container) return;
+    const rows = container.querySelectorAll('.pub-row');
+    const items = [];
+    rows.forEach((row) => {
+        const start = (row.querySelector('.pub-start') || {}).value || '';
+        const end = (row.querySelector('.pub-end') || {}).value || '';
+        const category = (row.querySelector('.pub-category') || {}).value || '';
+        const content = (row.querySelector('.pub-content') || {}).value || '';
+        if (start || end || category || content) {
+            items.push({ start: start, end: end, category: category, content: content });
+        }
+    });
+
+    const btn = document.getElementById('pub-save-btn');
+    const status = document.getElementById('pub-save-status');
+    if (btn) btn.disabled = true;
+    if (status) status.textContent = '保存中...';
+
+    try {
+        const response = await fetch(`${API_URL}?action=savePublications`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ items: items })
+        });
+        const result = await response.json();
+        if (result && result.success) {
+            if (status) {
+                status.textContent = '✅ 保存しました';
+                setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+            }
+            devLog('savePublicationsData: 保存成功', items.length, '件');
+        } else {
+            if (status) status.textContent = '❌ 保存に失敗しました';
+            console.error('savePublicationsData: 失敗', result);
+        }
+    } catch (error) {
+        if (status) status.textContent = '❌ エラーが発生しました';
+        console.error('savePublicationsData: 例外', error);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
 }

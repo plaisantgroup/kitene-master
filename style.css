@@ -2407,3 +2407,117 @@ body {
     font-size: 13px;
     color: var(--text-secondary);
 }
+
+
+/* ===== 商品・イベント掲載 ===== */
+.publication-space {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 12px 0;
+}
+.publication-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.publication-icon { font-size: 18px; }
+.publication-title {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 15px;
+}
+.publication-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.pub-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+}
+.pub-date,
+.pub-category,
+.pub-content {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    padding: 7px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+.pub-date {
+    width: 145px;
+    color-scheme: dark;
+}
+.pub-tilde { color: var(--text-secondary); }
+.pub-category { min-width: 110px; }
+.pub-content {
+    flex: 1;
+    min-width: 140px;
+}
+.pub-date:focus,
+.pub-category:focus,
+.pub-content:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+.pub-del-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.pub-del-btn:hover {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+.publication-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+.pub-add-btn {
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    color: var(--primary-color);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.pub-add-btn:hover { background: var(--hover-bg); }
+.pub-save-btn {
+    background: var(--primary-color);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.pub-save-btn:hover { background: var(--primary-dark); }
+.pub-save-btn:disabled { opacity: 0.5; cursor: default; }
+.pub-save-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
