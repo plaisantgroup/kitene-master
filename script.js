@@ -3765,6 +3765,30 @@ function fullDateToMd(full) {
 }
 
 /**
+ * 掲載の日付フィールド（「5/27」表示＋タップでカレンダーが開く）を生成
+ */
+function createPubDateField(cls, value) {
+    const wrap = document.createElement('div');
+    wrap.className = 'pub-date-wrap';
+
+    const label = document.createElement('span');
+    label.className = 'pub-date-label';
+    label.textContent = value ? fullDateToMd(value) : '日付';
+
+    const picker = document.createElement('input');
+    picker.type = 'date';
+    picker.className = 'pub-date-picker ' + cls;
+    if (value) picker.value = value;
+    picker.addEventListener('change', function () {
+        label.textContent = picker.value ? fullDateToMd(picker.value) : '日付';
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(picker);
+    return wrap;
+}
+
+/**
  * 掲載1行のDOMを生成して返す
  */
 function createPublicationRow(data) {
@@ -3772,21 +3796,13 @@ function createPublicationRow(data) {
     const row = document.createElement('div');
     row.className = 'pub-row';
 
-    const start = document.createElement('input');
-    start.type = 'text';
-    start.className = 'pub-date pub-start';
-    start.placeholder = '5/27';
-    if (data.start) start.value = fullDateToMd(data.start);
+    const start = createPubDateField('pub-start', data.start);
 
     const tilde = document.createElement('span');
     tilde.className = 'pub-tilde';
     tilde.textContent = '〜';
 
-    const end = document.createElement('input');
-    end.type = 'text';
-    end.className = 'pub-date pub-end';
-    end.placeholder = '6/2';
-    if (data.end) end.value = fullDateToMd(data.end);
+    const end = createPubDateField('pub-end', data.end);
 
     const sel = document.createElement('select');
     sel.className = 'pub-category';
@@ -3870,8 +3886,8 @@ async function savePublicationsData() {
     const rows = container.querySelectorAll('.pub-row');
     const items = [];
     rows.forEach((row) => {
-        const start = mdToFullDate((row.querySelector('.pub-start') || {}).value || '');
-        const end = mdToFullDate((row.querySelector('.pub-end') || {}).value || '');
+        const start = (row.querySelector('.pub-start') || {}).value || '';
+        const end = (row.querySelector('.pub-end') || {}).value || '';
         const category = (row.querySelector('.pub-category') || {}).value || '';
         const content = (row.querySelector('.pub-content') || {}).value || '';
         if (start || end || category || content) {
