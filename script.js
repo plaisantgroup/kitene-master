@@ -3732,6 +3732,38 @@ function toggleStrategyAccordion(storeKey) {
 // ===============================
 
 /**
+ * 「5/27」→「2026-05-27」（今日にいちばん近い年で補完）
+ */
+function mdToFullDate(md) {
+    const s = String(md || '').trim();
+    if (!s) return '';
+    const m = s.match(/^(\d{1,2})\s*[\/／]\s*(\d{1,2})$/);
+    if (!m) return s;
+    const month = Number(m[1]);
+    const day = Number(m[2]);
+    const today = new Date();
+    let best = null, bestDiff = Infinity;
+    [today.getFullYear() - 1, today.getFullYear(), today.getFullYear() + 1].forEach((y) => {
+        const d = new Date(y, month - 1, day);
+        const diff = Math.abs(d.getTime() - today.getTime());
+        if (diff < bestDiff) { bestDiff = diff; best = d; }
+    });
+    const y = best.getFullYear();
+    const mm = String(best.getMonth() + 1).padStart(2, '0');
+    const dd = String(best.getDate()).padStart(2, '0');
+    return `${y}-${mm}-${dd}`;
+}
+
+/**
+ * 「2026-05-27」→「5/27」（表示用）
+ */
+function fullDateToMd(full) {
+    const m = String(full || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (!m) return String(full || '');
+    return `${Number(m[2])}/${Number(m[3])}`;
+}
+
+/**
  * 掲載1行のDOMを生成して返す
  */
 function createPublicationRow(data) {
@@ -3740,18 +3772,20 @@ function createPublicationRow(data) {
     row.className = 'pub-row';
 
     const start = document.createElement('input');
-    start.type = 'date';
+    start.type = 'text';
     start.className = 'pub-date pub-start';
-    if (data.start) start.value = data.start;
+    start.placeholder = '5/27';
+    if (data.start) start.value = fullDateToMd(data.start);
 
     const tilde = document.createElement('span');
     tilde.className = 'pub-tilde';
     tilde.textContent = '〜';
 
     const end = document.createElement('input');
-    end.type = 'date';
+    end.type = 'text';
     end.className = 'pub-date pub-end';
-    if (data.end) end.value = data.end;
+    end.placeholder = '6/2';
+    if (data.end) end.value = fullDateToMd(data.end);
 
     const sel = document.createElement('select');
     sel.className = 'pub-category';
@@ -3835,8 +3869,8 @@ async function savePublicationsData() {
     const rows = container.querySelectorAll('.pub-row');
     const items = [];
     rows.forEach((row) => {
-        const start = (row.querySelector('.pub-start') || {}).value || '';
-        const end = (row.querySelector('.pub-end') || {}).value || '';
+        const start = mdToFullDate((row.querySelector('.pub-start') || {}).value || '');
+        const end = mdToFullDate((row.querySelector('.pub-end') || {}).value || '');
         const category = (row.querySelector('.pub-category') || {}).value || '';
         const content = (row.querySelector('.pub-content') || {}).value || '';
         if (start || end || category || content) {

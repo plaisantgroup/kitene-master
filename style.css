@@ -2457,8 +2457,8 @@ body {
     box-sizing: border-box;
 }
 .pub-date {
-    width: 145px;
-    color-scheme: dark;
+    width: 72px;
+    text-align: center;
 }
 .pub-tilde { color: var(--text-secondary); }
 .pub-category { min-width: 110px; }
