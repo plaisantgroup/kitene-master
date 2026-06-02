@@ -288,8 +288,10 @@ async function loadAllData() {
     
     devLog(`loadAllData: 主要データロード完了 (${Date.now() - startTime}ms)`);
     
-    // ★ 明日の戦略を読み込み（currentShiftDate確定後）
-    loadStrategyData();
+    // ★ 明日の戦略：統合API成功時はgetInitialDataに相乗り済み。失敗時のみ個別取得
+    if (!unifiedSuccess) {
+        loadStrategyData();
+    }
     
     // ★ コメントは統合APIで取得済みかチェック、未取得なら追加で取得
     if (unifiedSuccess && Object.keys(commentCache).length > 0) {
@@ -331,6 +333,14 @@ async function loadAllDataUnified() {
         if (Array.isArray(result.shiftData)) shiftData = result.shiftData;
         if (Array.isArray(result.urlData)) urlData = result.urlData;
         if (Array.isArray(result.okiniData)) okiniData = result.okiniData;
+        // ★ 明日の戦略も相乗りで反映（時間差なし）
+        if (result.strategy && result.strategy.stores) {
+            const sDateEl = document.getElementById('strategy-date');
+            if (sDateEl && result.strategy.date) sDateEl.textContent = `📅 ${result.strategy.date}`;
+            fillStrategyForm('delidosu', result.strategy.stores.delidosu);
+            fillStrategyForm('anecan', result.strategy.stores.anecan);
+            fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
+        }
         if (result.comments && typeof result.comments === 'object') {
             // コメントの整形（loadAllLatestCommentsと同じソート）
             for (const name in result.comments) {
