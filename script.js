@@ -335,8 +335,7 @@ async function loadAllDataUnified() {
         if (Array.isArray(result.okiniData)) okiniData = result.okiniData;
         // ★ 明日の戦略も相乗りで反映（時間差なし）
         if (result.strategy && result.strategy.stores) {
-            const sDateEl = document.getElementById('strategy-date');
-            if (sDateEl && result.strategy.date) sDateEl.textContent = `📅 ${result.strategy.date}`;
+            updateStrategyTitle(result.strategy.date);
             fillStrategyForm('delidosu', result.strategy.stores.delidosu);
             fillStrategyForm('anecan', result.strategy.stores.anecan);
             fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
@@ -3600,6 +3599,20 @@ function getStrategyTargetDate() {
 /**
  * 指定店舗のフォームに値をセット
  */
+/**
+ * 戦略の見出しを「明日（M/D）の戦略」に更新
+ */
+function updateStrategyTitle(targetDate) {
+    const titleEl = document.getElementById('strategy-title');
+    if (!titleEl) return;
+    const m = targetDate ? String(targetDate).match(/(\d{4})年(\d{1,2})月(\d{1,2})日/) : null;
+    if (!m) {
+        titleEl.textContent = '明日の戦略';
+        return;
+    }
+    titleEl.textContent = `明日（${Number(m[2])}/${Number(m[3])}）の戦略`;
+}
+
 function fillStrategyForm(storeKey, data) {
     data = data || {};
     ['count', 'event', 'chat', 'mail'].forEach((field) => {
@@ -3616,12 +3629,11 @@ function fillStrategyForm(storeKey, data) {
  */
 async function loadStrategyData() {
     const targetDate = getStrategyTargetDate();
-    const dateEl = document.getElementById('strategy-date');
     if (!targetDate) {
-        if (dateEl) dateEl.textContent = '日付未取得（シフトを取り込むと表示）';
+        updateStrategyTitle('');
         return;
     }
-    if (dateEl) dateEl.textContent = `📅 ${targetDate}`;
+    updateStrategyTitle(targetDate);
 
     const result = await apiCall('getStrategy', { query: { date: targetDate } });
     if (!result || result.success !== true) {
