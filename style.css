@@ -2278,3 +2278,132 @@ body {
         font-size: 1rem;
     }
 }
+
+/* ===== 明日の戦略スペース ===== */
+.strategy-space {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 12px 0;
+}
+.strategy-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.strategy-icon { font-size: 18px; }
+.strategy-title {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 15px;
+}
+.strategy-date {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.strategy-stores {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.strategy-store {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+}
+.strategy-acc-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.strategy-acc-btn:hover { background: var(--hover-bg); }
+.strategy-acc-arrow {
+    font-size: 11px;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+.strategy-store.open .strategy-acc-arrow { transform: rotate(180deg); }
+.strategy-acc-body {
+    display: none;
+    padding: 10px 12px 14px;
+    border-top: 1px solid var(--border-color);
+}
+.strategy-store.open .strategy-acc-body { display: block; }
+.strategy-field { margin-bottom: 10px; }
+.strategy-field:last-child { margin-bottom: 0; }
+.strategy-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.strategy-input,
+.strategy-textarea {
+    width: 100%;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+.strategy-textarea {
+    resize: vertical;
+    min-height: 38px;
+    line-height: 1.5;
+}
+.strategy-input:focus,
+.strategy-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+.strategy-count-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.strategy-count-wrap .strategy-input {
+    width: 80px;
+    text-align: center;
+}
+.strategy-count-unit {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+.strategy-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+.strategy-save-btn {
+    background: var(--primary-color);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.strategy-save-btn:hover { background: var(--primary-dark); }
+.strategy-save-btn:disabled { opacity: 0.5; cursor: default; }
+.strategy-save-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+}

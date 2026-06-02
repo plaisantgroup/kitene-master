@@ -288,6 +288,9 @@ async function loadAllData() {
     
     devLog(`loadAllData: 主要データロード完了 (${Date.now() - startTime}ms)`);
     
+    // ★ 明日の戦略を読み込み（currentShiftDate確定後）
+    loadStrategyData();
+    
     // ★ コメントは統合APIで取得済みかチェック、未取得なら追加で取得
     if (unifiedSuccess && Object.keys(commentCache).length > 0) {
         // 統合APIでコメントも取得済み
@@ -494,6 +497,9 @@ async function handleExcelUpload(file) {
         await loadShiftData();
         
         hideLoading();
+        // ★ 明日の戦略を読み込み（取り込んだ日付の翌日）
+        await loadStrategyData();
+        
         devLog('=== デバッグ: アップロード完了 ===');
         
     } catch (error) {
@@ -3561,3 +3567,123 @@ async function toggleTouketu(name) {
         showToast('当欠の保存に失敗しました', 'error');
     }
 }
+
+// ===============================
+// ★ 明日の戦略スペース
+// ===============================
+
+/**
+ * currentShiftDate（取り込んだシフト日付）の翌日を「YYYY年MM月DD日」で返す
+ */
+function getStrategyTargetDate() {
+    if (!currentShiftDate) return '';
+    const m = currentShiftDate.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (!m) return '';
+    const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    date.setDate(date.getDate() + 1);
+    const y = date.getFullYear();
+    const mo = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}年${mo}月${d}日`;
+}
+
+/**
+ * 指定店舗のフォームに値をセット
+ */
+function fillStrategyForm(storeKey, data) {
+    data = data || {};
+    ['count', 'event', 'chat', 'mail'].forEach((field) => {
+        const el = document.getElementById(`strategy-${storeKey}-${field}`);
+        if (el) {
+            const v = data[field];
+            el.value = (v !== undefined && v !== null) ? v : '';
+        }
+    });
+}
+
+/**
+ * 明日の戦略を読み込んでフォームに反映
+ */
+async function loadStrategyData() {
+    const targetDate = getStrategyTargetDate();
+    const dateEl = document.getElementById('strategy-date');
+    if (!targetDate) {
+        if (dateEl) dateEl.textContent = '日付未取得（シフトを取り込むと表示）';
+        return;
+    }
+    if (dateEl) dateEl.textContent = `📅 ${targetDate}`;
+
+    const result = await apiCall('getStrategy', { query: { date: targetDate } });
+    if (!result || result.success !== true) {
+        devLog('loadStrategyData: 取得失敗', result);
+        return;
+    }
+    const stores = result.stores || {};
+    fillStrategyForm('delidosu', stores.delidosu);
+    fillStrategyForm('anecan', stores.anecan);
+    fillStrategyForm('ainoshizuku', stores.ainoshizuku);
+    devLog('loadStrategyData: 読み込み完了', targetDate);
+}
+
+/**
+ * 明日の戦略を保存（3店舗まとめて1回）
+ */
+async function saveStrategyData() {
+    const targetDate = getStrategyTargetDate();
+    if (!targetDate) {
+        alert('シフト日付が未取得です。先にシフト（Excel）を取り込んでください。');
+        return;
+    }
+    const btn = document.getElementById('strategy-save-btn');
+    const status = document.getElementById('strategy-save-status');
+    if (btn) btn.disabled = true;
+    if (status) status.textContent = '保存中...';
+
+    const getVal = (storeKey, field) => {
+        const el = document.getElementById(`strategy-${storeKey}-${field}`);
+        return el ? el.value : '';
+    };
+    const collect = (storeKey) => ({
+        count: getVal(storeKey, 'count'),
+        event: getVal(storeKey, 'event'),
+        chat: getVal(storeKey, 'chat'),
+        mail: getVal(storeKey, 'mail')
+    });
+    const stores = {
+        delidosu: collect('delidosu'),
+        anecan: collect('anecan'),
+        ainoshizuku: collect('ainoshizuku')
+    };
+
+    try {
+        const response = await fetch(`${API_URL}?action=saveStrategy`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ date: targetDate, stores: stores })
+        });
+        const result = await response.json();
+        if (result && result.success) {
+            if (status) {
+                status.textContent = '✅ 保存しました';
+                setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+            }
+            devLog('saveStrategyData: 保存成功', targetDate);
+        } else {
+            if (status) status.textContent = '❌ 保存に失敗しました';
+            console.error('saveStrategyData: 失敗', result);
+        }
+    } catch (error) {
+        if (status) status.textContent = '❌ エラーが発生しました';
+        console.error('saveStrategyData: 例外', error);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+/**
+ * 店舗アコーディオンの開閉
+ */
+function toggleStrategyAccordion(storeKey) {
+    const el = document.getElementById('strategy-store-' + storeKey);
+    if (el) el.classList.toggle('open');
+}

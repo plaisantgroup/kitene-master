@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ミテネマスター</title>
+    <title>キテネマスター</title>
     <link rel="stylesheet" href="style.css?v=20260501">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -45,6 +45,102 @@
                 <span class="new-comment-text">新着コメント:</span>
             </div>
             <span id="new-comment-list" class="new-comment-list"></span>
+        </div>
+
+        <!-- 明日の戦略スペース -->
+        <div id="strategy-space" class="strategy-space">
+            <div class="strategy-header">
+                <span class="strategy-icon">📋</span>
+                <span class="strategy-title">明日の戦略</span>
+                <span id="strategy-date" class="strategy-date">日付未取得</span>
+            </div>
+            <div class="strategy-stores">
+                <div class="strategy-store open" id="strategy-store-delidosu">
+                    <button type="button" class="strategy-acc-btn" onclick="toggleStrategyAccordion('delidosu')">
+                        <span class="strategy-store-name">でりどす</span>
+                        <span class="strategy-acc-arrow">▼</span>
+                    </button>
+                    <div class="strategy-acc-body">
+                        <div class="strategy-field strategy-field-count">
+                            <label>出勤人数</label>
+                            <div class="strategy-count-wrap">
+                                <input type="text" inputmode="numeric" class="strategy-input" id="strategy-delidosu-count" placeholder="0">
+                                <span class="strategy-count-unit">人</span>
+                            </div>
+                        </div>
+                        <div class="strategy-field">
+                            <label>イベント内容</label>
+                            <textarea class="strategy-textarea" id="strategy-delidosu-event" rows="2"></textarea>
+                        </div>
+                        <div class="strategy-field">
+                            <label>チャット</label>
+                            <textarea class="strategy-textarea" id="strategy-delidosu-chat" rows="2"></textarea>
+                        </div>
+                        <div class="strategy-field">
+                            <label>メール</label>
+                            <textarea class="strategy-textarea" id="strategy-delidosu-mail" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="strategy-store" id="strategy-store-anecan">
+                    <button type="button" class="strategy-acc-btn" onclick="toggleStrategyAccordion('anecan')">
+                        <span class="strategy-store-name">アネキャン</span>
+                        <span class="strategy-acc-arrow">▼</span>
+                    </button>
+                    <div class="strategy-acc-body">
+                        <div class="strategy-field strategy-field-count">
+                            <label>出勤人数</label>
+                            <div class="strategy-count-wrap">
+                                <input type="text" inputmode="numeric" class="strategy-input" id="strategy-anecan-count" placeholder="0">
+                                <span class="strategy-count-unit">人</span>
+                            </div>
+                        </div>
+                        <div class="strategy-field">
+                            <label>イベント内容</label>
+                            <textarea class="strategy-textarea" id="strategy-anecan-event" rows="2"></textarea>
+                        </div>
+                        <div class="strategy-field">
+                            <label>チャット</label>
+                            <textarea class="strategy-textarea" id="strategy-anecan-chat" rows="2"></textarea>
+                        </div>
+                        <div class="strategy-field">
+                            <label>メール</label>
+                            <textarea class="strategy-textarea" id="strategy-anecan-mail" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="strategy-store" id="strategy-store-ainoshizuku">
+                    <button type="button" class="strategy-acc-btn" onclick="toggleStrategyAccordion('ainoshizuku')">
+                        <span class="strategy-store-name">しずく</span>
+                        <span class="strategy-acc-arrow">▼</span>
+                    </button>
+                    <div class="strategy-acc-body">
+                        <div class="strategy-field strategy-field-count">
+                            <label>出勤人数</label>
+                            <div class="strategy-count-wrap">
+                                <input type="text" inputmode="numeric" class="strategy-input" id="strategy-ainoshizuku-count" placeholder="0">
+                                <span class="strategy-count-unit">人</span>
+                            </div>
+                        </div>
+                        <div class="strategy-field">
+                            <label>イベント内容</label>
+                            <textarea class="strategy-textarea" id="strategy-ainoshizuku-event" rows="2"></textarea>
+                        </div>
+                        <div class="strategy-field">
+                            <label>チャット</label>
+                            <textarea class="strategy-textarea" id="strategy-ainoshizuku-chat" rows="2"></textarea>
+                        </div>
+                        <div class="strategy-field">
+                            <label>メール</label>
+                            <textarea class="strategy-textarea" id="strategy-ainoshizuku-mail" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="strategy-footer">
+                <button type="button" id="strategy-save-btn" class="strategy-save-btn" onclick="saveStrategyData()">💾 戦略を保存</button>
+                <span id="strategy-save-status" class="strategy-save-status"></span>
+            </div>
         </div>
 
         <!-- 面談アナリティクスへのリンク -->
