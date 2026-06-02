@@ -196,9 +196,10 @@ document.addEventListener('DOMContentLoaded', () => {
     devLog('初期データをロード中...');
     loadAllData();
     
-    // ★★★ 自動更新の自動起動を無効化（スマホ画面リセット・メモリ対策）★★★
-    // startAutoRefresh();
-    // document.querySelector('.auto-refresh').classList.add('active');
+    // ★★★ PCのみ5分ごとに自動更新（スマホは画面リセット対策で自動更新せず、下スワイプで更新）★★★
+    if (window.innerWidth >= 768) {
+        startAutoRefresh();
+    }
     
     // トップに戻るボタンのスクロール監視
     window.addEventListener('scroll', handleScroll);
