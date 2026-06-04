@@ -2003,6 +2003,7 @@ function updateLastRefreshTime() {
     
     // 新しい最終更新表示を追加
     const refreshBtn = document.querySelector('.refresh-btn');
+    if (!refreshBtn) return;
     const lastUpdated = document.createElement('span');
     lastUpdated.className = 'last-updated';
     lastUpdated.textContent = `最終更新: ${timeStr}`;
@@ -3779,6 +3780,11 @@ function createPubDateField(cls, value) {
     picker.type = 'date';
     picker.className = 'pub-date-picker ' + cls;
     if (value) picker.value = value;
+    picker.addEventListener('click', function () {
+        if (typeof picker.showPicker === 'function') {
+            try { picker.showPicker(); } catch (e) {}
+        }
+    });
     picker.addEventListener('change', function () {
         label.textContent = picker.value ? fullDateToMd(picker.value) : '日付';
     });
