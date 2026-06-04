@@ -2679,3 +2679,29 @@ html, body {
     font-weight: 600;
     color: var(--text-primary);
 }
+
+/* 今日の戦略メモ（出勤人数の右に編集不可で表示） */
+.strategy-field-count {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+.strategy-count-left {
+    flex-shrink: 0;
+}
+.strategy-today-memo {
+    flex: 1;
+    min-width: 0;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    word-break: break-word;
+}
+.today-memo-head {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+.today-memo-label {
+    color: var(--text-secondary);
+}

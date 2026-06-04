@@ -352,6 +352,13 @@ async function loadAllDataUnified() {
             fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
             strategyFilledByUnified = true;
         }
+        // ★ 今日の戦略をメモとして表示（編集不可）
+        if (result.todayStrategy && result.todayStrategy.stores) {
+            const tmd = result.todayStrategy.dateMd || '';
+            fillTodayMemo('delidosu', result.todayStrategy.stores.delidosu, tmd);
+            fillTodayMemo('anecan', result.todayStrategy.stores.anecan, tmd);
+            fillTodayMemo('ainoshizuku', result.todayStrategy.stores.ainoshizuku, tmd);
+        }
         // ★ 商品・イベント掲載も相乗りで反映
         if (result.publications) {
             renderPublications(result.publications.items, result.publications.categories);
@@ -3723,6 +3730,30 @@ async function saveStrategyData() {
 /**
  * 店舗アコーディオンの開閉
  */
+// 今日の戦略を編集不可メモとして表示
+function fillTodayMemo(storeKey, data, dateMd) {
+    const el = document.getElementById('strategy-today-' + storeKey);
+    if (!el) return;
+    el.innerHTML = '';
+    data = data || {};
+    const items = [['イベント', data.event], ['チャット', data.chat], ['メール', data.mail]].filter(function (x) { return x[1]; });
+    if (items.length === 0) return;
+    const head = document.createElement('div');
+    head.className = 'today-memo-head';
+    head.textContent = '今日' + (dateMd ? '(' + dateMd + ')' : '');
+    el.appendChild(head);
+    items.forEach(function (pair) {
+        const row = document.createElement('div');
+        row.className = 'today-memo-row';
+        const label = document.createElement('span');
+        label.className = 'today-memo-label';
+        label.textContent = pair[0] + ': ';
+        row.appendChild(label);
+        row.appendChild(document.createTextNode(pair[1]));
+        el.appendChild(row);
+    });
+}
+
 function toggleStrategyAccordion(storeKey) {
     const el = document.getElementById('strategy-store-' + storeKey);
     if (el) el.classList.toggle('open');
