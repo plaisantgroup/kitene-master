@@ -2705,3 +2705,73 @@ html, body {
 .today-memo-label {
     color: var(--text-secondary);
 }
+
+/* 商品スペース */
+.product-space {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 12px 0;
+}
+.product-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+}
+.product-icon { font-size: 18px; }
+.product-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+.product-main-arrow {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+.product-space.collapsed .product-main-arrow { transform: rotate(-90deg); }
+.product-space.collapsed .product-body { display: none; }
+.product-space.collapsed .product-header { margin-bottom: 0; }
+.product-textarea {
+    width: 100%;
+    min-height: 220px;
+    box-sizing: border-box;
+    padding: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    resize: vertical;
+    white-space: pre-wrap;
+}
+.product-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+.product-save-btn {
+    background: var(--primary-color);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.product-save-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+}

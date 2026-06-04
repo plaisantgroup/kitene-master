@@ -53,13 +53,29 @@
         <div id="publication-space" class="publication-space">
             <div class="publication-header">
                 <span class="publication-icon">📢</span>
-                <span class="publication-title">商品・イベント掲載</span>
+                <span class="publication-title">イベント掲載</span>
             </div>
             <div id="publication-rows" class="publication-rows"></div>
             <div class="publication-footer">
                 <button type="button" class="pub-add-btn" onclick="addPublicationRow()">＋ 行を追加</button>
                 <button type="button" id="pub-save-btn" class="pub-save-btn" onclick="savePublicationsData()">💾 掲載を保存</button>
                 <span id="pub-save-status" class="pub-save-status"></span>
+            </div>
+        </div>
+
+        <!-- 商品 -->
+        <div id="product-space" class="product-space collapsed">
+            <button type="button" class="product-header" onclick="toggleProduct()">
+                <span class="product-icon">🛍️</span>
+                <span class="product-title">商品</span>
+                <span class="product-main-arrow">▼</span>
+            </button>
+            <div class="product-body">
+                <textarea id="product-text" class="product-textarea" placeholder="商品情報を記入（改行・空行もそのまま反映されます）"></textarea>
+                <div class="product-footer">
+                    <button type="button" id="product-save-btn" class="product-save-btn" onclick="saveProductData()">💾 商品を保存</button>
+                    <span id="product-save-status" class="product-save-status"></span>
+                </div>
             </div>
         </div>
 
