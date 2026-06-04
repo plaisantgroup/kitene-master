@@ -3728,6 +3728,12 @@ function toggleStrategyAccordion(storeKey) {
     if (el) el.classList.toggle('open');
 }
 
+// 明日の戦略：全体を開閉
+function toggleStrategy() {
+    const space = document.getElementById('strategy-space');
+    if (space) space.classList.toggle('collapsed');
+}
+
 
 // ===============================
 // ★ 商品・イベント掲載
