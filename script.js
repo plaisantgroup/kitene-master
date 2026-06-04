@@ -3905,7 +3905,11 @@ function createPublicationRow(data) {
     del.type = 'button';
     del.className = 'pub-del-btn';
     del.textContent = '✕';
-    del.onclick = function () { row.remove(); };
+    del.onclick = function () {
+        if (confirm('この行を削除しますか？')) {
+            row.remove();
+        }
+    };
 
     row.appendChild(move);
     row.appendChild(start);
