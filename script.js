@@ -17,6 +17,7 @@ let currentShiftDate = '';
 let strategyFilledByUnified = false;  // 戦略フォームを相乗りで反映済みか
 let publicationCategories = [];  // 掲載カテゴリ（プルダウン選択肢）
 let publicationsFilledByUnified = false;  // 掲載を相乗りで反映済みか
+let productFilledByUnified = false;  // 商品を相乗りで反映済みか
 let currentStoreFilter = 'all'; // 現在の店舗フィルター
 let currentOkiniFilter = 'all'; // ★v3.5 オキニフィルター（all/danger/warn/clear）
 let autoRefreshInterval = null;  // 自動リロードのインターバルID
@@ -253,6 +254,7 @@ async function loadAllData() {
     const startTime = Date.now();
     strategyFilledByUnified = false;
     publicationsFilledByUnified = false;
+    productFilledByUnified = false;
     
     // ★★★ Phase 1: localStorage から即時表示（体感速度0ms）★★★
     const hasCacheData = loadCache();
@@ -302,6 +304,10 @@ async function loadAllData() {
     // ★ 商品・イベント掲載：相乗りで来ていなければ個別取得
     if (!publicationsFilledByUnified) {
         loadPublicationsData();
+    }
+    // ★ 商品：相乗りで来ていなければ個別取得
+    if (!productFilledByUnified) {
+        loadProductData();
     }
     
     // ★ コメントは統合APIで取得済みかチェック、未取得なら追加で取得
@@ -363,6 +369,11 @@ async function loadAllDataUnified() {
         if (result.publications) {
             renderPublications(result.publications.items, result.publications.categories);
             publicationsFilledByUnified = true;
+        }
+        if (result.product !== undefined && result.product !== null) {
+            const pEl = document.getElementById('product-text');
+            if (pEl) pEl.value = result.product;
+            productFilledByUnified = true;
         }
         if (result.comments && typeof result.comments === 'object') {
             // コメントの整形（loadAllLatestCommentsと同じソート）
@@ -3765,6 +3776,12 @@ function toggleStrategy() {
     if (space) space.classList.toggle('collapsed');
 }
 
+// 商品スペース：開閉
+function toggleProduct() {
+    const space = document.getElementById('product-space');
+    if (space) space.classList.toggle('collapsed');
+}
+
 
 // ===============================
 // ★ 商品・イベント掲載
@@ -3942,6 +3959,38 @@ function addPublicationRow() {
 /**
  * 掲載一覧を読み込み（相乗りで来なかった場合の個別取得）
  */
+async function loadProductData() {
+    const result = await apiCall('getProduct');
+    if (!result || result.success !== true) {
+        devLog('loadProductData: 取得失敗', result);
+        return;
+    }
+    const el = document.getElementById('product-text');
+    if (el) el.value = result.text || '';
+}
+
+async function saveProductData() {
+    const el = document.getElementById('product-text');
+    if (!el) return;
+    const btn = document.getElementById('product-save-btn');
+    const status = document.getElementById('product-save-status');
+    if (btn) btn.disabled = true;
+    if (status) status.textContent = '保存中...';
+    try {
+        const response = await fetch(`${API_URL}?action=saveProduct`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ text: el.value })
+        });
+        const result = await response.json();
+        if (status) status.textContent = (result && result.success) ? '✅ 保存しました' : '❌ 保存に失敗しました';
+    } catch (e) {
+        if (status) status.textContent = '❌ 保存に失敗しました';
+    }
+    if (btn) btn.disabled = false;
+    setTimeout(function () { if (status) status.textContent = ''; }, 3000);
+}
+
 async function loadPublicationsData() {
     const result = await apiCall('getPublications');
     if (!result || result.success !== true) {
