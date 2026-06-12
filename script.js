@@ -211,6 +211,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===============================
 
 function showView(viewName) {
+    // ★ View Transitions API：対応ブラウザはタブ切り替えをクロスフェードに
+    // 非対応ブラウザ・モーション軽減設定時は従来通り即時切り替え（壊れない）
+    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.startViewTransition(() => applyView(viewName));
+    } else {
+        applyView(viewName);
+    }
+}
+
+function applyView(viewName) {
     // 全てのビューを非表示
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
@@ -243,6 +253,22 @@ function showView(viewName) {
         renderUrlList();
         updateJumpButtons('url');
     }
+    
+    // ★ カード入場アニメーション（タブ切り替え時のみ再生・通常の再描画では再生しない）
+    playEntranceAnimation();
+}
+
+/**
+ * アクティブなビューにカード入場アニメーションを一度だけ再生
+ * animate-inクラスを短時間付与し、CSS側のスタガーアニメを発火させる
+ */
+function playEntranceAnimation() {
+    const view = document.querySelector('.view.active');
+    if (!view) return;
+    view.classList.remove('animate-in');
+    void view.offsetWidth;  // リフロー強制でアニメーションをリセット
+    view.classList.add('animate-in');
+    setTimeout(() => view.classList.remove('animate-in'), 700);
 }
 
 // ===============================
@@ -327,9 +353,11 @@ async function loadAllData() {
 /**
  * GAS統合API版：1回のリクエストで全データを取得（最大の高速化）
  * GAS側に getInitialData アクションが必要
+ * @param {object} options - { skipForms: true } で戦略・掲載・商品フォームを上書きしない（更新ボタン・自動更新用）
  * @returns {Promise<boolean>} 成功時true、失敗時false（呼び出し側でフォールバック）
  */
-async function loadAllDataUnified() {
+async function loadAllDataUnified(options = {}) {
+    const { skipForms = false } = options;
     const result = await apiCall('getInitialData');
     
     if (!result || result.success !== true) {
@@ -350,30 +378,33 @@ async function loadAllDataUnified() {
         if (Array.isArray(result.shiftData)) shiftData = result.shiftData;
         if (Array.isArray(result.urlData)) urlData = result.urlData;
         if (Array.isArray(result.okiniData)) okiniData = result.okiniData;
-        // ★ 明日の戦略も相乗りで反映（時間差なし）
-        if (result.strategy && result.strategy.stores) {
-            updateStrategyTitle(result.strategy.date);
-            fillStrategyForm('delidosu', result.strategy.stores.delidosu);
-            fillStrategyForm('anecan', result.strategy.stores.anecan);
-            fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
-            strategyFilledByUnified = true;
-        }
-        // ★ 今日の戦略をメモとして表示（編集不可）
-        if (result.todayStrategy && result.todayStrategy.stores) {
-            const tmd = result.todayStrategy.dateMd || '';
-            fillTodayMemo('delidosu', result.todayStrategy.stores.delidosu, tmd);
-            fillTodayMemo('anecan', result.todayStrategy.stores.anecan, tmd);
-            fillTodayMemo('ainoshizuku', result.todayStrategy.stores.ainoshizuku, tmd);
-        }
-        // ★ 商品・イベント掲載も相乗りで反映
-        if (result.publications) {
-            renderPublications(result.publications.items, result.publications.categories);
-            publicationsFilledByUnified = true;
-        }
-        if (result.product !== undefined && result.product !== null) {
-            const pEl = document.getElementById('product-text');
-            if (pEl) pEl.value = result.product;
-            productFilledByUnified = true;
+        // ★ フォーム系の反映（更新時 skipForms=true なら入力途中の内容を守るためスキップ）
+        if (!skipForms) {
+            // ★ 明日の戦略も相乗りで反映（時間差なし）
+            if (result.strategy && result.strategy.stores) {
+                updateStrategyTitle(result.strategy.date);
+                fillStrategyForm('delidosu', result.strategy.stores.delidosu);
+                fillStrategyForm('anecan', result.strategy.stores.anecan);
+                fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
+                strategyFilledByUnified = true;
+            }
+            // ★ 今日の戦略をメモとして表示（編集不可）
+            if (result.todayStrategy && result.todayStrategy.stores) {
+                const tmd = result.todayStrategy.dateMd || '';
+                fillTodayMemo('delidosu', result.todayStrategy.stores.delidosu, tmd);
+                fillTodayMemo('anecan', result.todayStrategy.stores.anecan, tmd);
+                fillTodayMemo('ainoshizuku', result.todayStrategy.stores.ainoshizuku, tmd);
+            }
+            // ★ 商品・イベント掲載も相乗りで反映
+            if (result.publications) {
+                renderPublications(result.publications.items, result.publications.categories);
+                publicationsFilledByUnified = true;
+            }
+            if (result.product !== undefined && result.product !== null) {
+                const pEl = document.getElementById('product-text');
+                if (pEl) pEl.value = result.product;
+                productFilledByUnified = true;
+            }
         }
         if (result.comments && typeof result.comments === 'object') {
             // コメントの整形（loadAllLatestCommentsと同じソート）
@@ -1088,12 +1119,37 @@ function renderShiftList() {
  * ★v3.5 出勤人数カウンターを更新
  * 店舗フィルター後のデータを受け取り、出勤/当欠の人数を表示
  */
+let lastShiftCount = null;  // ★カウントアップ用：前回表示した出勤人数
+
+/**
+ * 数字をカウントアップ表示するアニメーション
+ * @param {HTMLElement} el - 数字を表示する要素
+ * @param {number} from - 開始値
+ * @param {number} to - 終了値
+ */
+function animateNumber(el, from, to, duration = 450) {
+    if (!el) return;
+    if (from === to || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        el.textContent = to;
+        return;
+    }
+    const start = performance.now();
+    const ease = t => 1 - Math.pow(1 - t, 3);  // easeOutCubic
+    function frame(now) {
+        const p = Math.min((now - start) / duration, 1);
+        el.textContent = Math.round(from + (to - from) * ease(p));
+        if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+}
+
 function updateShiftCounter(storeFilteredData) {
     const counter = document.getElementById('shift-counter');
     if (!counter) return;
     
     if (storeFilteredData.length === 0) {
         counter.style.display = 'none';
+        lastShiftCount = null;
         return;
     }
     
@@ -1105,13 +1161,19 @@ function updateShiftCounter(storeFilteredData) {
     
     if (touketuCount > 0) {
         counter.innerHTML = 
-            '<span class="count-main">出勤 ' + activeCount + '人</span>' +
+            '<span class="count-main">出勤 <span class="count-num">' + activeCount + '</span>人</span>' +
             '<span class="count-detail">/ 元' + total + '人' +
             '（<span class="count-touketu">当欠' + touketuCount + '人</span>）</span>';
     } else {
         counter.innerHTML = 
-            '<span class="count-main">出勤 ' + activeCount + '人</span>';
+            '<span class="count-main">出勤 <span class="count-num">' + activeCount + '</span>人</span>';
     }
+    
+    // ★ カウントアップアニメーション（初回は0から、人数変化時は前回値から）
+    const numEl = counter.querySelector('.count-num');
+    const from = (lastShiftCount === null) ? 0 : lastShiftCount;
+    animateNumber(numEl, from, activeCount);
+    lastShiftCount = activeCount;
 }
 
 // ===============================
@@ -1880,6 +1942,43 @@ function hideLoading() {
 /**
  * データを手動更新
  */
+/**
+ * コアデータの再取得（更新ボタン・自動更新の共通処理）
+ * 統合API（1往復・高速）を優先し、失敗時は従来の並列ロードにフォールバック
+ * 戦略・掲載・商品フォームは上書きしない（入力途中の内容を守る）
+ */
+async function reloadCoreData() {
+    const unifiedSuccess = await loadAllDataUnified({ skipForms: true });
+
+    if (!unifiedSuccess) {
+        // フォールバック：従来の並列ロード
+        // ※ okiniData は loadShiftData 内で shiftData から生成されるため loadOkiniData は不要
+        devLog('reloadCoreData: 統合API失敗のため並列ロードにフォールバック');
+        await Promise.all([
+            loadShiftDate(),
+            loadShiftData(),
+            loadUrlData()
+        ]);
+    }
+
+    // 現在のタブに応じて再描画
+    if (document.getElementById('shift-view').classList.contains('active')) {
+        renderShiftList();
+    } else if (document.getElementById('all-view').classList.contains('active')) {
+        renderAllCastList();
+    } else if (document.getElementById('interview-view').classList.contains('active')) {
+        renderInterviewList();
+    } else if (document.getElementById('url-view').classList.contains('active')) {
+        renderUrlList();
+    }
+
+    // ★ キャッシュも最新化（次回起動時の即時表示用）
+    saveCache();
+
+    // 最終更新時刻を表示
+    updateLastRefreshTime();
+}
+
 async function refreshData() {
     const refreshBtn = document.querySelector('.refresh-btn');
     
@@ -1888,25 +1987,7 @@ async function refreshData() {
     refreshBtn.textContent = '🔄 更新中...';
     
     try {
-        // データを再読み込み
-        await loadUrlData();
-        await loadShiftData();
-        await loadOkiniData();  // ★★★ v3.5追加 ★★★
-        
-        // 現在のタブに応じて再描画
-        if (document.getElementById('shift-view').classList.contains('active')) {
-            renderShiftList();
-        } else if (document.getElementById('all-view').classList.contains('active')) {
-            renderAllCastList();
-        } else if (document.getElementById('interview-view').classList.contains('active')) {
-            renderInterviewList();
-        } else if (document.getElementById('url-view').classList.contains('active')) {
-            renderUrlList();
-        }
-        
-        // 最終更新時刻を表示
-        updateLastRefreshTime();
-        
+        await reloadCoreData();
         showToast('データを更新しました', 'success');
     } catch (error) {
         console.error('refreshData: エラー', error);
@@ -1967,22 +2048,7 @@ function startAutoRefresh() {
         devLog('自動リロード実行:', new Date().toLocaleTimeString());
         
         try {
-            await loadUrlData();
-            await loadShiftData();
-            await loadOkiniData();  // ★★★ v3.5追加 ★★★
-            
-            // 現在のタブに応じて再描画
-            if (document.getElementById('shift-view').classList.contains('active')) {
-                renderShiftList();
-            } else if (document.getElementById('all-view').classList.contains('active')) {
-                renderAllCastList();
-            } else if (document.getElementById('interview-view').classList.contains('active')) {
-                renderInterviewList();
-            } else if (document.getElementById('url-view').classList.contains('active')) {
-                renderUrlList();
-            }
-            
-            updateLastRefreshTime();
+            await reloadCoreData();
             
             // ★★★ 自動更新時もトースト通知を表示 ★★★
             showToast('データを更新しました', 'success');
