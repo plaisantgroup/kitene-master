@@ -2813,31 +2813,76 @@ html, body {
 .view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(4) { animation-delay: 0.15s; }
 .view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(5) { animation-delay: 0.20s; }
 
-/* --- 4) スクロール連動アンビエント背景（黒金テーマの光彩） ---
+/* --- 4) スクロール連動アンビエント背景（黒金テーマ・2層パララックス） ---
    transformのみをGPU合成で動かすためJS不要・描画コストほぼゼロ。
+   手前の層は上へ、奥の層は下へ動き、奥行きのあるパララックスになる。
    scroll-driven animations 非対応ブラウザでは静止した光彩のまま（壊れない）。 */
+
+/* 手前の層：明るい金の光彩（スクロールで上昇＋わずかに回転） */
 body::before {
     content: '';
     position: fixed;
-    inset: -25% -10% -10% -10%;  /* 上方向に動かしても端が見えないよう広めに確保 */
+    inset: -30% -15%;
     z-index: -1;
     pointer-events: none;
     background:
-        radial-gradient(620px 420px at 85% 12%, rgba(212, 175, 55, 0.08), transparent 70%),
-        radial-gradient(720px 520px at 8% 75%, rgba(212, 175, 55, 0.05), transparent 70%),
-        radial-gradient(400px 300px at 50% 45%, rgba(212, 175, 55, 0.03), transparent 70%);
+        radial-gradient(640px 440px at 85% 12%, rgba(212, 175, 55, 0.16), transparent 70%),
+        radial-gradient(520px 380px at 12% 70%, rgba(212, 175, 55, 0.10), transparent 70%);
 }
 
-@keyframes bgDrift {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-7%); }
+/* 奥の層：深い金の大きな光だまり（スクロールで逆方向＝下へ流れる） */
+body::after {
+    content: '';
+    position: fixed;
+    inset: -30% -15%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(900px 640px at 30% 25%, rgba(166, 124, 0, 0.10), transparent 72%),
+        radial-gradient(420px 320px at 70% 85%, rgba(212, 175, 55, 0.08), transparent 70%);
+}
+
+@keyframes bgDriftA {
+    from { transform: translateY(4%) rotate(0deg); }
+    to   { transform: translateY(-14%) rotate(2deg); }
+}
+@keyframes bgDriftB {
+    from { transform: translateY(-6%) translateX(0); }
+    to   { transform: translateY(10%) translateX(-3%); }
+}
+
+/* スクロール進捗バー：画面最上部に金のラインが伸びる */
+@keyframes scrollProgress {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
 }
 
 @supports (animation-timeline: scroll()) {
     body::before {
-        animation: bgDrift linear both;
+        animation: bgDriftA linear both;
         animation-timeline: scroll(root);
         will-change: transform;
+    }
+    body::after {
+        animation: bgDriftB linear both;
+        animation-timeline: scroll(root);
+        will-change: transform;
+    }
+    html::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        z-index: 9000;  /* モーダル(9999)より下・通常UIより上 */
+        pointer-events: none;
+        background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #f3d97a);
+        box-shadow: 0 0 8px rgba(212, 175, 55, 0.55);
+        transform-origin: 0 50%;
+        transform: scaleX(0);
+        animation: scrollProgress linear both;
+        animation-timeline: scroll(root);
     }
 }
 
@@ -2850,7 +2895,9 @@ body::before {
     .view.animate-in :is(.shift-item, .interview-card, .url-item) {
         animation: none;
     }
-    body::before {
+    body::before,
+    body::after,
+    html::before {
         animation: none;
     }
 }
