@@ -2813,42 +2813,144 @@ html, body {
 .view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(4) { animation-delay: 0.15s; }
 .view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(5) { animation-delay: 0.20s; }
 
-/* --- 4) スクロール連動アンビエント背景（黒金テーマ・2層パララックス） ---
-   transformのみをGPU合成で動かすためJS不要・描画コストほぼゼロ。
-   手前の層は上へ、奥の層は下へ動き、奥行きのあるパララックスになる。
-   scroll-driven animations 非対応ブラウザでは静止した光彩のまま（壊れない）。 */
+/* --- 4) 背景デザインシステム「上品な銀河・満天の星空」 ---
+   レイヤー構成（z-index:-1 で本体UIの背面・すべて pointer-events:none）:
+     body::before     = 星雲＋天の川＋星団の光（常時ゆっくり漂う）
+     body::after      = 中景の星（200pxタイル・スクロールで流れる）
+     #star-deep       = 遠景の極小星（100pxタイル・最密・ゆっくり流れる）※JSで生成
+     #star-twinkle    = 近景のチカチカ星 20個（別々のリズムで瞬く）※JSで生成
+     #shooting-layer  = 流れ星（全域からランダム発生）※JSで生成
+     html::after      = ビネット（四隅を締める暗がり）
+     html::before     = スクロール進捗バー */
 
-/* 手前の層：明るい金の光彩（スクロールで上昇＋わずかに回転） */
+/* 星雲＋天の川＋星団の光（常時ドリフト） */
 body::before {
     content: '';
     position: fixed;
-    inset: -30% -15%;
+    inset: -40% -30%;
     z-index: -1;
     pointer-events: none;
     background:
-        radial-gradient(640px 440px at 85% 12%, rgba(212, 175, 55, 0.16), transparent 70%),
-        radial-gradient(520px 380px at 12% 70%, rgba(212, 175, 55, 0.10), transparent 70%);
+        radial-gradient(1100px 760px at 78% 16%, rgba(212, 175, 55, 0.15), transparent 62%),
+        radial-gradient(900px 640px at 14% 80%, rgba(166, 124, 0, 0.12), transparent 62%),
+        radial-gradient(680px 520px at 88% 88%, rgba(120, 90, 200, 0.06), transparent 60%),
+        /* 星団の淡い光だまり */
+        radial-gradient(220px 220px at 30% 35%, rgba(255, 255, 255, 0.05), transparent 70%),
+        radial-gradient(180px 180px at 70% 60%, rgba(243, 217, 122, 0.06), transparent 70%),
+        /* 天の川の帯 */
+        linear-gradient(118deg, transparent 36%, rgba(212, 175, 55, 0.06) 46%, rgba(243, 217, 122, 0.10) 50%, rgba(212, 175, 55, 0.06) 54%, transparent 64%);
+    animation: galaxyDrift 34s ease-in-out infinite alternate;
+    will-change: transform;
+}
+@keyframes galaxyDrift {
+    from { transform: translate3d(-4%, -2%, 0) scale(1) rotate(0deg); }
+    to   { transform: translate3d(4%, 3%, 0) scale(1.08) rotate(3deg); }
 }
 
-/* 奥の層：深い金の大きな光だまり（スクロールで逆方向＝下へ流れる） */
+/* 中景の星（200pxタイルで画面を埋める） */
 body::after {
     content: '';
     position: fixed;
-    inset: -30% -15%;
+    inset: 0;
     z-index: -1;
     pointer-events: none;
-    background:
-        radial-gradient(900px 640px at 30% 25%, rgba(166, 124, 0, 0.10), transparent 72%),
-        radial-gradient(420px 320px at 70% 85%, rgba(212, 175, 55, 0.08), transparent 70%);
+    background-image:
+        radial-gradient(1.3px 1.3px at 18px 22px, #fff, transparent),
+        radial-gradient(1px 1px at 60px 48px, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1.3px 1.3px at 100px 16px, #fff, transparent),
+        radial-gradient(1px 1px at 82px 92px, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1.6px 1.6px at 40px 70px, rgba(243, 217, 122, 0.95), transparent),
+        radial-gradient(1px 1px at 128px 80px, rgba(255, 255, 255, 0.75), transparent),
+        radial-gradient(1.2px 1.2px at 22px 118px, rgba(212, 175, 55, 0.85), transparent),
+        radial-gradient(1px 1px at 120px 130px, rgba(255, 255, 255, 0.65), transparent),
+        radial-gradient(1px 1px at 150px 40px, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(1px 1px at 70px 150px, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(1px 1px at 160px 110px, rgba(255, 255, 255, 0.55), transparent),
+        radial-gradient(1px 1px at 8px 90px, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1px 1px at 185px 165px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 45px 185px, rgba(255, 255, 255, 0.55), transparent);
+    background-size: 200px 200px;
+    background-repeat: repeat;
+    opacity: 0.95;
+}
+@keyframes starScrollMid {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-12%); }
 }
 
-@keyframes bgDriftA {
-    from { transform: translateY(4%) rotate(0deg); }
-    to   { transform: translateY(-14%) rotate(2deg); }
+/* 遠景の極小星（100pxタイル・最密）※#star-deep はJSで body 先頭に挿入 */
+#star-deep {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(0.8px 0.8px at 10px 14px, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(0.8px 0.8px at 38px 30px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(0.8px 0.8px at 65px 10px, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(0.8px 0.8px at 22px 52px, rgba(255, 255, 255, 0.45), transparent),
+        radial-gradient(0.8px 0.8px at 78px 44px, rgba(255, 255, 255, 0.55), transparent),
+        radial-gradient(0.8px 0.8px at 52px 72px, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(0.8px 0.8px at 88px 70px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(0.8px 0.8px at 15px 82px, rgba(255, 255, 255, 0.45), transparent),
+        radial-gradient(0.7px 0.7px at 45px 92px, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(0.7px 0.7px at 92px 22px, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(0.7px 0.7px at 70px 90px, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(0.7px 0.7px at 30px 38px, rgba(255, 255, 255, 0.45), transparent),
+        radial-gradient(0.8px 0.8px at 5px 60px, rgba(243, 217, 122, 0.5), transparent),
+        radial-gradient(0.7px 0.7px at 60px 55px, rgba(255, 255, 255, 0.4), transparent);
+    background-size: 100px 100px;
+    background-repeat: repeat;
+    opacity: 0.75;
 }
-@keyframes bgDriftB {
-    from { transform: translateY(-6%) translateX(0); }
-    to   { transform: translateY(10%) translateX(-3%); }
+@keyframes starScrollDeep {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-5%); }
+}
+
+/* 近景のチカチカ星 ※#star-twinkle の中身(span)はJSで生成 */
+#star-twinkle {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+#star-twinkle .tw-star {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.9), 0 0 12px 2px rgba(212, 175, 55, 0.5);
+    animation: starBlink ease-in-out infinite;
+}
+@keyframes starBlink {
+    0%, 100% { opacity: 0.15; transform: scale(0.7); }
+    50%      { opacity: 1;    transform: scale(1.2); }
+}
+
+/* 流れ星 ※.shooting-star はJSで生成し WebAnimations で動かす */
+#shooting-layer {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+.shooting-star {
+    position: absolute;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, rgba(243, 217, 122, 0.95), #fff);
+    border-radius: 2px;
+    filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.8));
+}
+
+/* ビネット：四隅を締めて奥行きを出す */
+html::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(160% 120% at 50% 0%, transparent 38%, rgba(0, 0, 0, 0.6) 100%);
 }
 
 /* スクロール進捗バー：画面最上部に金のラインが伸びる */
@@ -2858,13 +2960,13 @@ body::after {
 }
 
 @supports (animation-timeline: scroll()) {
-    body::before {
-        animation: bgDriftA linear both;
+    body::after {
+        animation: starScrollMid linear both;
         animation-timeline: scroll(root);
         will-change: transform;
     }
-    body::after {
-        animation: bgDriftB linear both;
+    #star-deep {
+        animation: starScrollDeep linear both;
         animation-timeline: scroll(root);
         will-change: transform;
     }
@@ -2886,7 +2988,7 @@ body::after {
     }
 }
 
-/* --- モーション軽減設定のユーザーには全アニメを無効化 --- */
+/* --- モーション軽減設定のユーザーには動きを止める（星空は静止表示） --- */
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-old(root),
     ::view-transition-new(root) {
@@ -2897,7 +2999,14 @@ body::after {
     }
     body::before,
     body::after,
+    #star-deep,
     html::before {
         animation: none;
     }
+    #star-twinkle .tw-star {
+        animation: none;
+        opacity: 0.85;
+    }
+    /* 流れ星はJS側でも生成を停止する */
 }
+

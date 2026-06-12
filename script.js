@@ -169,6 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
     devLog('API URL:', API_URL);
     devLog('XLSXライブラリ:', typeof XLSX !== 'undefined' ? '読み込み済み' : '未読み込み');
     
+    // ★ 背景：満天の星空（チカチカ星＋流れ星）を初期化
+    initStarfield();
+    
     // Excelアップロードイベント
     document.getElementById('excel-upload').addEventListener('change', (event) => {
         const file = event.target.files[0];
@@ -205,6 +208,92 @@ document.addEventListener('DOMContentLoaded', () => {
     // トップに戻るボタンのスクロール監視
     window.addEventListener('scroll', handleScroll);
 });
+
+// ===============================
+// 背景：満天の星空（チカチカ星＋流れ星）
+// ===============================
+
+/**
+ * 星空背景を初期化する
+ * - チカチカ星: #star-twinkle に20個のspanを生成（CSSで別々のリズムで瞬く）
+ * - 流れ星:     #shooting-layer に定期的に流星を発生（全域・ランダム角度）
+ * モーション軽減設定がONのユーザーには、流れ星を発生させない（チカチカもCSS側で停止）
+ */
+function initStarfield() {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // --- チカチカ星 20個 ---
+    const twinkleLayer = document.getElementById('star-twinkle');
+    if (twinkleLayer && twinkleLayer.childElementCount === 0) {
+        const positions = [
+            '12% 18%', '28% 62%', '45% 30%', '61% 75%', '73% 22%',
+            '84% 58%', '38% 85%', '92% 40%', '19% 45%', '55% 12%',
+            '7% 70%',  '67% 48%', '33% 8%',  '78% 82%', '48% 65%',
+            '95% 28%', '24% 35%', '88% 15%', '41% 52%', '15% 88%'
+        ];
+        const frag = document.createDocumentFragment();
+        positions.forEach((pos, i) => {
+            const [left, top] = pos.split(' ');
+            const size = 2 + (i % 3 === 0 ? 1 : 0);
+            const star = document.createElement('span');
+            star.className = 'tw-star';
+            star.style.left = left;
+            star.style.top = top;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            // 別々の周期・開始タイミングで自然な瞬きに
+            star.style.animationDuration = (2 + i * 0.3) + 's';
+            star.style.animationDelay = (i * 0.2) + 's';
+            frag.appendChild(star);
+        });
+        twinkleLayer.appendChild(frag);
+    }
+
+    // --- 流れ星（モーション軽減設定がONなら出さない） ---
+    if (reduceMotion) return;
+
+    const shootLayer = document.getElementById('shooting-layer');
+    if (!shootLayer) return;
+
+    function launchShootingStar() {
+        const star = document.createElement('div');
+        star.className = 'shooting-star';
+
+        const len = 90 + Math.random() * 80;        // 尾の長さ 90〜170px
+        const angle = 12 + Math.random() * 26;       // 角度 12〜38度
+        const dist = 380 + Math.random() * 340;      // 飛距離 380〜720px
+        const dur = 900 + Math.random() * 800;       // 0.9〜1.7秒
+
+        star.style.width = len + 'px';
+        star.style.left = (Math.random() * 85) + '%';   // 横位置：ほぼ全域
+        star.style.top = (Math.random() * 55) + '%';    // 縦位置：上〜中段
+
+        const rad = angle * Math.PI / 180;
+        const dx = Math.cos(rad) * dist;
+        const dy = Math.sin(rad) * dist;
+
+        // WebAnimations APIで尾を引いて流れる
+        const anim = star.animate([
+            { transform: `translate(0, 0) rotate(${angle}deg)`, opacity: 0 },
+            { opacity: 1, offset: 0.1 },
+            { opacity: 1, offset: 0.7 },
+            { transform: `translate(${dx}px, ${dy}px) rotate(${angle}deg)`, opacity: 0 }
+        ], { duration: dur, easing: 'ease-out', fill: 'forwards' });
+
+        shootLayer.appendChild(star);
+        anim.onfinish = () => star.remove();
+    }
+
+    // 2秒ごとに70%の確率で発生（平均およそ3秒に1本）
+    // タブが非表示の間はブラウザがsetIntervalを抑制するので負荷も気にならない
+    setInterval(() => {
+        if (document.hidden) return;
+        if (Math.random() < 0.7) launchShootingStar();
+    }, 2000);
+
+    // 起動直後に1本流して「動いている」ことをすぐ見せる
+    launchShootingStar();
+}
 
 // ===============================
 // ビュー切り替え
