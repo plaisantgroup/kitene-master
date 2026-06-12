@@ -2783,10 +2783,10 @@ html, body {
    3) カード入場: タブ切り替え時のスタガー表示
    =============================================== */
 
-/* --- 1) View Transitions のフェード時間（短め＝キビキビ感維持） --- */
+/* --- 1) View Transitions のフェード時間 --- */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-    animation-duration: 0.18s;
+    animation-duration: 0.28s;
 }
 
 /* --- 2) カウントアップ中の数字幅ブレ防止 --- */
@@ -2798,18 +2798,48 @@ html, body {
    .animate-in はタブ切り替え時のみJSが約0.7秒間だけ付与する。
    通常の再描画（チェック操作・自動更新）では再生されない。 */
 @keyframes cardIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: none; }
 }
 
 .view.animate-in :is(.shift-item, .interview-card, .url-item) {
-    animation: cardIn 0.26s ease-out both;
-    animation-delay: 0.12s;
+    animation: cardIn 0.38s ease-out both;
+    animation-delay: 0.25s;
 }
-/* 先頭3枚は少しずつ早く出して「波」を作る */
+/* 先頭5枚を少しずつ早く出して「波」を作る */
 .view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(1) { animation-delay: 0s; }
-.view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(2) { animation-delay: 0.04s; }
-.view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(3) { animation-delay: 0.08s; }
+.view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(2) { animation-delay: 0.05s; }
+.view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(3) { animation-delay: 0.10s; }
+.view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(4) { animation-delay: 0.15s; }
+.view.animate-in :is(.shift-item, .interview-card, .url-item):nth-child(5) { animation-delay: 0.20s; }
+
+/* --- 4) スクロール連動アンビエント背景（黒金テーマの光彩） ---
+   transformのみをGPU合成で動かすためJS不要・描画コストほぼゼロ。
+   scroll-driven animations 非対応ブラウザでは静止した光彩のまま（壊れない）。 */
+body::before {
+    content: '';
+    position: fixed;
+    inset: -25% -10% -10% -10%;  /* 上方向に動かしても端が見えないよう広めに確保 */
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(620px 420px at 85% 12%, rgba(212, 175, 55, 0.08), transparent 70%),
+        radial-gradient(720px 520px at 8% 75%, rgba(212, 175, 55, 0.05), transparent 70%),
+        radial-gradient(400px 300px at 50% 45%, rgba(212, 175, 55, 0.03), transparent 70%);
+}
+
+@keyframes bgDrift {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-7%); }
+}
+
+@supports (animation-timeline: scroll()) {
+    body::before {
+        animation: bgDrift linear both;
+        animation-timeline: scroll(root);
+        will-change: transform;
+    }
+}
 
 /* --- モーション軽減設定のユーザーには全アニメを無効化 --- */
 @media (prefers-reduced-motion: reduce) {
@@ -2818,6 +2848,9 @@ html, body {
         animation: none;
     }
     .view.animate-in :is(.shift-item, .interview-card, .url-item) {
+        animation: none;
+    }
+    body::before {
         animation: none;
     }
 }
