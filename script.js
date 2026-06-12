@@ -215,21 +215,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * 星空背景を初期化する
- * - チカチカ星: #star-twinkle に20個のspanを生成（CSSで別々のリズムで瞬く）
+ * - チカチカ星: #star-twinkle に26個のspanを生成（CSSで別々のリズムで瞬く）
  * - 流れ星:     #shooting-layer に定期的に流星を発生（全域・ランダム角度）
  * モーション軽減設定がONのユーザーには、流れ星を発生させない（チカチカもCSS側で停止）
  */
 function initStarfield() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // --- チカチカ星 20個 ---
+    // --- チカチカ星 26個 ---
     const twinkleLayer = document.getElementById('star-twinkle');
     if (twinkleLayer && twinkleLayer.childElementCount === 0) {
         const positions = [
             '12% 18%', '28% 62%', '45% 30%', '61% 75%', '73% 22%',
             '84% 58%', '38% 85%', '92% 40%', '19% 45%', '55% 12%',
             '7% 70%',  '67% 48%', '33% 8%',  '78% 82%', '48% 65%',
-            '95% 28%', '24% 35%', '88% 15%', '41% 52%', '15% 88%'
+            '95% 28%', '24% 35%', '88% 15%', '41% 52%', '15% 88%',
+            '58% 38%', '5% 25%',  '70% 8%',  '82% 70%', '30% 75%',
+            '50% 90%'
         ];
         const frag = document.createDocumentFragment();
         positions.forEach((pos, i) => {
@@ -242,8 +244,8 @@ function initStarfield() {
             star.style.width = size + 'px';
             star.style.height = size + 'px';
             // 別々の周期・開始タイミングで自然な瞬きに
-            star.style.animationDuration = (2 + i * 0.3) + 's';
-            star.style.animationDelay = (i * 0.2) + 's';
+            star.style.animationDuration = (2 + i * 0.28) + 's';
+            star.style.animationDelay = (i * 0.18) + 's';
             frag.appendChild(star);
         });
         twinkleLayer.appendChild(frag);
