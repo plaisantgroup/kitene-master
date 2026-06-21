@@ -1280,6 +1280,7 @@ async function loadRealtimeFlags() {
         const r = await apiCall('getRealtimeFlags', {});
         if (r && r.success && r.flags) realtimeFlags = r.flags;
         if (r && r.success) setAvailLockFromServer(r.locks || {}); // ★ 60分ロック状態を取り込み
+        if (r && r.success) setManryoLockFromServer(r.manryoLocks || {}); // ★ 本日満了ロック状態を取り込み
     } catch (e) {
         devLog('loadRealtimeFlags エラー: ' + (e && e.message));
     }
@@ -1309,6 +1310,16 @@ function availLockRemainMin(name) {
     const m = Math.ceil((until - Date.now()) / 60000);
     return m > 0 ? m : 0;
 }
+
+// ★ 本日満了グレーアウト（1日1回）: 本日すでに本日満了を出した源氏名のセット
+let manryoLocked = {};
+function setManryoLockFromServer(locks) {
+    const merged = {};
+    for (const nm in manryoLocked) { if (manryoLocked[nm]) merged[nm] = true; }
+    for (const nm in (locks || {})) { if (locks[nm]) merged[nm] = true; }
+    manryoLocked = merged;
+}
+function isManryoLocked(name) { return !!manryoLocked[String(name).trim()]; }
 // ★ ロック残りの自動更新（30秒ごと・1回だけ起動）。解除されたらそのカードの空き予告だけ再描画
 function startAvailLockTicker() {
     if (window.__availTickStarted) return;
@@ -1328,6 +1339,23 @@ function startAvailLockTicker() {
             }
         });
     }, 30000);
+}
+
+// ★ 本日満了ボタン（1日1回ロックで見た目が変わる）。getAvailabilitySection から呼ぶ
+function getManryoBlock(name) {
+    const esc = String(name).replace(/'/g, "\\'");
+    if (isManryoLocked(name)) {
+        return `
+                    <div class="manryo" data-mr-name="${esc}" data-locked="1">
+                        <button class="btn-manryo locked" disabled>✅ 本日すでに投稿済み<span class="mr-sub">（本日分）</span></button>
+                        <div class="rt-res" hidden></div>
+                    </div>`;
+    }
+    return `
+                    <div class="manryo" data-mr-name="${esc}" data-locked="0">
+                        <button class="btn-manryo" onclick="doManryo('${esc}',this)">🈵 本日満了</button>
+                        <div class="rt-res" hidden></div>
+                    </div>`;
 }
 
 // カードに差し込む空き予告セクションのHTML
@@ -1350,10 +1378,7 @@ function getAvailabilitySection(name) {
         return `
                 <div class="availability-section" data-rt-name="${esc}" data-locked="1">
                     <button class="btn-availability locked" disabled>🔒 空き予告<span class="lk-min">（あと${rem}分）</span></button>
-                    <div class="manryo">
-                        <button class="btn-manryo" onclick="doManryo('${esc}',this)">🈵 本日満了</button>
-                        <div class="rt-res" hidden></div>
-                    </div>
+                    ${getManryoBlock(name)}
                 </div>`;
     }
     return `
@@ -1371,10 +1396,7 @@ function getAvailabilitySection(name) {
                         <button class="btn-go" onclick="doAvailabilityWheel('${esc}',this)">21:30 で空き予告</button>
                         <div class="rt-res" hidden></div>
                     </div>
-                    <div class="manryo">
-                        <button class="btn-manryo" onclick="doManryo('${esc}',this)">🈵 本日満了</button>
-                        <div class="rt-res" hidden></div>
-                    </div>
+                    ${getManryoBlock(name)}
                 </div>`;
 }
 
@@ -1594,6 +1616,13 @@ async function doManryo(name, btn) {
             if (r && r.success) {
                 res.className = 'rt-res ok';
                 res.textContent = '✓ ' + (r.message || '本日満了を出しました');
+                // ★ 本日満了は1日1回 → 投稿成功でこの子をロック（見た目グレーアウト）。✓メッセージは残す
+                manryoLocked[name] = true;
+                btn.classList.add('locked');
+                btn.disabled = true;
+                btn.removeAttribute('onclick');
+                btn.innerHTML = '✅ 本日すでに投稿済み<span class="mr-sub">（本日分）</span>';
+                wrap.setAttribute('data-locked', '1');
                 break;
             } else if (r && r.locked) {
                 res.className = 'rt-res warn';

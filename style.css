@@ -3154,6 +3154,19 @@ html::after {
 }
 .btn-manryo:hover { background: #3a1e1e; }
 .btn-manryo:disabled { cursor: not-allowed; opacity: 0.55; }
+.btn-manryo.locked {
+    border: 2px solid #4a4a4a;
+    background: #242424;
+    color: #9a9a9a;
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+.btn-manryo.locked .mr-sub {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #7d7d7d;
+    margin-left: 2px;
+}
 .manryo-note { flex: 0 0 38%; font-size: 0.62rem; color: var(--text-secondary); line-height: 1.3; }
 
 /* ★ 明日の戦略：出勤人数（週間シフトから自動・読み取り専用） */
