@@ -1268,7 +1268,7 @@ function renderShiftList() {
 // ============================================================
 // ★ 空き予告（リアルタイム）UI
 // ============================================================
-const RT_HOURS = (function(){var a=[];for(var h=0;h<24;h++)a.push(('0'+h).slice(-2));return a;})();
+const RT_HOURS = (function(){var a=[];for(var h=10;h<=23;h++)a.push(('0'+h).slice(-2));for(var h=0;h<=5;h++)a.push(('0'+h).slice(-2));return a;})(); // 営業時間 10時〜翌5時
 const RT_MINS  = (function(){var a=[];for(var m=0;m<60;m+=5)a.push(('0'+m).slice(-2));return a;})();
 const RT_ITEM_H = 36;
 
@@ -1312,8 +1312,8 @@ function getAvailabilitySection(name) {
                         <div class="rt-res" hidden></div>
                     </div>
                     <div class="manryo">
-                        <button class="btn-manryo" disabled title="週間シフト導入後（手順8）で有効になります">🚫 本日満了</button>
-                        <span class="manryo-note">手順8で有効</span>
+                        <button class="btn-manryo" onclick="doManryo('${esc}',this)">🈵 本日満了</button>
+                        <div class="rt-res" hidden></div>
                     </div>
                 </div>`;
 }
@@ -1347,11 +1347,13 @@ function fillWheelCol(col, values, def, picker) {
     const idx = Math.max(0, values.indexOf(def));
     col.scrollTop = idx * RT_ITEM_H;
     markWheelCol(col);
-    let t;
+    let t, raf;
     col.addEventListener('scroll', function () {
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(function () { markWheelCol(col); }); // スクロール中もハイライト追従
         clearTimeout(t);
-        t = setTimeout(function () { markWheelCol(col); updateGoLabel(picker); }, 70);
-    });
+        t = setTimeout(function () { markWheelCol(col); updateGoLabel(picker); }, 60);
+    }, { passive: true });
 }
 
 function markWheelCol(col) {
@@ -1406,6 +1408,38 @@ async function doAvailability(name, time, btn) {
         res.textContent = '⚠️ 通信エラー: ' + (e && e.message);
     } finally {
         sec.dataset.busy = '';
+    }
+}
+
+/**
+ * ★ 本日満了（手順8）。doAvailabilityの本日満了版。
+ *   時間は選ばない（次の出勤日はGAS側が週間シフトから決める）。S列の1日1回ロック。
+ */
+async function doManryo(name, btn) {
+    const wrap = btn.closest('.manryo');
+    const res = wrap.querySelector('.rt-res');
+    if (wrap.dataset.busy) return;          // 連打防止
+    wrap.dataset.busy = '1';
+    res.className = 'rt-res';
+    res.textContent = '送信中…';
+    res.removeAttribute('hidden');
+    try {
+        const r = await apiCall('postManryo', { method: 'POST', body: { name: name } });
+        if (r && r.success) {
+            res.className = 'rt-res ok';
+            res.textContent = '✓ ' + (r.message || '本日満了を出しました');
+        } else if (r && r.locked) {
+            res.className = 'rt-res warn';
+            res.textContent = '⏳ ' + (r.message || '本日はもう出せません');
+        } else {
+            res.className = 'rt-res warn';
+            res.textContent = '⚠️ ' + ((r && (r.message || r.error)) || '失敗しました');
+        }
+    } catch (e) {
+        res.className = 'rt-res warn';
+        res.textContent = '⚠️ 通信エラー: ' + (e && e.message);
+    } finally {
+        wrap.dataset.busy = '';
     }
 }
 
