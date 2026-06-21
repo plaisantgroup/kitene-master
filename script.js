@@ -12,6 +12,7 @@ const NEW_COMMENT_DAYS = 5;
 let shiftData = [];
 let urlData = [];
 let realtimeFlags = {}; // ★ 空き予告: 源氏名→公開範囲（getRealtimeFlags）
+let availLockUntil = {}; // ★ 空き予告グレーアウト（方式B）: 源氏名→ロック解除のmsタイムスタンプ（クライアント基準）
 let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
@@ -408,6 +409,7 @@ async function loadAllData() {
     
     // ★ 全データ揃った状態で再描画
     await loadRealtimeFlags();  // ★ 空き予告フラグを取得してから描画
+    startAvailLockTicker();     // ★ 空き予告グレーアウト: ロック残りの自動更新を起動（1回だけ）
     renderShiftList();
     renderUrlList();
     
@@ -1277,9 +1279,55 @@ async function loadRealtimeFlags() {
     try {
         const r = await apiCall('getRealtimeFlags', {});
         if (r && r.success && r.flags) realtimeFlags = r.flags;
+        if (r && r.success) setAvailLockFromServer(r.locks || {}); // ★ 60分ロック状態を取り込み
     } catch (e) {
         devLog('loadRealtimeFlags エラー: ' + (e && e.message));
     }
+}
+
+// ★ 空き予告グレーアウト（方式B）: サーバーのロック {源氏名:残り分} をクライアントのタイムスタンプに反映
+//   既存のクライアント側ロック（未来のもの）は残し、サーバー値で上書き（残り時間はサーバーが正）
+function setAvailLockFromServer(locks) {
+    const now = Date.now();
+    const merged = {};
+    for (const nm in availLockUntil) {
+        if (availLockUntil[nm] > now) merged[nm] = availLockUntil[nm];
+    }
+    for (const nm in locks) {
+        const rem = Number(locks[nm]) || 0;
+        if (rem > 0) merged[nm] = now + rem * 60000;
+    }
+    availLockUntil = merged;
+}
+function isAvailLocked(name) {
+    const until = availLockUntil[name];
+    return !!(until && until > Date.now());
+}
+function availLockRemainMin(name) {
+    const until = availLockUntil[name];
+    if (!until) return 0;
+    const m = Math.ceil((until - Date.now()) / 60000);
+    return m > 0 ? m : 0;
+}
+// ★ ロック残りの自動更新（30秒ごと・1回だけ起動）。解除されたらそのカードの空き予告だけ再描画
+function startAvailLockTicker() {
+    if (window.__availTickStarted) return;
+    window.__availTickStarted = true;
+    setInterval(function () {
+        const secs = document.querySelectorAll('.availability-section[data-rt-name]');
+        secs.forEach(function (sec) {
+            const name = sec.getAttribute('data-rt-name');
+            if (!name) return;
+            const lockedNow = isAvailLocked(name);
+            const wasLocked = sec.getAttribute('data-locked') === '1';
+            if (lockedNow) {
+                const lbl = sec.querySelector('.btn-availability.locked .lk-min');
+                if (lbl) lbl.textContent = '（あと' + availLockRemainMin(name) + '分）';
+            } else if (wasLocked) {
+                sec.outerHTML = getAvailabilitySection(name); // ロック解除 → フル再描画
+            }
+        });
+    }, 30000);
 }
 
 // カードに差し込む空き予告セクションのHTML
@@ -1291,13 +1339,25 @@ function getAvailabilitySection(name) {
     const esc = String(name).replace(/'/g, "\\'");
     if (!enabled) {
         return `
-                <div class="availability-section">
+                <div class="availability-section" data-rt-name="${esc}" data-locked="0">
                     <button class="btn-availability dis" disabled>🔔 空き予告</button>
                     <div class="off-note">リアルタイムOFF（空き予告列＝なし）</div>
                 </div>`;
     }
+    // ★ 空き予告グレーアウト（方式B）: 60分ロック中は空き予告だけグレー（本日満了は別ロックなので有効）
+    if (isAvailLocked(name)) {
+        const rem = availLockRemainMin(name);
+        return `
+                <div class="availability-section" data-rt-name="${esc}" data-locked="1">
+                    <button class="btn-availability locked" disabled>🔒 空き予告<span class="lk-min">（あと${rem}分）</span></button>
+                    <div class="manryo">
+                        <button class="btn-manryo" onclick="doManryo('${esc}',this)">🈵 本日満了</button>
+                        <div class="rt-res" hidden></div>
+                    </div>
+                </div>`;
+    }
     return `
-                <div class="availability-section">
+                <div class="availability-section" data-rt-name="${esc}" data-locked="0">
                     <button class="btn-availability" onclick="toggleAvailability(this)">🔔 空き予告</button>
                     <div class="availability-picker" hidden>
                         <div class="rt-row2">
@@ -1396,6 +1456,16 @@ async function doAvailability(name, time, btn) {
         if (r && r.success) {
             res.className = 'rt-res ok';
             res.textContent = '✓ ' + (r.message || '空き予告を出しました') + (r.timing ? '（' + r.timing + '）' : '');
+            // ★ 投稿成功 → この子の空き予告を60分グレーアウト（UI即反映。サーバーR列も更新済み）
+            availLockUntil[name] = Date.now() + 60 * 60000;
+            const tgl = sec.querySelector('.btn-availability');
+            if (tgl) {
+                tgl.classList.add('locked');
+                tgl.classList.remove('open');
+                tgl.disabled = true;
+                tgl.innerHTML = '🔒 空き予告<span class="lk-min">（あと60分）</span>';
+            }
+            sec.setAttribute('data-locked', '1');
         } else if (r && r.locked) {
             res.className = 'rt-res warn';
             res.textContent = '⏳ ' + (r.message || 'ロック中です');
@@ -1416,6 +1486,8 @@ async function doAvailability(name, time, btn) {
  *   時間は選ばない（次の出勤日はGAS側が週間シフトから決める）。S列の1日1回ロック。
  */
 async function doManryo(name, btn) {
+    // ★ 誤操作防止: 本日満了は即生成されるので確認を挟む
+    if (!confirm(name + ' の「🈵 本日満了」を出します。\n\n次の出勤日を週間シフトから取得して下書きを作成します（店舗ごとに投稿）。\nよろしいですか？')) return;
     const wrap = btn.closest('.manryo');
     const res = wrap.querySelector('.rt-res');
     if (wrap.dataset.busy) return;          // 連打防止

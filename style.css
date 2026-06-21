@@ -3079,6 +3079,20 @@ html::after {
     color: #999;
     cursor: not-allowed;
 }
+/* ★ 空き予告グレーアウト（方式B）: 60分ロック中（一時的＝くすんだゴールド系・OFFの完全灰色と区別） */
+.btn-availability.locked {
+    border: 2px solid #6b5d2e;
+    background: #2c2a22;
+    color: #b9a86a;
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+.btn-availability.locked .lk-min {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #8f8456;
+    margin-left: 2px;
+}
 .off-note { font-size: 0.72rem; color: var(--text-secondary); text-align: center; margin-top: 7px; }
 
 .availability-picker { margin-top: 11px; }
