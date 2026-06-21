@@ -1391,42 +1391,127 @@ function toggleAvailability(btn) {
     }
 }
 
+// ★ ドラッグ式ホイール（つまんで回す・慣性つき）。PC/スマホ共通（pointerイベント）。
+// 触り心地の調整：WHEEL_FRICTION（慣性の減衰・1に近いほど長く転がる）／WHEEL_WHEEL_STEP（マウスホイール感度）
+const WHEEL_FRICTION = 0.94;   // 慣性の減衰（フレームごと）。0.90=すぐ止まる / 0.96=よく転がる
+const WHEEL_MIN_VEL = 0.02;    // これ未満の速度（px/ms）でスナップ開始
+const WHEEL_WHEEL_STEP = 0.5;  // マウスホイール1刻みの移動量（px係数）
+
 function buildWheel(picker) {
     if (picker.dataset.built) return;
-    fillWheelCol(picker.querySelector('.wcol[data-kind="hour"]'), RT_HOURS, '21', picker);
-    fillWheelCol(picker.querySelector('.wcol[data-kind="min"]'), RT_MINS, '30', picker);
+    setupDragWheel(picker.querySelector('.wcol[data-kind="hour"]'), RT_HOURS, '21', picker);
+    setupDragWheel(picker.querySelector('.wcol[data-kind="min"]'), RT_MINS, '30', picker);
     picker.dataset.built = '1';
     updateGoLabel(picker);
 }
 
-function fillWheelCol(col, values, def, picker) {
-    let h = '<div class="wpad"></div>';
-    for (let i = 0; i < values.length; i++) h += '<div class="witem">' + values[i] + '</div>';
-    h += '<div class="wpad"></div>';
-    col.innerHTML = h;
-    const idx = Math.max(0, values.indexOf(def));
-    col.scrollTop = idx * RT_ITEM_H;
-    markWheelCol(col);
-    let t, raf;
-    col.addEventListener('scroll', function () {
-        if (raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(function () { markWheelCol(col); }); // スクロール中もハイライト追従
-        clearTimeout(t);
-        t = setTimeout(function () { markWheelCol(col); updateGoLabel(picker); }, 60);
-    }, { passive: true });
+// 1列ぶんのドラッグ式ホイールを構築（中身を .wlist にまとめて transform で動かす）
+function setupDragWheel(col, values, def, picker) {
+    let html = '<div class="wlist">';
+    for (let i = 0; i < values.length; i++) html += '<div class="witem">' + values[i] + '</div>';
+    html += '</div>';
+    col.innerHTML = html;
+    const list = col.querySelector('.wlist');
+
+    const H = col.clientHeight || (RT_ITEM_H * 3);
+    const base = (H - RT_ITEM_H) / 2;            // 選択中アイテムを中央に置く基準オフセット
+    const maxPos = (values.length - 1) * RT_ITEM_H;
+
+    const w = {
+        col: col, list: list, values: values, picker: picker,
+        pos: Math.max(0, values.indexOf(def)) * RT_ITEM_H,
+        base: base, maxPos: maxPos,
+        vel: 0, raf: 0, dragging: false, lastY: 0, lastT: 0, lastIdx: -1
+    };
+    col._wheel = w;
+
+    function clampPos(p) { return p < 0 ? 0 : (p > maxPos ? maxPos : p); }
+    function curIdx() { return Math.max(0, Math.min(values.length - 1, Math.round(w.pos / RT_ITEM_H))); }
+    function render() {
+        list.style.transform = 'translateY(' + (w.base - w.pos) + 'px)';
+        const idx = curIdx();
+        if (idx !== w.lastIdx) {
+            w.lastIdx = idx;
+            const items = list.children;
+            for (let i = 0; i < items.length; i++) items[i].classList.toggle('sel', i === idx);
+            updateGoLabel(picker);                // 選択が変わった時だけラベル更新（ドラッグ中もライブ）
+        }
+    }
+    function setPos(p) { w.pos = clampPos(p); render(); }
+    function stopAnim() { if (w.raf) { cancelAnimationFrame(w.raf); w.raf = 0; } w.vel = 0; }
+    w.value = function () { return values[curIdx()]; };
+
+    // 最寄りのアイテムへなめらかにスナップ
+    function snap() {
+        const target = clampPos(Math.round(w.pos / RT_ITEM_H) * RT_ITEM_H);
+        const start = w.pos, dist = target - start, t0 = performance.now(), dur = 200;
+        function step(now) {
+            const k = Math.min(1, (now - t0) / dur);
+            const e = 1 - Math.pow(1 - k, 3);     // easeOutCubic
+            w.pos = start + dist * e; render();
+            if (k < 1) { w.raf = requestAnimationFrame(step); }
+            else { w.raf = 0; w.pos = target; render(); updateGoLabel(picker); }
+        }
+        stopAnim(); w.raf = requestAnimationFrame(step);
+    }
+
+    // 慣性スクロール（vel: px/ms） → 止まりかけたらスナップ
+    function inertia() {
+        function step() {
+            w.pos = w.pos - w.vel * 16;           // 1フレーム≒16ms
+            if (w.pos < 0) { w.pos = 0; w.vel = 0; }
+            if (w.pos > maxPos) { w.pos = maxPos; w.vel = 0; }
+            render();
+            w.vel *= WHEEL_FRICTION;
+            if (Math.abs(w.vel) > WHEEL_MIN_VEL) { w.raf = requestAnimationFrame(step); }
+            else { w.raf = 0; snap(); }
+        }
+        stopAnim(); w.raf = requestAnimationFrame(step);
+    }
+
+    // ---- ドラッグ（pointer：マウスもタッチも共通）----
+    col.addEventListener('pointerdown', function (e) {
+        stopAnim();
+        w.dragging = true;
+        w.lastY = e.clientY; w.lastT = performance.now(); w.vel = 0;
+        try { col.setPointerCapture(e.pointerId); } catch (_) {}
+        col.classList.add('grabbing');
+        e.preventDefault();
+    });
+    col.addEventListener('pointermove', function (e) {
+        if (!w.dragging) return;
+        const now = performance.now();
+        const dy = e.clientY - w.lastY;
+        const dt = Math.max(1, now - w.lastT);
+        setPos(w.pos - dy);                       // 下げると過去側（iOSピッカーと同じ向き）
+        w.vel = dy / dt;                          // px/ms（下方向＋）。慣性は pos -= vel
+        w.lastY = e.clientY; w.lastT = now;
+    });
+    function endDrag(e) {
+        if (!w.dragging) return;
+        w.dragging = false;
+        col.classList.remove('grabbing');
+        try { col.releasePointerCapture(e.pointerId); } catch (_) {}
+        if (Math.abs(w.vel) > WHEEL_MIN_VEL) inertia(); else snap();
+    }
+    col.addEventListener('pointerup', endDrag);
+    col.addEventListener('pointercancel', endDrag);
+
+    // ---- マウスホイール（なめらか・最後にまとめてスナップ）----
+    let wheelT;
+    col.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        stopAnim();
+        setPos(w.pos + e.deltaY * WHEEL_WHEEL_STEP);
+        clearTimeout(wheelT);
+        wheelT = setTimeout(snap, 120);
+    }, { passive: false });
+
+    render();
 }
 
-function markWheelCol(col) {
-    const idx = Math.round(col.scrollTop / RT_ITEM_H);
-    const items = col.querySelectorAll('.witem');
-    for (let i = 0; i < items.length; i++) items[i].classList.toggle('sel', i === idx);
-}
-
-function wheelVal(col) {
-    const idx = Math.round(col.scrollTop / RT_ITEM_H);
-    const items = col.querySelectorAll('.witem');
-    return items[idx] ? items[idx].textContent : '';
-}
+// 値の読み取り（コントローラ経由）
+function wheelVal(col) { return (col && col._wheel) ? col._wheel.value() : ''; }
 
 function pickerTime(picker) {
     return wheelVal(picker.querySelector('.wcol[data-kind="hour"]')) + ':' + wheelVal(picker.querySelector('.wcol[data-kind="min"]'));

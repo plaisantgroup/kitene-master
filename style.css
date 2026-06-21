@@ -3113,10 +3113,12 @@ html::after {
 .btn-now:hover { filter: brightness(1.1); }
 .wheelwrap { flex: 1; background: #121212; border: 1px solid #6b5e2e; border-radius: 9px; padding: 5px; }
 .wheel { display: flex; justify-content: center; align-items: stretch; gap: 2px; position: relative; height: 108px; }
-.wcol { height: 108px; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; width: 60px; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.wcol { height: 108px; overflow: hidden; position: relative; text-align: center; width: 60px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.wcol.grabbing { cursor: grabbing; }
+.wlist { will-change: transform; }
 .wcol::-webkit-scrollbar { display: none; }
 .wpad { height: 36px; }
-.witem { height: 36px; line-height: 36px; scroll-snap-align: center; font-size: 1.25rem; font-weight: 700; color: #777; transition: color 0.12s; }
+.witem { height: 36px; line-height: 36px; font-size: 1.25rem; font-weight: 700; color: #777; transition: color 0.12s; }
 .witem.sel { color: #ffd454; }
 .wsep { align-self: center; font-size: 1.25rem; color: var(--primary-color); font-weight: 700; }
 .whl-bar { position: absolute; top: 36px; left: 6px; right: 6px; height: 36px; border-top: 1.5px solid var(--primary-color); border-bottom: 1.5px solid var(--primary-color); pointer-events: none; border-radius: 4px; }
