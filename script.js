@@ -1466,6 +1466,13 @@ async function doAvailability(name, time, btn) {
                 tgl.innerHTML = '🔒 空き予告<span class="lk-min">（あと60分）</span>';
             }
             sec.setAttribute('data-locked', '1');
+            // ★ ピッカーを折りたたんでロック表示にする（投稿後に折りたためない問題の対策）。✓を少し見せてから再描画
+            setTimeout(function () {
+                if (!sec || !sec.isConnected) return;
+                const mw = sec.querySelector('.manryo');
+                if (mw && mw.dataset.busy) return; // 本日満了の処理中は畳まない（次の再描画で畳まれる）
+                sec.outerHTML = getAvailabilitySection(name);
+            }, 1800);
         } else if (r && r.locked) {
             res.className = 'rt-res warn';
             res.textContent = '⏳ ' + (r.message || 'ロック中です');
