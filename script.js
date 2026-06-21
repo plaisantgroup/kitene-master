@@ -15,6 +15,7 @@ let realtimeFlags = {}; // ★ 空き予告: 源氏名→公開範囲（getRealt
 let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
+let weeklyHeadcount = [];  // 週間シフトの人数（日付ごと・店舗ごと）
 let strategyFilledByUnified = false;  // 戦略フォームを相乗りで反映済みか
 let publicationCategories = [];  // 掲載カテゴリ（プルダウン選択肢）
 let publicationsFilledByUnified = false;  // 掲載を相乗りで反映済みか
@@ -471,6 +472,8 @@ async function loadAllDataUnified(options = {}) {
         if (Array.isArray(result.shiftData)) shiftData = result.shiftData;
         if (Array.isArray(result.urlData)) urlData = result.urlData;
         if (Array.isArray(result.okiniData)) okiniData = result.okiniData;
+        if (Array.isArray(result.weeklyHeadcount)) weeklyHeadcount = result.weeklyHeadcount;
+        renderWeeklyStrip();
         // ★ フォーム系の反映（更新時 skipForms=true なら入力途中の内容を守るためスキップ）
         if (!skipForms) {
             // ★ 明日の戦略も相乗りで反映（時間差なし）
@@ -481,6 +484,8 @@ async function loadAllDataUnified(options = {}) {
                 fillStrategyForm('ainoshizuku', result.strategy.stores.ainoshizuku);
                 strategyFilledByUnified = true;
             }
+            // ★ 明日の戦略の「出勤人数」を週間シフトから自動表示
+            fillStrategyCounts();
             // ★ 今日の戦略をメモとして表示（編集不可）
             if (result.todayStrategy && result.todayStrategy.stores) {
                 const tmd = result.todayStrategy.dateMd || '';
@@ -660,6 +665,9 @@ async function handleExcelUpload(file) {
         devLog('ステップ4.1: 週間シフトに書き込み中...', parsed.weekly.length, '行');
         await uploadWeeklyShift(parsed.weekly);
         devLog('ステップ4.1完了: 週間シフト書き込み');
+        
+        // ★ ステップ4.2: 週間シフトの人数を取得（明日の戦略の出勤人数に反映）
+        await loadWeeklyHeadcount();
         
         // ★★★ ステップ4.5: 最終出勤日を自動更新 ★★★
         devLog('ステップ4.5: 最終出勤日を更新中...');
@@ -918,6 +926,7 @@ function getMainStoreBadgeForUrl(url) {
 function filterByStore(store) {
     devLog('filterByStore:', store);
     currentStoreFilter = store;
+    renderWeeklyStrip();
     
     // フィルターボタンのアクティブ状態を更新
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -4000,9 +4009,72 @@ function updateStrategyTitle(targetDate) {
     titleEl.textContent = `明日（${Number(m[2])}/${Number(m[3])}）の戦略`;
 }
 
+// ★ 戦略の日付("2026年06月22日") → "2026-06-22"
+function strategyDateToISO(jpDate) {
+    const m = String(jpDate || '').match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (!m) return '';
+    return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+}
+
+// ★ 明日の戦略の「出勤人数」を週間シフトの人数から自動表示（読み取り専用）
+function fillStrategyCounts() {
+    const targetISO = strategyDateToISO(getStrategyTargetDate());
+    const day = (weeklyHeadcount || []).find(function (d) { return d.date === targetISO; });
+    ['delidosu', 'anecan', 'ainoshizuku'].forEach(function (store) {
+        const el = document.getElementById('strategy-' + store + '-count');
+        if (!el) return;
+        el.value = day ? String(day[store]) : '';
+        el.readOnly = true;
+    });
+}
+
+// ★ 週間シフトの人数を取得（取り込み後の再取得用）
+async function loadWeeklyHeadcount() {
+    const result = await apiCall('getWeeklyHeadcount');
+    if (result && result.success) {
+        weeklyHeadcount = result.days || [];
+        fillStrategyCounts();
+        renderWeeklyStrip();
+    }
+}
+
+// ★ 出勤タブ：週間シフトの人数を横スライドで表示（店舗フィルタ連動）
+function renderWeeklyStrip() {
+    const el = document.getElementById('weekly-strip');
+    if (!el) return;
+    if (!weeklyHeadcount || weeklyHeadcount.length === 0) {
+        el.style.display = 'none';
+        el.innerHTML = '';
+        return;
+    }
+    el.style.display = '';
+    const store = currentStoreFilter;
+    const storeLabel = ({ all: '全店', delidosu: 'でりどす', anecan: 'アネキャン', ainoshizuku: 'しずく' })[store] || '全店';
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+    const todayISO = strategyDateToISO(currentShiftDate); // 取り込んだ日（今日）
+    let html = '<div class="wk-head">週間人数（' + storeLabel + '）</div><div class="wk-row">';
+    html += weeklyHeadcount.map(function (d) {
+        const dt = new Date(d.date + 'T00:00:00');
+        const md = (dt.getMonth() + 1) + '/' + dt.getDate();
+        const wd = weekdays[dt.getDay()] || '';
+        const main = (store === 'all') ? d.total : (d[store] || 0);
+        const sub = (store === 'all') ? ('で' + d.delidosu + '/ア' + d.anecan + '/し' + d.ainoshizuku) : '';
+        const isToday = (d.date === todayISO);
+        const cls = 'wk-day' + (main === 0 ? ' wk-zero' : '') + (isToday ? ' wk-today' : '')
+                  + (wd === '日' ? ' wk-sun' : '') + (wd === '土' ? ' wk-sat' : '');
+        return '<div class="' + cls + '">'
+             + '<div class="wk-date">' + md + '<span class="wk-wd">(' + wd + ')</span></div>'
+             + '<div class="wk-count">' + main + '<span class="wk-unit">人</span></div>'
+             + (sub ? '<div class="wk-sub">' + sub + '</div>' : '')
+             + '</div>';
+    }).join('');
+    html += '</div>';
+    el.innerHTML = html;
+}
+
 function fillStrategyForm(storeKey, data) {
     data = data || {};
-    ['count', 'event', 'chat', 'mail'].forEach((field) => {
+    ['chat', 'mail'].forEach((field) => {
         const el = document.getElementById(`strategy-${storeKey}-${field}`);
         if (el) {
             const v = data[field];
@@ -4031,6 +4103,7 @@ async function loadStrategyData() {
     fillStrategyForm('delidosu', stores.delidosu);
     fillStrategyForm('anecan', stores.anecan);
     fillStrategyForm('ainoshizuku', stores.ainoshizuku);
+    fillStrategyCounts();
     devLog('loadStrategyData: 読み込み完了', targetDate);
 }
 
@@ -4053,8 +4126,6 @@ async function saveStrategyData() {
         return el ? el.value : '';
     };
     const collect = (storeKey) => ({
-        count: getVal(storeKey, 'count'),
-        event: getVal(storeKey, 'event'),
         chat: getVal(storeKey, 'chat'),
         mail: getVal(storeKey, 'mail')
     });
@@ -4098,7 +4169,7 @@ function fillTodayMemo(storeKey, data, dateMd) {
     if (!el) return;
     el.innerHTML = '';
     data = data || {};
-    const items = [['イベント', data.event], ['チャット', data.chat], ['メール', data.mail]].filter(function (x) { return x[1]; });
+    const items = [['チャット', data.chat], ['メール', data.mail]].filter(function (x) { return x[1]; });
     if (items.length === 0) return;
     const head = document.createElement('div');
     head.className = 'today-memo-head';

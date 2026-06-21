@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260620b">
+    <link rel="stylesheet" href="style.css?v=20260620e">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -100,17 +100,13 @@
                     <div class="strategy-acc-body">
                         <div class="strategy-field strategy-field-count">
                             <div class="strategy-count-left">
-                                <label>出勤人数</label>
+                                <label>出勤人数（自動）</label>
                                 <div class="strategy-count-wrap">
-                                    <input type="text" inputmode="numeric" class="strategy-input" id="strategy-delidosu-count" placeholder="0">
+                                    <input type="text" inputmode="numeric" class="strategy-input strategy-input-auto" id="strategy-delidosu-count" placeholder="自動" readonly>
                                     <span class="strategy-count-unit">人</span>
                                 </div>
                             </div>
                             <div class="strategy-today-memo" id="strategy-today-delidosu"></div>
-                        </div>
-                        <div class="strategy-field">
-                            <label>イベント内容</label>
-                            <textarea class="strategy-textarea" id="strategy-delidosu-event" rows="2"></textarea>
                         </div>
                         <div class="strategy-field">
                             <label>チャット</label>
@@ -129,17 +125,13 @@
                     <div class="strategy-acc-body">
                         <div class="strategy-field strategy-field-count">
                             <div class="strategy-count-left">
-                                <label>出勤人数</label>
+                                <label>出勤人数（自動）</label>
                                 <div class="strategy-count-wrap">
-                                    <input type="text" inputmode="numeric" class="strategy-input" id="strategy-anecan-count" placeholder="0">
+                                    <input type="text" inputmode="numeric" class="strategy-input strategy-input-auto" id="strategy-anecan-count" placeholder="自動" readonly>
                                     <span class="strategy-count-unit">人</span>
                                 </div>
                             </div>
                             <div class="strategy-today-memo" id="strategy-today-anecan"></div>
-                        </div>
-                        <div class="strategy-field">
-                            <label>イベント内容</label>
-                            <textarea class="strategy-textarea" id="strategy-anecan-event" rows="2"></textarea>
                         </div>
                         <div class="strategy-field">
                             <label>チャット</label>
@@ -158,17 +150,13 @@
                     <div class="strategy-acc-body">
                         <div class="strategy-field strategy-field-count">
                             <div class="strategy-count-left">
-                                <label>出勤人数</label>
+                                <label>出勤人数（自動）</label>
                                 <div class="strategy-count-wrap">
-                                    <input type="text" inputmode="numeric" class="strategy-input" id="strategy-ainoshizuku-count" placeholder="0">
+                                    <input type="text" inputmode="numeric" class="strategy-input strategy-input-auto" id="strategy-ainoshizuku-count" placeholder="自動" readonly>
                                     <span class="strategy-count-unit">人</span>
                                 </div>
                             </div>
                             <div class="strategy-today-memo" id="strategy-today-ainoshizuku"></div>
-                        </div>
-                        <div class="strategy-field">
-                            <label>イベント内容</label>
-                            <textarea class="strategy-textarea" id="strategy-ainoshizuku-event" rows="2"></textarea>
                         </div>
                         <div class="strategy-field">
                             <label>チャット</label>
@@ -234,6 +222,9 @@
             
             <!-- ★v3.5 出勤人数カウンター -->
             <div class="shift-counter" id="shift-counter" style="display:none;"></div>
+
+            <!-- ★ 週間シフトの人数（横スライド） -->
+            <div class="weekly-strip" id="weekly-strip" style="display:none;"></div>
 
             <!-- アップロードエリア -->
             <div class="upload-area">
@@ -596,6 +587,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260620b"></script>
+    <script src="script.js?v=20260620e"></script>
 </body>
 </html>
