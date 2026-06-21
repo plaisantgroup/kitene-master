@@ -11,6 +11,7 @@ const NEW_COMMENT_DAYS = 5;
 // グローバル変数
 let shiftData = [];
 let urlData = [];
+let realtimeFlags = {}; // ★ 空き予告: 源氏名→公開範囲（getRealtimeFlags）
 let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
@@ -405,6 +406,7 @@ async function loadAllData() {
     }
     
     // ★ 全データ揃った状態で再描画
+    await loadRealtimeFlags();  // ★ 空き予告フラグを取得してから描画
     renderShiftList();
     renderUrlList();
     
@@ -587,14 +589,17 @@ async function handleExcelUpload(file) {
         
         showLoading();
         
-        // ステップ1: Excelファイルを読み込み
+        // ステップ1: Excelファイルを読み込み（今日＝ファイル名先頭日で絞る／週間も同時取得）
         devLog('ステップ1: Excelファイルを読み込み中...');
-        const shiftData = await readExcelFile(file);
-        devLog('ステップ1完了: データ件数', shiftData.length);
-        devLog('読み込んだデータ:', shiftData);
+        let targetISO = '';
+        const fnMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
+        if (fnMatch) targetISO = fnMatch[1] + '-' + fnMatch[2] + '-' + fnMatch[3];
+        const parsed = await readExcelFile(file, targetISO);
+        const shiftData = parsed.today;
+        devLog('ステップ1完了: 今日', shiftData.length, '人 / 週間', parsed.weekly.length, '行');
         
         if (!shiftData || shiftData.length === 0) {
-            throw new Error('出勤予定のデータが見つかりませんでした');
+            throw new Error('今日（' + (parsed.dateStr || targetISO) + '）の出勤予定データが見つかりませんでした');
         }
         
         // 日付を抽出
@@ -651,6 +656,11 @@ async function handleExcelUpload(file) {
         await uploadShiftData(dataWithUrls);
         devLog('ステップ4完了: アップロード成功');
         
+        // ★ ステップ4.1: 週間シフトシートにも7日ぶんを書き込む
+        devLog('ステップ4.1: 週間シフトに書き込み中...', parsed.weekly.length, '行');
+        await uploadWeeklyShift(parsed.weekly);
+        devLog('ステップ4.1完了: 週間シフト書き込み');
+        
         // ★★★ ステップ4.5: 最終出勤日を自動更新 ★★★
         devLog('ステップ4.5: 最終出勤日を更新中...');
         const shiftNames = dataWithUrls.map(d => d.name);
@@ -675,7 +685,7 @@ async function handleExcelUpload(file) {
     }
 }
 
-function readExcelFile(file) {
+function readExcelFile(file, targetDate) {
     return new Promise((resolve, reject) => {
         devLog('readExcelFile: ファイル読み込み開始');
         const reader = new FileReader();
@@ -695,59 +705,75 @@ function readExcelFile(file) {
                 devLog('readExcelFile: JSON変換完了、行数:', jsonData.length);
                 devLog('最初の3行:', jsonData.slice(0, 3));
                 
-                // 「出勤予」と「出勤確」のデータを抽出
-                const filteredData = jsonData
-                    .filter(row => {
-                        const status = row['シフト状態'];
-                        const isMatch = status === '出勤予' || status === '出勤確';
-                        if (!isMatch) {
-                            devLog('❌ フィルタアウト:', {
-                                name: row['源氏名'],
-                                time: row['出勤時間'],
-                                status: status,
-                                statusType: typeof status
-                            });
-                        } else {
-                            devLog('✅ OK:', {
-                                name: row['源氏名'],
-                                time: row['出勤時間'],
-                                status: status
-                            });
-                        }
-                        return isMatch;
-                    })
-                    .map(row => ({
-                        name: row['源氏名'] || '',
-                        time: formatTimeRange(row['出勤時間'], row['退勤時間']),
-                        status: row['シフト状態'] || '',
-                        delidosuName: row['でりどす'] || '',
-                        anecanName: row['アネキャン'] || '',
-                        ainoshizukuName: row['人妻本舗愛のしずく'] || ''
-                    }))
-                    .sort((a, b) => {
-                        // 時間順にソート
-                        const timeA = parseTime(a.time);
-                        const timeB = parseTime(b.time);
-                        return timeA - timeB;
-                    });
-                
-                // ★★★ v3.5: 重複排除（同じ源氏名は最初の1件だけ） ★★★
-                const seenNames = {};
-                const uniqueData = filteredData.filter(item => {
-                    if (seenNames[item.name]) {
-                        devLog('⚠️ 重複排除:', item.name);
-                        return false;
+                // ★ 出勤扱い（出勤予/出勤確/受付終）
+                const WORKING = ['出勤予', '出勤確', '受付終'];
+                const norm = (v) => String(v == null ? '' : v).trim();
+                // 日付を 'YYYY-MM-DD' に正規化（文字列/スラッシュ/Excelシリアル対応）
+                const toISO = (v) => {
+                    const str = norm(v);
+                    const m = str.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+                    if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+                    const n = Number(str);
+                    if (!isNaN(n) && n > 30000 && n < 80000) {
+                        const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+                        return d.getUTCFullYear() + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2) + '-' + ('0' + d.getUTCDate()).slice(-2);
                     }
-                    seenNames[item.name] = true;
-                    return true;
+                    return str;
+                };
+
+                // 全行を正規化
+                const allRows = jsonData.map(row => ({
+                    date: toISO(row['日付']),
+                    name: norm(row['源氏名']),
+                    inTime: norm(row['出勤時間']),
+                    outTime: norm(row['退勤時間']),
+                    status: norm(row['シフト状態']),
+                    delidosu: norm(row['でりどす']),
+                    anecan: norm(row['アネキャン']),
+                    ainoshizuku: norm(row['人妻本舗愛のしずく']),
+                    comment: norm(row['コメント'])
+                })).filter(r => r.name);
+
+                // 今日 = targetDate（ファイル名先頭日）がデータにあればそれ／無ければファイル内の最古日にフォールバック
+                const allDates = allRows.map(r => r.date).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+                const earliest = allDates.length ? allDates[0] : '';
+                const todayDate = (targetDate && allDates.indexOf(targetDate) !== -1) ? targetDate : earliest;
+                devLog('readExcelFile: 今日=', todayDate, '(指定=', targetDate, '/最古=', earliest, ')');
+
+                // ===== シフトデータ（今日の出勤者・源氏名でまとめる）=====
+                const byName = {};
+                const today = [];
+                allRows.filter(r => r.date === todayDate && WORKING.indexOf(r.status) !== -1).forEach(r => {
+                    if (!byName[r.name]) {
+                        byName[r.name] = {
+                            name: r.name,
+                            time: formatTimeRange(r.inTime, r.outTime),
+                            status: r.status,
+                            delidosuName: r.delidosu,
+                            anecanName: r.anecan,
+                            ainoshizukuName: r.ainoshizuku
+                        };
+                        today.push(byName[r.name]);
+                    } else {
+                        // 同じ子が同じ日に複数店舗 → 店舗名をマージ
+                        const exist = byName[r.name];
+                        if (!exist.delidosuName && r.delidosu) exist.delidosuName = r.delidosu;
+                        if (!exist.anecanName && r.anecan) exist.anecanName = r.anecan;
+                        if (!exist.ainoshizukuName && r.ainoshizuku) exist.ainoshizukuName = r.ainoshizuku;
+                    }
                 });
-                if (filteredData.length !== uniqueData.length) {
-                    devLog('★ 重複排除: ' + filteredData.length + '件 → ' + uniqueData.length + '件');
-                }
-                
-                devLog('readExcelFile: フィルタ後の件数', uniqueData.length);
-                devLog('フィルタ後のデータ:', uniqueData);
-                resolve(uniqueData);
+                today.sort((a, b) => parseTime(a.time) - parseTime(b.time));
+
+                // ===== 週間シフト（7日ぶんの出勤行・全部）=====
+                const weekly = allRows
+                    .filter(r => WORKING.indexOf(r.status) !== -1)
+                    .map(r => ({
+                        date: r.date, name: r.name, time: r.inTime, end: r.outTime, status: r.status,
+                        delidosu: r.delidosu, anecan: r.anecan, ainoshizuku: r.ainoshizuku, comment: r.comment
+                    }));
+
+                devLog('readExcelFile: 今日' + today.length + '人 / 週間' + weekly.length + '行');
+                resolve({ today: today, weekly: weekly, dateStr: todayDate });
             } catch (error) {
                 console.error('readExcelFile: エラー', error);
                 reject(error);
@@ -1035,6 +1061,29 @@ function getKanaGroup(name) {
 }
 
 
+async function uploadWeeklyShift(rows) {
+    try {
+        devLog('uploadWeeklyShift: 送信中...', rows.length, '行');
+        const response = await fetch(`${API_URL}?action=updateWeeklyShift`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ rows: rows })
+        });
+        const resultText = await response.text();
+        const result = JSON.parse(resultText);
+        if (result.success) {
+            devLog('uploadWeeklyShift: 成功 -', result.message);
+        } else {
+            console.error('uploadWeeklyShift: APIエラー', result.error);
+        }
+        return result;
+    } catch (error) {
+        // 週間シフトの失敗は致命的ではない（シフトデータは別途成功している）ので投げない
+        console.error('uploadWeeklyShift: 例外', error);
+        return { success: false, error: String(error) };
+    }
+}
+
 async function uploadShiftData(data) {
     try {
         devLog('uploadShiftData: リクエスト送信中...');
@@ -1197,6 +1246,7 @@ function renderShiftList() {
                         ${getOkiniBadge(shift.name, 'ainoshizuku')}
                     </div>
                 </div>
+                ${getAvailabilitySection(shift.name)}
             </div>
         `;
     }).join('');
@@ -1204,6 +1254,150 @@ function renderShiftList() {
     // 日付表示（handleExcelUpload関数で設定済みなので、ここでは何もしない）
     
     devLog('renderShiftList: 描画完了');
+}
+
+// ============================================================
+// ★ 空き予告（リアルタイム）UI
+// ============================================================
+const RT_HOURS = (function(){var a=[];for(var h=0;h<24;h++)a.push(('0'+h).slice(-2));return a;})();
+const RT_MINS  = (function(){var a=[];for(var m=0;m<60;m+=5)a.push(('0'+m).slice(-2));return a;})();
+const RT_ITEM_H = 36;
+
+// 空き予告フラグ取得（源氏名→公開範囲）
+async function loadRealtimeFlags() {
+    try {
+        const r = await apiCall('getRealtimeFlags', {});
+        if (r && r.success && r.flags) realtimeFlags = r.flags;
+    } catch (e) {
+        devLog('loadRealtimeFlags エラー: ' + (e && e.message));
+    }
+}
+
+// カードに差し込む空き予告セクションのHTML
+function getAvailabilitySection(name) {
+    const flagsLoaded = realtimeFlags && Object.keys(realtimeFlags).length > 0;
+    const scope = flagsLoaded ? (realtimeFlags[name] || '') : '';
+    // フラグ未取得のうちは楽観的に有効（取得後の再描画で「なし」は無効化）
+    const enabled = !flagsLoaded || (scope === '全公開' || scope === 'マイガール限定');
+    const esc = String(name).replace(/'/g, "\\'");
+    if (!enabled) {
+        return `
+                <div class="availability-section">
+                    <button class="btn-availability dis" disabled>🔔 空き予告</button>
+                    <div class="off-note">リアルタイムOFF（空き予告列＝なし）</div>
+                </div>`;
+    }
+    return `
+                <div class="availability-section">
+                    <button class="btn-availability" onclick="toggleAvailability(this)">🔔 空き予告</button>
+                    <div class="availability-picker" hidden>
+                        <div class="rt-row2">
+                            <button class="btn-now" onclick="doAvailability('${esc}','',this)">今から<br>出す</button>
+                            <div class="wheelwrap"><div class="wheel">
+                                <div class="wcol" data-kind="hour"></div><span class="wsep">:</span><div class="wcol" data-kind="min"></div>
+                                <div class="whl-bar"></div>
+                            </div></div>
+                        </div>
+                        <div class="rt-plab">在籍3店舗にまとめて／店舗ごと5分あけて投稿</div>
+                        <button class="btn-go" onclick="doAvailabilityWheel('${esc}',this)">21:30 で空き予告</button>
+                        <div class="rt-res" hidden></div>
+                    </div>
+                    <div class="manryo">
+                        <button class="btn-manryo" disabled title="週間シフト導入後（手順8）で有効になります">🚫 本日満了</button>
+                        <span class="manryo-note">手順8で有効</span>
+                    </div>
+                </div>`;
+}
+
+function toggleAvailability(btn) {
+    const sec = btn.closest('.availability-section');
+    const picker = sec.querySelector('.availability-picker');
+    if (picker.hasAttribute('hidden')) {
+        picker.removeAttribute('hidden');
+        btn.classList.add('open');
+        buildWheel(picker);
+    } else {
+        picker.setAttribute('hidden', '');
+        btn.classList.remove('open');
+    }
+}
+
+function buildWheel(picker) {
+    if (picker.dataset.built) return;
+    fillWheelCol(picker.querySelector('.wcol[data-kind="hour"]'), RT_HOURS, '21', picker);
+    fillWheelCol(picker.querySelector('.wcol[data-kind="min"]'), RT_MINS, '30', picker);
+    picker.dataset.built = '1';
+    updateGoLabel(picker);
+}
+
+function fillWheelCol(col, values, def, picker) {
+    let h = '<div class="wpad"></div>';
+    for (let i = 0; i < values.length; i++) h += '<div class="witem">' + values[i] + '</div>';
+    h += '<div class="wpad"></div>';
+    col.innerHTML = h;
+    const idx = Math.max(0, values.indexOf(def));
+    col.scrollTop = idx * RT_ITEM_H;
+    markWheelCol(col);
+    let t;
+    col.addEventListener('scroll', function () {
+        clearTimeout(t);
+        t = setTimeout(function () { markWheelCol(col); updateGoLabel(picker); }, 70);
+    });
+}
+
+function markWheelCol(col) {
+    const idx = Math.round(col.scrollTop / RT_ITEM_H);
+    const items = col.querySelectorAll('.witem');
+    for (let i = 0; i < items.length; i++) items[i].classList.toggle('sel', i === idx);
+}
+
+function wheelVal(col) {
+    const idx = Math.round(col.scrollTop / RT_ITEM_H);
+    const items = col.querySelectorAll('.witem');
+    return items[idx] ? items[idx].textContent : '';
+}
+
+function pickerTime(picker) {
+    return wheelVal(picker.querySelector('.wcol[data-kind="hour"]')) + ':' + wheelVal(picker.querySelector('.wcol[data-kind="min"]'));
+}
+
+function updateGoLabel(picker) {
+    const go = picker.querySelector('.btn-go');
+    if (go) go.textContent = pickerTime(picker) + ' で空き予告';
+}
+
+function doAvailabilityWheel(name, goBtn) {
+    const picker = goBtn.closest('.availability-picker');
+    doAvailability(name, pickerTime(picker), goBtn);
+}
+
+// 空き予告を実行（postAvailability を呼ぶ）
+async function doAvailability(name, time, btn) {
+    const sec = btn.closest('.availability-section');
+    const res = sec.querySelector('.rt-res');
+    if (sec.dataset.busy) return;          // 連打防止
+    sec.dataset.busy = '1';
+    res.className = 'rt-res';
+    res.textContent = '送信中…';
+    res.removeAttribute('hidden');
+    try {
+        const r = await apiCall('postAvailability', { method: 'POST', body: { name: name, time: time } });
+        if (r && r.success) {
+            res.className = 'rt-res ok';
+            res.textContent = '✓ ' + (r.message || '空き予告を出しました') + (r.timing ? '（' + r.timing + '）' : '');
+        } else if (r && r.locked) {
+            res.className = 'rt-res warn';
+            res.textContent = '⏳ ' + (r.message || 'ロック中です');
+        } else {
+            res.className = 'rt-res warn';
+            res.textContent = '⚠️ ' + ((r && (r.message || r.error)) || '失敗しました');
+        }
+    } catch (e) {
+        res.className = 'rt-res warn';
+        res.textContent = '⚠️ 通信エラー: ' + (e && e.message);
+    } finally {
+        sec.dataset.busy = '';
+    }
 }
 
 /**

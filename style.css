@@ -3052,3 +3052,88 @@ html::after {
     /* 流れ星はJS側でも生成を停止する */
 }
 
+
+/* ===== ★ 空き予告（リアルタイム）UI ===== */
+.availability-section {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(212, 175, 55, 0.35);
+}
+.btn-availability {
+    width: 100%;
+    padding: 11px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--primary-color);
+    background: #3a3320;
+    color: #ffd454;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-availability:hover { background: #4a4228; }
+.btn-availability.open { background: var(--primary-color); color: #0a0a0a; }
+.btn-availability.dis {
+    border: 2px solid #555;
+    background: #2a2a2a;
+    color: #999;
+    cursor: not-allowed;
+}
+.off-note { font-size: 0.72rem; color: var(--text-secondary); text-align: center; margin-top: 7px; }
+
+.availability-picker { margin-top: 11px; }
+.availability-picker[hidden] { display: none; }
+.rt-row2 { display: flex; gap: 8px; align-items: stretch; }
+.btn-now {
+    flex: 0 0 38%;
+    padding: 10px 6px;
+    border-radius: 8px;
+    border: none;
+    background: var(--primary-color);
+    color: #0a0a0a;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    line-height: 1.2;
+}
+.btn-now:hover { filter: brightness(1.1); }
+.wheelwrap { flex: 1; background: #121212; border: 1px solid #6b5e2e; border-radius: 9px; padding: 5px; }
+.wheel { display: flex; justify-content: center; align-items: stretch; gap: 2px; position: relative; height: 108px; }
+.wcol { height: 108px; overflow-y: scroll; scroll-snap-type: y mandatory; text-align: center; width: 60px; scrollbar-width: none; -ms-overflow-style: none; }
+.wcol::-webkit-scrollbar { display: none; }
+.wpad { height: 36px; }
+.witem { height: 36px; line-height: 36px; scroll-snap-align: center; font-size: 1.25rem; font-weight: 700; color: #777; transition: color 0.12s; }
+.witem.sel { color: #ffd454; }
+.wsep { align-self: center; font-size: 1.25rem; color: var(--primary-color); font-weight: 700; }
+.whl-bar { position: absolute; top: 36px; left: 6px; right: 6px; height: 36px; border-top: 1.5px solid var(--primary-color); border-bottom: 1.5px solid var(--primary-color); pointer-events: none; border-radius: 4px; }
+.rt-plab { font-size: 0.72rem; color: var(--text-secondary); text-align: center; margin: 8px 0 0; }
+.btn-go {
+    width: 100%;
+    padding: 11px;
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+    background: #3a3320;
+    color: #ffd454;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 9px;
+}
+.btn-go:hover { background: #4a4228; }
+.rt-res { margin-top: 10px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border-color); background: #1a1a1a; color: var(--text-primary); font-size: 0.82rem; font-weight: 600; line-height: 1.5; }
+.rt-res.ok { border-color: #4ade80; background: #16301f; color: #c9f7d6; }
+.rt-res.warn { border-color: #facc15; background: #2e2a12; color: #fde68a; }
+.manryo { margin-top: 9px; display: flex; align-items: center; gap: 9px; }
+.btn-manryo {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 2px solid #ef6b6b;
+    background: #2e1818;
+    color: #ff9b9b;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.manryo-note { flex: 0 0 38%; font-size: 0.62rem; color: var(--text-secondary); line-height: 1.3; }
