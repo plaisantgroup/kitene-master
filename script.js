@@ -4054,9 +4054,9 @@ function renderWeeklyStrip() {
     const todayISO = strategyDateToISO(currentShiftDate); // 取り込んだ日（今日）
     let html = '<div class="wk-head">週間人数（' + storeLabel + '）</div><div class="wk-row">';
     html += weeklyHeadcount.map(function (d) {
-        const dt = new Date(d.date + 'T00:00:00');
-        const md = (dt.getMonth() + 1) + '/' + dt.getDate();
-        const wd = weekdays[dt.getDay()] || '';
+        const dm = String(d.date).match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+        const md = dm ? (Number(dm[2]) + '/' + Number(dm[3])) : String(d.date);
+        const wd = dm ? (weekdays[new Date(Number(dm[1]), Number(dm[2]) - 1, Number(dm[3])).getDay()] || '') : '';
         const main = (store === 'all') ? d.total : (d[store] || 0);
         const sub = (store === 'all') ? ('で' + d.delidosu + '/ア' + d.anecan + '/し' + d.ainoshizuku) : '';
         const isToday = (d.date === todayISO);
