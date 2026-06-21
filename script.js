@@ -1588,16 +1588,29 @@ async function doManryo(name, btn) {
     res.textContent = '送信中…';
     res.removeAttribute('hidden');
     try {
-        const r = await apiCall('postManryo', { method: 'POST', body: { name: name } });
-        if (r && r.success) {
-            res.className = 'rt-res ok';
-            res.textContent = '✓ ' + (r.message || '本日満了を出しました');
-        } else if (r && r.locked) {
-            res.className = 'rt-res warn';
-            res.textContent = '⏳ ' + (r.message || '本日はもう出せません');
-        } else {
-            res.className = 'rt-res warn';
-            res.textContent = '⚠️ ' + ((r && (r.message || r.error)) || '失敗しました');
+        let force = false;
+        for (;;) {
+            const r = await apiCall('postManryo', { method: 'POST', body: { name: name, force: force } });
+            if (r && r.success) {
+                res.className = 'rt-res ok';
+                res.textContent = '✓ ' + (r.message || '本日満了を出しました');
+                break;
+            } else if (r && r.locked) {
+                res.className = 'rt-res warn';
+                res.textContent = '⏳ ' + (r.message || '本日はもう出せません');
+                break;
+            } else if (r && r.noNextShift && !force) {
+                // ★ 次の出勤予定なし → 確認して、OKなら日付なしで生成（完売日記は作れる）
+                const ok = confirm(name + ' は次の出勤予定が見つかりません。\n（週間シフトが未取込か、今週これ以降の出勤がない可能性があります）\n\nそれでも完売（本日満了）日記を作りますか？\n※次の出勤日は本文に入りません（日付なしで締めます）');
+                if (ok) { force = true; res.className = 'rt-res'; res.textContent = '送信中…'; continue; }
+                res.className = 'rt-res warn';
+                res.textContent = '中止しました（週間シフトを取り込むと次の出勤日入りで作れます）';
+                break;
+            } else {
+                res.className = 'rt-res warn';
+                res.textContent = '⚠️ ' + ((r && (r.message || r.error)) || '失敗しました');
+                break;
+            }
         }
     } catch (e) {
         res.className = 'rt-res warn';
