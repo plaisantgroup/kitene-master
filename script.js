@@ -1555,6 +1555,10 @@ async function doAvailability(name, time, btn) {
     const res = sec.querySelector('.rt-res');
     if (sec.dataset.busy) return;          // 連打防止
     sec.dataset.busy = '1';
+    // ★ 即フィードバック: タップ直後にトグルを即グレー＋送信中（楽観表示。失敗したら元に戻す）
+    const tgl = sec.querySelector('.btn-availability');
+    const tglPrev = tgl ? tgl.innerHTML : '';
+    if (tgl) { tgl.classList.add('locked'); tgl.disabled = true; tgl.innerHTML = '⏳ 送信中…'; }
     res.className = 'rt-res';
     res.textContent = '送信中…';
     res.removeAttribute('hidden');
@@ -1563,31 +1567,29 @@ async function doAvailability(name, time, btn) {
         if (r && r.success) {
             res.className = 'rt-res ok';
             res.textContent = '✓ ' + (r.message || '空き予告を出しました') + (r.timing ? '（' + r.timing + '）' : '');
-            // ★ 投稿成功 → この子の空き予告を60分グレーアウト（UI即反映。サーバーR列も更新済み）
+            // ★ 投稿成功 → 60分グレーアウト確定（サーバーR列も更新済み）
             availLockUntil[name] = Date.now() + 60 * 60000;
-            const tgl = sec.querySelector('.btn-availability');
-            if (tgl) {
-                tgl.classList.add('locked');
-                tgl.classList.remove('open');
-                tgl.disabled = true;
-                tgl.innerHTML = '🔒 空き予告<span class="lk-min">（あと60分）</span>';
-            }
+            if (tgl) { tgl.innerHTML = '🔒 空き予告<span class="lk-min">（あと60分）</span>'; }
             sec.setAttribute('data-locked', '1');
-            // ★ ピッカーを折りたたんでロック表示にする（投稿後に折りたためない問題の対策）。✓を少し見せてから再描画
+            // ★ ✓を少し見せてから畳んでロック表示に再描画
             setTimeout(function () {
                 if (!sec || !sec.isConnected) return;
                 const mw = sec.querySelector('.manryo');
                 if (mw && mw.dataset.busy) return; // 本日満了の処理中は畳まない（次の再描画で畳まれる）
                 sec.outerHTML = getAvailabilitySection(name);
-            }, 1800);
+            }, 900);
         } else if (r && r.locked) {
+            // ★ 失敗 → 楽観表示を元に戻す
+            if (tgl) { tgl.classList.remove('locked'); tgl.disabled = false; tgl.innerHTML = tglPrev; }
             res.className = 'rt-res warn';
             res.textContent = '⏳ ' + (r.message || 'ロック中です');
         } else {
+            if (tgl) { tgl.classList.remove('locked'); tgl.disabled = false; tgl.innerHTML = tglPrev; }
             res.className = 'rt-res warn';
             res.textContent = '⚠️ ' + ((r && (r.message || r.error)) || '失敗しました');
         }
     } catch (e) {
+        if (tgl) { tgl.classList.remove('locked'); tgl.disabled = false; tgl.innerHTML = tglPrev; }
         res.className = 'rt-res warn';
         res.textContent = '⚠️ 通信エラー: ' + (e && e.message);
     } finally {
@@ -1606,6 +1608,9 @@ async function doManryo(name, btn) {
     const res = wrap.querySelector('.rt-res');
     if (wrap.dataset.busy) return;          // 連打防止
     wrap.dataset.busy = '1';
+    // ★ 即フィードバック: タップ直後にボタンを即グレー＋送信中（楽観表示。失敗したら元に戻す）
+    const mbtnPrev = btn ? btn.innerHTML : '';
+    if (btn) { btn.classList.add('locked'); btn.disabled = true; btn.innerHTML = '⏳ 送信中…'; }
     res.className = 'rt-res';
     res.textContent = '送信中…';
     res.removeAttribute('hidden');
@@ -1616,15 +1621,15 @@ async function doManryo(name, btn) {
             if (r && r.success) {
                 res.className = 'rt-res ok';
                 res.textContent = '✓ ' + (r.message || '本日満了を出しました');
-                // ★ 本日満了は1日1回 → 投稿成功でこの子をロック（見た目グレーアウト）。✓メッセージは残す
+                // ★ 本日満了は1日1回 → 投稿成功でロック確定（楽観グレーをそのまま確定）
                 manryoLocked[name] = true;
-                btn.classList.add('locked');
-                btn.disabled = true;
                 btn.removeAttribute('onclick');
                 btn.innerHTML = '✅ 本日すでに投稿済み<span class="mr-sub">（本日分）</span>';
                 wrap.setAttribute('data-locked', '1');
                 break;
             } else if (r && r.locked) {
+                // ★ 失敗 → 楽観表示を元に戻す
+                if (btn) { btn.classList.remove('locked'); btn.disabled = false; btn.innerHTML = mbtnPrev; }
                 res.className = 'rt-res warn';
                 res.textContent = '⏳ ' + (r.message || '本日はもう出せません');
                 break;
@@ -1632,16 +1637,20 @@ async function doManryo(name, btn) {
                 // ★ 次の出勤予定なし → 確認して、OKなら日付なしで生成（完売日記は作れる）
                 const ok = confirm(name + ' は次の出勤予定が見つかりません。\n（週間シフトが未取込か、今週これ以降の出勤がない可能性があります）\n\nそれでも完売（本日満了）日記を作りますか？\n※次の出勤日は本文に入りません（日付なしで締めます）');
                 if (ok) { force = true; res.className = 'rt-res'; res.textContent = '送信中…'; continue; }
+                // ★ キャンセル → 楽観表示を元に戻す
+                if (btn) { btn.classList.remove('locked'); btn.disabled = false; btn.innerHTML = mbtnPrev; }
                 res.className = 'rt-res warn';
                 res.textContent = '中止しました（週間シフトを取り込むと次の出勤日入りで作れます）';
                 break;
             } else {
+                if (btn) { btn.classList.remove('locked'); btn.disabled = false; btn.innerHTML = mbtnPrev; }
                 res.className = 'rt-res warn';
                 res.textContent = '⚠️ ' + ((r && (r.message || r.error)) || '失敗しました');
                 break;
             }
         }
     } catch (e) {
+        if (btn) { btn.classList.remove('locked'); btn.disabled = false; btn.innerHTML = mbtnPrev; }
         res.className = 'rt-res warn';
         res.textContent = '⚠️ 通信エラー: ' + (e && e.message);
     } finally {
