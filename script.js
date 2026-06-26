@@ -2443,9 +2443,13 @@ async function confirmDelete() {
         const result = await response.json();
         
         if (result.success) {
+            const deletedName = currentDeleteName;   // モーダルを閉じる前に名前を確保
             closeDeleteModal();
             await loadUrlData();
             await loadShiftData();
+            // ★ 削除した子の面談キャッシュを破棄＋localStorage全体キャッシュをクリア（再読込で古い面談履歴が復活するのを防止）
+            if (commentCache && deletedName) delete commentCache[deletedName];
+            clearCache();
             showToast(result.message, 'success');
         } else {
             showToast(result.error, 'error');
@@ -3450,6 +3454,9 @@ async function confirmHistoryDelete() {
             if (cache && cardId) {
                 await loadLatestComment(cardId, cache.name);
             }
+            // ★ 古い履歴が再読込で復活しないよう面談キャッシュ＋localStorage全体キャッシュをクリア
+            if (cache && cache.name && commentCache) delete commentCache[cache.name];
+            clearCache();
         } else {
             showToast(result.error || '削除に失敗しました', 'error');
         }
@@ -3834,6 +3841,8 @@ async function confirmDeleteComment() {
             // 面談カードを再描画
             renderInterviewList();
             
+            // ★ 古いコメントが再読込で復活しないようlocalStorage全体キャッシュをクリア
+            clearCache();
             showToast('コメントを削除しました', 'success');
         } else {
             showToast(result.error || '削除に失敗しました', 'error');
