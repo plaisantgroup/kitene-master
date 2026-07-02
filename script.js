@@ -1324,18 +1324,38 @@ function isManryoLocked(name) { return !!manryoLocked[String(name).trim()]; }
 function startAvailLockTicker() {
     if (window.__availTickStarted) return;
     window.__availTickStarted = true;
+    let tickCount = 0;
     setInterval(function () {
+        // ★ 60秒ごと（2ティックに1回）にサーバーのロック状態を再取得。
+        //   別端末・別スタッフの投稿によるロックも、タップしなくても最大60秒で画面に反映される
+        tickCount++;
+        if (tickCount % 2 === 0) { try { loadRealtimeFlags(); } catch (e) { } }
         const secs = document.querySelectorAll('.availability-section[data-rt-name]');
         secs.forEach(function (sec) {
             const name = sec.getAttribute('data-rt-name');
             if (!name) return;
+            if (sec.dataset.busy) return;                              // 送信中のカードは触らない
+            const mw = sec.querySelector('.manryo');
+            if (mw && mw.dataset.busy) return;                         // 本日満了の処理中も触らない
             const lockedNow = isAvailLocked(name);
             const wasLocked = sec.getAttribute('data-locked') === '1';
+            if (lockedNow && !wasLocked) {
+                // ★ 未ロック表示のままロック状態になっていた（別端末の投稿・弾かれ後等）→ ロック表示へ再描画
+                sec.outerHTML = getAvailabilitySection(name);
+                return;
+            }
+            if (!lockedNow && wasLocked) {
+                sec.outerHTML = getAvailabilitySection(name); // ロック解除 → フル再描画
+                return;
+            }
+            if (mw && isManryoLocked(name) && mw.getAttribute('data-locked') !== '1') {
+                // ★ 本日満了ロックが後から判明した場合（別端末の投稿等）→ ロック表示へ再描画
+                sec.outerHTML = getAvailabilitySection(name);
+                return;
+            }
             if (lockedNow) {
                 const lbl = sec.querySelector('.btn-availability.locked .lk-min');
                 if (lbl) lbl.textContent = '（あと' + availLockRemainMin(name) + '分）';
-            } else if (wasLocked) {
-                sec.outerHTML = getAvailabilitySection(name); // ロック解除 → フル再描画
             }
         });
     }, 30000);
@@ -1579,10 +1599,20 @@ async function doAvailability(name, time, btn) {
                 sec.outerHTML = getAvailabilitySection(name);
             }, 900);
         } else if (r && r.locked) {
-            // ★ 失敗 → 楽観表示を元に戻す
-            if (tgl) { tgl.classList.remove('locked'); tgl.disabled = false; tgl.innerHTML = tglPrev; }
+            // ★ サーバーがロック中＝実際にロック中 → 表示も即ロック確定（従来は未ロック表示に戻していた＝
+            //   別端末・別スタッフが先に投稿した場合に「表示だけ未ロック」が残る原因だった）
+            const rem = Math.max(1, Number(r.remainingMin) || 60);
+            availLockUntil[name] = Date.now() + rem * 60000;
+            sec.setAttribute('data-locked', '1');
             res.className = 'rt-res warn';
             res.textContent = '⏳ ' + (r.message || 'ロック中です');
+            // メッセージを少し見せてからロック表示へ再描画
+            setTimeout(function () {
+                if (!sec || !sec.isConnected) return;
+                const mw = sec.querySelector('.manryo');
+                if (mw && mw.dataset.busy) return; // 本日満了の処理中は畳まない
+                sec.outerHTML = getAvailabilitySection(name);
+            }, 1200);
         } else {
             if (tgl) { tgl.classList.remove('locked'); tgl.disabled = false; tgl.innerHTML = tglPrev; }
             res.className = 'rt-res warn';
@@ -1628,10 +1658,13 @@ async function doManryo(name, btn) {
                 wrap.setAttribute('data-locked', '1');
                 break;
             } else if (r && r.locked) {
-                // ★ 失敗 → 楽観表示を元に戻す
-                if (btn) { btn.classList.remove('locked'); btn.disabled = false; btn.innerHTML = mbtnPrev; }
+                // ★ サーバーが1日1回ロック中＝本日投稿済み → 表示も即ロック確定（従来は未ロック表示に戻していた）
+                manryoLocked[name] = true;
                 res.className = 'rt-res warn';
                 res.textContent = '⏳ ' + (r.message || '本日はもう出せません');
+                btn.removeAttribute('onclick');
+                btn.innerHTML = '✅ 本日すでに投稿済み<span class="mr-sub">（本日分）</span>';
+                wrap.setAttribute('data-locked', '1');
                 break;
             } else if (r && r.noNextShift && !force) {
                 // ★ 次の出勤予定なし → 確認して、OKなら日付なしで生成（完売日記は作れる）
