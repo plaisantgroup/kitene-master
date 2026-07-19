@@ -1182,7 +1182,7 @@ function renderShiftList() {
         const timeA = parseTime(a.time === '当欠' ? (a.originalTime || '00:00') : a.time);
         const timeB = parseTime(b.time === '当欠' ? (b.originalTime || '00:00') : b.time);
         if (timeA !== timeB) return timeA - timeB;
-        return a.name.localeCompare(b.name, 'ja');
+        return String(a.name || '').localeCompare(String(b.name || ''), 'ja');
     });
     
     listElement.innerHTML = mergedData.map(shift => {
@@ -1802,7 +1802,7 @@ function renderAllCastList() {
     
     // 各クラス内で名前順にソート
     Object.values(classGroups).forEach(group => {
-        group.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        group.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ja'));
     });
     
     let html = '';
@@ -2174,11 +2174,11 @@ function renderUrlList() {
     
     // 各クラス内で名前順にソート
     Object.values(classGroups).forEach(group => {
-        group.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        group.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ja'));
     });
     
     // スタッフを名前順にソート
-    staffCasts.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    staffCasts.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ja'));
     
     let html = '';
     
@@ -2751,7 +2751,7 @@ async function renderInterviewList() {
     
     // 各クラス内で名前順にソート
     Object.values(classGroups).forEach(group => {
-        group.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        group.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ja'));
     });
     
     let html = '';
