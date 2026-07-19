@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260719h">
+    <link rel="stylesheet" href="style.css?v=20260720a">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -198,6 +198,30 @@
             <div id="loading" class="loading" style="display: none;">
                 <div class="spinner"></div>
                 <p>読み込み中...</p>
+            </div>
+
+            <!-- ★ Stage2: 当日追加フォーム（出勤タブ・日付の下/今日のシフトの上・名前=URL管理−本日シフト） -->
+            <div class="today-add" id="today-add" style="display:none;">
+                <button type="button" class="taa-toggle" onclick="toggleCallAcc(this)">
+                    <span class="taa-title">＋ 当日出勤を追加</span>
+                    <span class="taa-caret">▾</span>
+                </button>
+                <div class="taa-body" style="display:none;">
+                    <div class="taa-row">
+                        <label class="taa-label" for="taa-name">名前</label>
+                        <select id="taa-name" class="taa-select"></select>
+                    </div>
+                    <div class="taa-row">
+                        <label class="taa-label" for="taa-start">時間</label>
+                        <div class="taa-time">
+                            <select id="taa-start" class="taa-select taa-time-sel"></select>
+                            <span class="taa-sep">〜</span>
+                            <select id="taa-end" class="taa-select taa-time-sel"></select>
+                        </div>
+                    </div>
+                    <button type="button" id="taa-submit" class="btn-primary taa-submit" onclick="submitTodayAdd()">追加</button>
+                    <div class="taa-msg" id="taa-msg"></div>
+                </div>
             </div>
 
             <!-- ★ オキニフィルタ（出勤のみ・今日のシフト直上・タブ切替で差込） -->
@@ -605,6 +629,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260719h"></script>
+    <script src="script.js?v=20260720a"></script>
 </body>
 </html>

@@ -3242,3 +3242,20 @@ html::after {
 .cl-store.st-d{background:#fce5a8;color:#7f6011;}
 .cl-store.st-a{background:#f4cccc;color:#a61c5c;}
 .cl-store.st-s{background:#d9d2e9;color:#5b2c8a;}
+
+/* ★ Stage2: 当日追加フォーム */
+.today-add{border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;margin:12px 0;background:var(--card-bg);}
+.taa-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;background:transparent;border:none;color:var(--text-primary);font-size:14px;font-weight:700;cursor:pointer;text-align:left;}
+.taa-toggle .taa-caret{transition:transform 0.2s ease;color:var(--primary-color);font-size:12px;}
+.taa-toggle.open .taa-caret{transform:rotate(180deg);}
+.taa-body{padding:6px 14px 14px;border-top:1px solid var(--border-color);}
+.taa-row{display:flex;align-items:center;gap:10px;margin-top:12px;}
+.taa-label{width:44px;flex:0 0 auto;font-size:13px;font-weight:600;color:var(--text-secondary);}
+.taa-select{flex:1 1 auto;min-width:0;padding:10px 12px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:16px;}
+.taa-time{flex:1 1 auto;display:flex;align-items:center;gap:8px;min-width:0;}
+.taa-time-sel{flex:1 1 0;}
+.taa-sep{flex:0 0 auto;color:var(--text-secondary);}
+.taa-submit{width:100%;margin-top:14px;}
+.taa-msg{margin-top:10px;font-size:13px;min-height:18px;}
+.taa-msg.ok{color:#22c55e;}
+.taa-msg.err{color:var(--danger-color);}

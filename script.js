@@ -598,6 +598,106 @@ function toggleCallAcc(btn){
     body.style.display = isOpen ? 'none' : '';
     btn.classList.toggle('open', !isOpen);
 }
+
+// ===============================
+// ★ Stage2: 当日追加フォーム
+// ===============================
+
+// 30分刻みの時間option（00:00〜23:30）
+function buildTimeOptions(){
+    let html = '<option value="">--:--</option>';
+    for (let h = 0; h < 24; h++){
+        for (const m of [0, 30]){
+            const t = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+            html += '<option value="' + t + '">' + t + '</option>';
+        }
+    }
+    return html;
+}
+
+// 源氏名の頭文字→五十音行ラベル（カタカナ→ひらがな対応・その他は末尾）
+function taaKanaRow(name){
+    let c = String(name || '').charAt(0);
+    const code = c.charCodeAt(0);
+    if (code >= 0x30A1 && code <= 0x30F6) c = String.fromCharCode(code - 0x60);
+    const rows = [
+        ['あ','あいうえおぁぃぅぇぉ'],['か','かきくけこがぎぐげご'],['さ','さしすせそざじずぜぞ'],
+        ['た','たちつてとだぢづでどっ'],['な','なにぬねの'],['は','はひふへほばびぶべぼぱぴぷぺぽ'],
+        ['ま','まみむめも'],['や','やゆよゃゅょ'],['ら','らりるれろ'],['わ','わをんゎ']
+    ];
+    for (let i = 0; i < rows.length; i++){ if (rows[i][1].indexOf(c) >= 0) return rows[i][0]; }
+    return 'その他';
+}
+
+// 名前プルダウンを (URL管理登録 − 本日シフト) で生成。あいうえお順＋五十音行optgroup（頭文字ジャンプ）。
+function populateTodayAddNames(){
+    const sel = document.getElementById('taa-name');
+    if (!sel) return;
+    const startSel = document.getElementById('taa-start');
+    const endSel = document.getElementById('taa-end');
+    if (startSel && startSel.options.length === 0) startSel.innerHTML = buildTimeOptions();
+    if (endSel && endSel.options.length === 0) endSel.innerHTML = buildTimeOptions();
+    const box = document.getElementById('today-add');
+    if (!Array.isArray(urlData) || urlData.length === 0){
+        sel.innerHTML = '<option value="">（登録キャスト読み込み中）</option>';
+        return;
+    }
+    const inShift = new Set((Array.isArray(shiftData) ? shiftData : [])
+        .map(s => String(s && s.name || '').trim()).filter(Boolean));
+    const seen = new Set();
+    const cands = [];
+    urlData.forEach(u => {
+        const n = String(u && u.name || '').trim();
+        if (!n || inShift.has(n) || seen.has(n)) return;
+        seen.add(n); cands.push(n);
+    });
+    if (box) box.style.display = '';
+    if (cands.length === 0){
+        sel.innerHTML = '<option value="">追加できる子がいません（全員シフト済）</option>';
+        return;
+    }
+    cands.sort((a, b) => a.localeCompare(b, 'ja'));
+    const groups = {};
+    cands.forEach(n => { const r = taaKanaRow(n); (groups[r] = groups[r] || []).push(n); });
+    const order = ['あ','か','さ','た','な','は','ま','や','ら','わ','その他'];
+    let html = '<option value="">選択してください</option>';
+    order.forEach(r => {
+        if (!groups[r] || groups[r].length === 0) return;
+        html += '<optgroup label="' + r + '">';
+        groups[r].forEach(n => { html += '<option value="' + _escCL(n) + '">' + _escCL(n) + '</option>'; });
+        html += '</optgroup>';
+    });
+    sel.innerHTML = html;
+}
+
+// 追加ボタン → addTodayShift → 成功後シフト再描画＆名前候補から除外
+async function submitTodayAdd(){
+    const nameSel = document.getElementById('taa-name');
+    const startSel = document.getElementById('taa-start');
+    const endSel = document.getElementById('taa-end');
+    const msg = document.getElementById('taa-msg');
+    const btn = document.getElementById('taa-submit');
+    const setMsg = (cls, txt) => { if (msg){ msg.className = 'taa-msg' + (cls ? ' ' + cls : ''); msg.textContent = txt; } };
+    const name = nameSel ? nameSel.value.trim() : '';
+    const start = startSel ? startSel.value : '';
+    const end = endSel ? endSel.value : '';
+    if (!name){ setMsg('err', '名前を選んでください'); return; }
+    if (!start || !end){ setMsg('err', '開始と終了の時間を選んでください'); return; }
+    const time = start + '\u301c' + end;
+    if (btn) btn.disabled = true;
+    setMsg('', '追加中...');
+    const result = await apiCall('addTodayShift', { method: 'POST', body: { name: name, time: time } });
+    if (btn) btn.disabled = false;
+    if (result && result.success){
+        setMsg('ok', result.message || (name + ' を追加しました'));
+        if (nameSel) nameSel.value = '';
+        if (startSel) startSel.value = '';
+        if (endSel) endSel.value = '';
+        await loadShiftData();
+    } else {
+        setMsg('err', (result && result.error) ? result.error : '追加に失敗しました');
+    }
+}
 async function loadCallList(){
     try {
         const result = await apiCall('getCallList');
@@ -633,6 +733,7 @@ async function loadShiftData() {
         
         renderShiftList();
         loadCallList();         // ★ Phase2: 声掛け候補も更新
+        populateTodayAddNames(); // ★ Stage2: 当日追加の名前候補を更新（本日シフト反映）
     } else {
         console.error('loadShiftData: エラー:', result.error);
     }
@@ -645,6 +746,7 @@ async function loadUrlData() {
         urlData = result.data;
         devLog('loadUrlData: データ件数', urlData.length);
         renderUrlList();
+        populateTodayAddNames(); // ★ Stage2: URL管理ロード後に名前候補を生成
         return result.data;
     } else {
         console.error('loadUrlData: エラー:', result.error);
