@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260719c">
+    <link rel="stylesheet" href="style.css?v=20260719e">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -140,7 +140,7 @@
         </div>
 
         <!-- 店舗フィルター -->
-        <div class="store-filter">
+        <div class="store-filter" style="display:none;">
             <button class="filter-btn active" data-store="all" onclick="filterByStore('all')">
                 全店舗
             </button>
@@ -156,7 +156,7 @@
         </div>
 
         <!-- ★v3.5 オキニフィルター -->
-        <div class="okini-filter" id="okini-filter">
+        <div class="okini-filter" id="okini-filter" style="display:none;">
             <button class="okini-filter-btn active" data-okini="all" onclick="filterByOkini('all')">
                 全部
             </button>
@@ -197,6 +197,9 @@
                 <p>読み込み中...</p>
             </div>
 
+            <!-- ★ 店舗/オキニフィルタ（タブ切替で差込） -->
+            <div id="filter-slot-shift"></div>
+
             <!-- シフトリスト -->
             <div id="shift-list" class="shift-list"></div>
 
@@ -209,6 +212,9 @@
 
         <!-- 全キャストビュー -->
         <div id="all-view" class="view">
+            <!-- ★ 店舗/オキニフィルタ（タブ切替で差込） -->
+            <div id="filter-slot-all"></div>
+
             <!-- 検索バー -->
             <div class="search-bar">
                 <input type="text" id="all-search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterAllCastList()">
@@ -290,6 +296,9 @@
 
         <!-- URL管理ビュー -->
         <div id="url-view" class="view">
+            <!-- ★ 店舗/オキニフィルタ（タブ切替で差込） -->
+            <div id="filter-slot-url"></div>
+
             <!-- 商品・イベント掲載 -->
             <div id="publication-space" class="publication-space">
                 <div class="publication-header">
@@ -590,6 +599,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260719c"></script>
+    <script src="script.js?v=20260719e"></script>
 </body>
 </html>

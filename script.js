@@ -306,9 +306,12 @@ function initStarfield() {
 // ===============================
 
 function showView(viewName) {
+    // ★ Phase2: グローバル要素の表示切替は遷移の「外」で行う（モバイルSafariの重い遷移でのクラッシュ回避）
+    setGlobalSectionsForView(viewName);
     // ★ View Transitions API：対応ブラウザはタブ切り替えをクロスフェードに
-    // 非対応ブラウザ・モーション軽減設定時は従来通り即時切り替え（壊れない）
-    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    //   ただしモバイル(狭い画面)では無効化＝瞬時切替（重いスナップショットでSafariが繰り返しクラッシュするため）
+    var isNarrow = window.matchMedia('(max-width: 820px)').matches;
+    if (document.startViewTransition && !isNarrow && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         document.startViewTransition(() => applyView(viewName));
     } else {
         applyView(viewName);
@@ -319,13 +322,20 @@ function showView(viewName) {
 //   出勤=全て非表示 / 在籍=声掛け+店舗+オキニ / 面談=(要素は面談ビュー内) / 管理=店舗+オキニ
 function setGlobalSectionsForView(viewName){
     var cl = document.getElementById('call-list-section');   // 声掛け＝在籍のみ
-    var sf = document.querySelector('.store-filter');        // 店舗フィルタ＝在籍・管理
-    var of_ = document.getElementById('okini-filter');       // オキニフィルタ＝在籍・管理
     var st = document.getElementById('strategy-space');      // 明日の戦略＝常時非表示（Stage3で削除）
     if (cl) cl.style.display = (viewName === 'all') ? '' : 'none';
-    if (sf) sf.style.display = (viewName === 'all' || viewName === 'url') ? '' : 'none';
-    if (of_) of_.style.display = (viewName === 'all' || viewName === 'url') ? '' : 'none';
     if (st) st.style.display = 'none';
+    // 店舗/オキニフィルタ＝出勤・在籍・管理で使用。現タブのスロットへ移動して表示（面談は非表示）
+    var sf = document.querySelector('.store-filter');
+    var of_ = document.getElementById('okini-filter');
+    var slotId = ({ shift:'filter-slot-shift', all:'filter-slot-all', url:'filter-slot-url' })[viewName];
+    var slot = slotId ? document.getElementById(slotId) : null;
+    if (slot) {
+        if (sf) slot.appendChild(sf);
+        if (of_) slot.appendChild(of_);
+    }
+    if (sf) sf.style.display = slot ? '' : 'none';
+    if (of_) of_.style.display = slot ? '' : 'none';
 }
 function applyView(viewName) {
     // 全てのビューを非表示
@@ -360,8 +370,6 @@ function applyView(viewName) {
         renderUrlList();
         updateJumpButtons('url');
     }
-    
-    setGlobalSectionsForView(viewName);
     
     // ★ カード入場アニメーション（タブ切り替え時のみ再生・通常の再描画では再生しない）
     playEntranceAnimation();
