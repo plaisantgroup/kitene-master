@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260719g">
+    <link rel="stylesheet" href="style.css?v=20260719h">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -173,6 +173,9 @@
 
         <!-- シフト一覧ビュー -->
         <div id="shift-view" class="view active">
+            <!-- ★ 店舗フィルタ（出勤・週間の上・タブ切替で差込） -->
+            <div id="filter-slot-shift-store"></div>
+
             <!-- ★ 週間シフト＝出勤タブ最上部 -->
             <div class="weekly-strip" id="weekly-strip" style="display:none;"></div>
 
@@ -197,7 +200,7 @@
                 <p>読み込み中...</p>
             </div>
 
-            <!-- ★ 店舗/オキニフィルタ（タブ切替で差込） -->
+            <!-- ★ オキニフィルタ（出勤のみ・今日のシフト直上・タブ切替で差込） -->
             <div id="filter-slot-shift"></div>
 
             <!-- シフトリスト -->
@@ -212,7 +215,7 @@
 
         <!-- 全キャストビュー -->
         <div id="all-view" class="view">
-            <!-- ★ 店舗/オキニフィルタ（タブ切替で差込） -->
+            <!-- ★ 店舗フィルタ（在籍・検索の上・タブ切替で差込） -->
             <div id="filter-slot-all"></div>
 
             <!-- 検索バー -->
@@ -299,9 +302,6 @@
 
         <!-- URL管理ビュー -->
         <div id="url-view" class="view">
-            <!-- ★ 店舗/オキニフィルタ（タブ切替で差込） -->
-            <div id="filter-slot-url"></div>
-
             <!-- 商品・イベント掲載 -->
             <div id="publication-space" class="publication-space">
                 <div class="publication-header">
@@ -331,6 +331,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ★ 店舗フィルタ（管理・検索の上・タブ切替で差込） -->
+            <div id="filter-slot-url"></div>
 
             <!-- 検索バー -->
             <div class="search-bar">
@@ -602,6 +605,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260719g"></script>
+    <script src="script.js?v=20260719h"></script>
 </body>
 </html>
