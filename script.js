@@ -1483,6 +1483,7 @@ function renderShiftList() {
     // 日付表示（handleExcelUpload関数で設定済みなので、ここでは何もしない）
     
     devLog('renderShiftList: 描画完了');
+    populateTodayAddNames(); // ★ Stage2修正: シフト描画のたびに当日追加フォームを更新（統合API/キャッシュ経路もカバー）
 }
 
 // ============================================================
