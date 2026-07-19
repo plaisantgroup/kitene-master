@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260719a">
+    <link rel="stylesheet" href="style.css?v=20260719b">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -217,14 +217,14 @@
 
         <!-- シフト一覧ビュー -->
         <div id="shift-view" class="view active">
+            <!-- ★ 週間シフト＝出勤タブ最上部 -->
+            <div class="weekly-strip" id="weekly-strip" style="display:none;"></div>
+
             <!-- 日付表示 -->
             <div class="date-display" id="date-display">📅 日付未選択</div>
             
             <!-- ★v3.5 出勤人数カウンター -->
             <div class="shift-counter" id="shift-counter" style="display:none;"></div>
-
-            <!-- ★ 週間シフトの人数（横スライド） -->
-            <div class="weekly-strip" id="weekly-strip" style="display:none;"></div>
 
             <!-- アップロードエリア -->
             <div class="upload-area">
@@ -244,9 +244,6 @@
             <!-- シフトリスト -->
             <div id="shift-list" class="shift-list"></div>
 
-            <!-- ★ Phase2: 声掛け候補リスト -->
-            <div id="call-list-section" class="call-list-section"></div>
-
             <!-- 空状態 -->
             <div id="empty-state" class="empty-state">
                 <p>📂</p>
@@ -256,6 +253,9 @@
 
         <!-- 全キャストビュー -->
         <div id="all-view" class="view">
+            <!-- ★ Phase2: 声掛け候補リスト（在籍タブ最上部） -->
+            <div id="call-list-section" class="call-list-section"></div>
+
             <!-- 検索バー -->
             <div class="search-bar">
                 <input type="text" id="all-search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterAllCastList()">
@@ -590,6 +590,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260719a"></script>
+    <script src="script.js?v=20260719b"></script>
 </body>
 </html>

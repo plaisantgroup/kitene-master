@@ -3227,3 +3227,18 @@ html::after {
 .cl-w30{color:#86efac;} .cl-z30{color:#fca5a5;}
 .cl-warnwrap{opacity:0.82;}
 .cl-empty{color:var(--text-secondary);font-size:12px;text-align:center;padding:14px;border:1px dashed var(--border-color);border-radius:var(--radius-md);}
+
+/* ===== Phase2: 声掛けアコーディオン＋店舗バッジ ===== */
+.cl-acc{border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px;}
+.cl-acc-head{width:100%;display:flex;align-items:center;gap:8px;padding:11px 13px;background:var(--card-bg);border:none;color:var(--text-primary);font-size:14px;font-weight:700;cursor:pointer;text-align:left;}
+.cl-acc-head.d{border-left:3px solid var(--danger-color);}
+.cl-acc-head.w{border-left:3px solid #eab308;}
+.cl-acc-head .cl-cnt{font-size:12px;color:var(--text-secondary);font-weight:600;}
+.cl-acc-head .cl-arrow{margin-left:auto;font-size:11px;color:var(--text-secondary);transition:transform 0.15s;}
+.cl-acc-head.open .cl-arrow{transform:rotate(90deg);}
+.cl-acc-body{background:rgba(0,0,0,0.15);}
+.cl-none-in{padding:12px;text-align:center;color:var(--text-secondary);font-size:12px;}
+.cl-store{font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;flex-shrink:0;white-space:nowrap;}
+.cl-store.st-d{background:#fce5a8;color:#7f6011;}
+.cl-store.st-a{background:#f4cccc;color:#a61c5c;}
+.cl-store.st-s{background:#d9d2e9;color:#5b2c8a;}

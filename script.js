@@ -545,25 +545,35 @@ function _escCL(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){ret
 function renderCallList(danger, warn){
     const sec = document.getElementById('call-list-section');
     if (!sec) return;
+    danger = danger || []; warn = warn || [];
     const fmtMD = (v) => { const p = String(v||'').split('/'); return p.length===3 ? (Number(p[1])+'/'+Number(p[2])) : (v||''); };
+    const STORE = { delidosu:{l:'でりどす',c:'d'}, anecan:{l:'アネキャン',c:'a'}, ainoshizuku:{l:'愛のしずく',c:'s'} };
+    const badge = (st) => { const m = STORE[st]; return m ? '<span class="cl-store st-'+m.c+'">'+m.l+'</span>' : ''; };
     const row = (c, g) => '<div class="cl-row '+g+'">'
         + '<span class="cl-nm">'+_escCL(c.name)+'</span>'
+        + badge(c.store)
         + '<span class="cl-gap '+g+'">'+c.gapDays+'日</span>'
         + '<span class="cl-right"><span class="cl-last">最終 <b>'+fmtMD(c.lastWork)+'</b></span><span class="cl-30">直近30日 <span class="cl-w30">出勤'+c.work30+'</span> / <span class="cl-z30">当欠'+c.zenketsu30+'</span></span></span>'
         + '</div>';
-    let html = '';
-    if (danger && danger.length){
-        html += '<div class="cl-sec danger">🚨 危険 <span class="cl-cnt">14日以上 ・ '+danger.length+'人</span></div>';
-        html += '<div class="cl-list">'+danger.map(c=>row(c,'d')).join('')+'</div>';
+    const acc = (title, g, arr) =>
+        '<div class="cl-acc">'
+        + '<button type="button" class="cl-acc-head '+g+'" onclick="toggleCallAcc(this)">'
+        + '<span class="cl-acc-t">'+title+'</span><span class="cl-cnt">'+arr.length+'人</span><span class="cl-arrow">▶</span>'
+        + '</button>'
+        + '<div class="cl-acc-body" style="display:none;">'+(arr.length ? arr.map(c=>row(c,g)).join('') : '<div class="cl-none-in">なし</div>')+'</div>'
+        + '</div>';
+    if (!danger.length && !warn.length){
+        sec.innerHTML = '<div class="cl-empty">📣 声掛け候補なし（全員が最近出勤 or 今後2週間に予定あり）</div>';
+        return;
     }
-    if (warn && warn.length){
-        html += '<div class="cl-warnwrap"><div class="cl-sec warn">⚠️ 要注意 <span class="cl-cnt">7〜13日 ・ '+warn.length+'人</span></div>';
-        html += '<div class="cl-list">'+warn.map(c=>row(c,'w')).join('')+'</div></div>';
-    }
-    if ((!danger || !danger.length) && (!warn || !warn.length)){
-        html = '<div class="cl-empty">📣 声掛け候補なし（全員が最近出勤 or 今後2週間に予定あり）</div>';
-    }
-    sec.innerHTML = html;
+    sec.innerHTML = acc('🚨 危険（14日以上）', 'd', danger) + acc('⚠️ 要注意（7〜13日）', 'w', warn);
+}
+function toggleCallAcc(btn){
+    const body = btn.nextElementSibling;
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : '';
+    btn.classList.toggle('open', !isOpen);
 }
 async function loadCallList(){
     try {
