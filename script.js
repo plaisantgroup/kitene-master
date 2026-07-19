@@ -542,7 +542,8 @@ async function loadAllDataUnified(options = {}) {
                     date: item.interviewDate || item.date,
                     staff: item.staff,
                     comment: item.comment,
-                    createdAt: item.createdAt
+                    createdAt: item.createdAt,
+                    readBy: item.readBy || []
                 })).sort((a, b) => {
                     const dateA = new Date(a.date || 0);
                     const dateB = new Date(b.date || 0);
@@ -2523,8 +2524,6 @@ function showAddModal() {
     document.getElementById('modal-last-work-date').value = '';
     document.getElementById('modal-last-interview-date').value = '';
     document.getElementById('modal-interview-staff').value = '';
-    document.getElementById('modal-last-photo-date').value = '';
-    document.getElementById('modal-last-video-date').value = '';
     
     // 面談スタッフのドロップダウンを更新
     updateStaffDropdown('');
@@ -2563,8 +2562,6 @@ function showEditModal(name) {
     document.getElementById('modal-last-interview-date').value = formatDateForInput(urlInfo.lastInterviewDate);
     // 面談スタッフのドロップダウンを更新
     updateStaffDropdown(urlInfo.interviewStaff || '');
-    document.getElementById('modal-last-photo-date').value = formatDateForInput(urlInfo.lastPhotoDate);
-    document.getElementById('modal-last-video-date').value = formatDateForInput(urlInfo.lastVideoDate);
     
     document.getElementById('url-modal').classList.add('active');
 }
@@ -2649,9 +2646,7 @@ async function saveUrlData() {
         // ★★★ 面談情報を追加 ★★★
         lastWorkDate: document.getElementById('modal-last-work-date').value.trim(),
         lastInterviewDate: document.getElementById('modal-last-interview-date').value.trim(),
-        interviewStaff: document.getElementById('modal-interview-staff').value.trim(),
-        lastPhotoDate: document.getElementById('modal-last-photo-date').value.trim(),
-        lastVideoDate: document.getElementById('modal-last-video-date').value.trim()
+        interviewStaff: document.getElementById('modal-interview-staff').value.trim()
     };
     
     try {
@@ -3087,8 +3082,6 @@ function renderInterviewCard(cast) {
     // 日付表示
     const lastWorkDisplay = cast.lastWorkDate ? formatDisplayDate(cast.lastWorkDate) : '未登録';
     const lastInterviewDisplay = cast.lastInterviewDate ? formatDisplayDate(cast.lastInterviewDate) : '未登録';
-    const lastPhotoDisplay = cast.lastPhotoDate ? formatDisplayDate(cast.lastPhotoDate) : '未登録';
-    const lastVideoDisplay = cast.lastVideoDate ? formatDisplayDate(cast.lastVideoDate) : '未登録';
     
     // スタッフ表示
     const staffDisplay = cast.interviewStaff ? ` (担当: ${escapeHtml(cast.interviewStaff)})` : '';
@@ -3118,14 +3111,6 @@ function renderInterviewCard(cast) {
                 <div class="interview-info-item">
                     <span class="interview-info-label">💬 最終面談</span>
                     <span class="interview-info-value ${!cast.lastInterviewDate ? 'empty' : ''}">${lastInterviewDisplay}${staffDisplay}</span>
-                </div>
-                <div class="interview-info-item">
-                    <span class="interview-info-label">📷 最終撮影</span>
-                    <span class="interview-info-value ${!cast.lastPhotoDate ? 'empty' : ''}">${lastPhotoDisplay}</span>
-                </div>
-                <div class="interview-info-item">
-                    <span class="interview-info-label">🎬 動画更新</span>
-                    <span class="interview-info-value ${!cast.lastVideoDate ? 'empty' : ''}">${lastVideoDisplay}</span>
                 </div>
                 <div class="interview-info-item">
                     <span class="interview-info-label">📊 直近30日</span>
@@ -3745,6 +3730,56 @@ async function confirmHistoryDelete() {
 // コメント履歴機能（v5.1）
 // ===============================
 
+// ★Phase3(3-5): 既読の日付を M/D に整形（'YYYY-MM-DD'→'7/19'）
+function readDateMd(d) {
+    const p = String(d || '').split('-');
+    return p.length === 3 ? (Number(p[1]) + '/' + Number(p[2])) : (d || '');
+}
+
+// ★Phase3(3-5): 既読マークの表示（👁 なべ 7/19 · たろう 7/20 ／ 無ければ未読）
+function renderReadMarks(readBy) {
+    if (!Array.isArray(readBy) || readBy.length === 0) return '<span class="read-none">未読</span>';
+    return '👁 ' + readBy.map(r => {
+        const d = readDateMd(r.date);
+        return `<span class="read-mark">${escapeHtml(r.staff)}${d ? ' ' + d : ''}</span>`;
+    }).join(' · ');
+}
+
+// ★Phase3(3-5): 既読記録用のスタッフoption（URL管理 class=スタッフ）
+function buildReadStaffOptions() {
+    const staffList = (Array.isArray(urlData) ? urlData : []).filter(u => u.class === 'スタッフ');
+    return staffList.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('');
+}
+
+// ★Phase3(3-5): コメント1件の既読行（既存マーク＋スタッフ選択で記録）
+function renderReadRow(name, c) {
+    return `
+        <div class="comment-read">
+            <span class="read-marks">${renderReadMarks(c.readBy)}</span>
+            <select class="read-select" onchange="markCommentReadUI('${name}', ${c.rowIndex}, this)">
+                <option value="">👁 既読を記録…</option>
+                ${buildReadStaffOptions()}
+            </select>
+        </div>
+    `;
+}
+
+// ★Phase3(3-5): 既読を記録（スタッフ選択→markCommentRead→キャッシュ更新→再描画）
+async function markCommentReadUI(name, rowIndex, sel) {
+    const staff = sel ? sel.value : '';
+    if (sel) sel.value = '';
+    if (!staff) return;
+    const result = await apiCall('markCommentRead', { method: 'POST', body: { rowIndex, name, staff } });
+    if (result && result.success) {
+        const list = commentCache[name] || [];
+        const c = list.find(x => x.rowIndex === rowIndex);
+        if (c) c.readBy = result.readBy || [];
+        renderInterviewList();
+    } else {
+        alert((result && result.error) ? result.error : '既読の記録に失敗しました');
+    }
+}
+
 /**
  * コメントセクションのHTMLを生成
  */
@@ -3777,6 +3812,7 @@ function renderCommentSection(name) {
                     <div class="comment-text ${expandedComments.has(name) ? 'expanded' : 'collapsed'}">${escapeHtml(latestComment.comment || '')}</div>
                     <span class="expand-hint"></span>
                 </div>
+                ${renderReadRow(name, latestComment)}
             </div>
         `;
     } else {
@@ -3804,6 +3840,7 @@ function renderCommentSection(name) {
                         <div class="comment-text ${expandedComments.has(name) ? 'expanded' : 'collapsed'}">${escapeHtml(c.comment || '')}</div>
                         <span class="expand-hint"></span>
                     </div>
+                    ${renderReadRow(name, c)}
                 </div>
             `;
         }).join('');
@@ -3865,7 +3902,8 @@ async function loadCommentHistory(name) {
                 date: item.interviewDate || item.date,
                 staff: item.staff,
                 comment: item.comment,
-                createdAt: item.createdAt
+                createdAt: item.createdAt,
+                readBy: item.readBy || []
             }));
             return commentCache[name];
         }
@@ -3894,7 +3932,8 @@ async function loadAllLatestComments() {
                     date: item.interviewDate || item.date,
                     staff: item.staff,
                     comment: item.comment,
-                    createdAt: item.createdAt
+                    createdAt: item.createdAt,
+                    readBy: item.readBy || []
                 })).sort((a, b) => {
                     // 日付で降順ソート（新しい順）
                     const dateA = new Date(a.date || 0);

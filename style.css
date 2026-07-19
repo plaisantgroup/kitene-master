@@ -3262,3 +3262,9 @@ html::after {
 /* ★Phase3(3-6): 面談カード 直近30日 出勤/当欠 */
 .d30-w{color:#22c55e;font-weight:700;}
 .d30-z{color:var(--danger-color);font-weight:700;}
+/* ★Phase3(3-5): 面談コメント 既読 */
+.comment-read{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;padding-top:6px;border-top:1px dashed rgba(212,175,55,0.15);font-size:12px;}
+.read-marks{color:var(--text-secondary);flex:1 1 auto;min-width:0;}
+.read-mark{color:var(--primary-color);}
+.read-none{color:var(--text-secondary);opacity:0.7;}
+.read-select{flex:0 0 auto;padding:4px 8px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:12px;}
