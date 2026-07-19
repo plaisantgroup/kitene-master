@@ -212,8 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ★Phase3(A): アプリ/タブ復帰時、面談タブ表示中ならコメント（既読含む）を取り直す（定期リロードなし＝画面リセットを避けつつ最新化）
+    // ★修正: 一定時間以上バックグラウンドだった復帰時のみ（一瞬のblur/選択ピッカー/キーボードでは再描画しない＝閲覧中の画面揺れ防止）
+    let _lastHiddenAt = 0;
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) refreshInterviewComments();
+        if (document.hidden) {
+            _lastHiddenAt = Date.now();
+        } else if (Date.now() - _lastHiddenAt > 1500) {
+            refreshInterviewComments();
+        }
     });
     
     // トップに戻るボタンのスクロール監視
@@ -3773,14 +3779,20 @@ function buildReadStaffOptions() {
     return staffList.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('');
 }
 
+// ★修正(クラッシュ対策): スタッフoptionはタップ時に一度だけ生成（描画時に全コメント分展開するとDOMが肥大しモバイルSafariがメモリ枯渇でクラッシュ）
+function populateReadSelect(sel) {
+    if (!sel || sel.dataset.populated === '1') return;
+    sel.insertAdjacentHTML('beforeend', buildReadStaffOptions());
+    sel.dataset.populated = '1';
+}
+
 // ★Phase3(3-5): コメント1件の既読行（既存マーク＋スタッフ選択で記録）
 function renderReadRow(name, c) {
     return `
         <div class="comment-read">
             <span class="read-marks">${renderReadMarks(c.readBy)}</span>
-            <select class="read-select" onchange="markCommentReadUI('${name}', ${c.rowIndex}, this)">
+            <select class="read-select" onpointerdown="populateReadSelect(this)" onfocus="populateReadSelect(this)" onchange="markCommentReadUI('${name}', ${c.rowIndex}, this)">
                 <option value="">👁 既読を記録…</option>
-                ${buildReadStaffOptions()}
             </select>
         </div>
     `;
@@ -5119,7 +5131,7 @@ async function savePublicationsData() {
             ind.classList.add('visible');
             ind.textContent = '🔄 更新中...';
             try {
-                await loadAllData();
+                await reloadCoreData(); // ★修正: loadAllDataだと現タブに関係なくsetGlobalSectionsForView('shift')で出勤レイアウトにリセットされる。reloadは現タブ保持・再描画のみ
                 ind.textContent = '✅ 更新しました';
             } catch (err) {
                 console.error('プルトゥリフレッシュ更新エラー:', err);
