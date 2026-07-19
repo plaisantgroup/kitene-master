@@ -606,11 +606,12 @@ function toggleCallAcc(btn){
 // 30分刻みの時間option（00:00〜23:30）
 function buildTimeOptions(){
     let html = '<option value="">--:--</option>';
-    for (let h = 0; h < 24; h++){
-        for (const m of [0, 30]){
-            const t = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
-            html += '<option value="' + t + '">' + t + '</option>';
-        }
+    // 営業時間順: 10:00開始 → 翌5:00終了（30分刻み・時計表記で日跨ぎ・全39スロット）
+    const startMin = 10 * 60; // 10:00
+    for (let i = 0; i <= 38; i++){ // 10:00 + 38*30分 = 翌5:00
+        const clock = (startMin + i * 30) % 1440;
+        const t = String(Math.floor(clock / 60)).padStart(2, '0') + ':' + String(clock % 60).padStart(2, '0');
+        html += '<option value="' + t + '">' + t + '</option>';
     }
     return html;
 }
@@ -649,6 +650,7 @@ function populateTodayAddNames(){
     urlData.forEach(u => {
         const n = String(u && u.name || '').trim();
         if (!n || inShift.has(n) || seen.has(n)) return;
+        if (u && u.class === 'スタッフ') return; // ★ スタッフは当日追加の対象外（在籍/URL一覧と同じ除外）
         seen.add(n); cands.push(n);
     });
     if (box) box.style.display = '';
