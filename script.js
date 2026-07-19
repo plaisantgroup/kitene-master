@@ -315,6 +315,18 @@ function showView(viewName) {
     }
 }
 
+// ★ Phase2: タブごとにグローバル要素を出し分け（各タブの最上部を意図通りに）
+//   出勤=全て非表示 / 在籍=声掛け+店舗+オキニ / 面談=(要素は面談ビュー内) / 管理=店舗+オキニ
+function setGlobalSectionsForView(viewName){
+    var cl = document.getElementById('call-list-section');   // 声掛け＝在籍のみ
+    var sf = document.querySelector('.store-filter');        // 店舗フィルタ＝在籍・管理
+    var of_ = document.getElementById('okini-filter');       // オキニフィルタ＝在籍・管理
+    var st = document.getElementById('strategy-space');      // 明日の戦略＝常時非表示（Stage3で削除）
+    if (cl) cl.style.display = (viewName === 'all') ? '' : 'none';
+    if (sf) sf.style.display = (viewName === 'all' || viewName === 'url') ? '' : 'none';
+    if (of_) of_.style.display = (viewName === 'all' || viewName === 'url') ? '' : 'none';
+    if (st) st.style.display = 'none';
+}
 function applyView(viewName) {
     // 全てのビューを非表示
     document.querySelectorAll('.view').forEach(view => {
@@ -348,6 +360,8 @@ function applyView(viewName) {
         renderUrlList();
         updateJumpButtons('url');
     }
+    
+    setGlobalSectionsForView(viewName);
     
     // ★ カード入場アニメーション（タブ切り替え時のみ再生・通常の再描画では再生しない）
     playEntranceAnimation();
@@ -414,6 +428,7 @@ async function loadAllData() {
     renderShiftList();
     renderUrlList();
     loadCallList();             // ★ Phase2: 声掛け候補を取得
+    setGlobalSectionsForView('shift'); // ★ Phase2: 初期タブ(出勤)のグローバル出し分け
     
     // ★ Phase 3: キャッシュ保存（次回起動時に使用）
     saveCache();

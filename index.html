@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260719b">
+    <link rel="stylesheet" href="style.css?v=20260719c">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -46,44 +46,8 @@
             </button>
         </nav>
 
-        <!-- 新着コメント通知バー -->
-        <div id="new-comment-bar" class="new-comment-bar" style="display: none;">
-            <div class="new-comment-header">
-                <span class="new-comment-icon">🔔</span>
-                <span class="new-comment-text">新着コメント:</span>
-            </div>
-            <span id="new-comment-list" class="new-comment-list"></span>
-        </div>
-
-        <!-- 商品・イベント掲載 -->
-        <div id="publication-space" class="publication-space">
-            <div class="publication-header">
-                <span class="publication-icon">📢</span>
-                <span class="publication-title">イベント掲載</span>
-            </div>
-            <div id="publication-rows" class="publication-rows"></div>
-            <div class="publication-footer">
-                <button type="button" class="pub-add-btn" onclick="addPublicationRow()">＋ 行を追加</button>
-                <button type="button" id="pub-save-btn" class="pub-save-btn" onclick="savePublicationsData()">💾 掲載を保存</button>
-                <span id="pub-save-status" class="pub-save-status"></span>
-            </div>
-        </div>
-
-        <!-- 商品 -->
-        <div id="product-space" class="product-space collapsed">
-            <button type="button" class="product-header" onclick="toggleProduct()">
-                <span class="product-icon">🛍️</span>
-                <span class="product-title">商品</span>
-                <span class="product-main-arrow">▼</span>
-            </button>
-            <div class="product-body">
-                <textarea id="product-text" class="product-textarea" placeholder="商品情報を記入（改行・空行もそのまま反映されます）"></textarea>
-                <div class="product-footer">
-                    <button type="button" id="product-save-btn" class="product-save-btn" onclick="saveProductData()">💾 商品を保存</button>
-                    <span id="product-save-status" class="product-save-status"></span>
-                </div>
-            </div>
-        </div>
+        <!-- ★ Phase2: 声掛け候補リスト（グローバル・在籍タブのみ表示） -->
+        <div id="call-list-section" class="call-list-section"></div>
 
         <!-- 明日の戦略スペース -->
         <div id="strategy-space" class="strategy-space collapsed">
@@ -175,14 +139,6 @@
             </div>
         </div>
 
-        <!-- 面談アナリティクスへのリンク -->
-        <a href="interview-analytics.html" target="_blank" rel="noopener" class="analytics-link-bar">
-            <span class="analytics-link-icon">📊</span>
-            <span class="analytics-link-text">面談アナリティクス</span>
-            <span class="analytics-link-sub">キャスト別の傾向と要約を見る</span>
-            <span class="analytics-link-arrow">→</span>
-        </a>
-
         <!-- 店舗フィルター -->
         <div class="store-filter">
             <button class="filter-btn active" data-store="all" onclick="filterByStore('all')">
@@ -253,9 +209,6 @@
 
         <!-- 全キャストビュー -->
         <div id="all-view" class="view">
-            <!-- ★ Phase2: 声掛け候補リスト（在籍タブ最上部） -->
-            <div id="call-list-section" class="call-list-section"></div>
-
             <!-- 検索バー -->
             <div class="search-bar">
                 <input type="text" id="all-search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterAllCastList()">
@@ -288,6 +241,23 @@
 
         <!-- 面談タブビュー -->
         <div id="interview-view" class="view">
+            <!-- 新着コメント通知バー -->
+            <div id="new-comment-bar" class="new-comment-bar" style="display: none;">
+                <div class="new-comment-header">
+                    <span class="new-comment-icon">🔔</span>
+                    <span class="new-comment-text">新着コメント:</span>
+                </div>
+                <span id="new-comment-list" class="new-comment-list"></span>
+            </div>
+
+            <!-- 面談アナリティクスへのリンク -->
+            <a href="interview-analytics.html" target="_blank" rel="noopener" class="analytics-link-bar">
+                <span class="analytics-link-icon">📊</span>
+                <span class="analytics-link-text">面談アナリティクス</span>
+                <span class="analytics-link-sub">キャスト別の傾向と要約を見る</span>
+                <span class="analytics-link-arrow">→</span>
+            </a>
+
             <!-- 検索バー -->
             <div class="search-bar">
                 <input type="text" id="interview-search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterInterviewList()">
@@ -320,6 +290,36 @@
 
         <!-- URL管理ビュー -->
         <div id="url-view" class="view">
+            <!-- 商品・イベント掲載 -->
+            <div id="publication-space" class="publication-space">
+                <div class="publication-header">
+                    <span class="publication-icon">📢</span>
+                    <span class="publication-title">イベント掲載</span>
+                </div>
+                <div id="publication-rows" class="publication-rows"></div>
+                <div class="publication-footer">
+                    <button type="button" class="pub-add-btn" onclick="addPublicationRow()">＋ 行を追加</button>
+                    <button type="button" id="pub-save-btn" class="pub-save-btn" onclick="savePublicationsData()">💾 掲載を保存</button>
+                    <span id="pub-save-status" class="pub-save-status"></span>
+                </div>
+            </div>
+
+            <!-- 商品 -->
+            <div id="product-space" class="product-space collapsed">
+                <button type="button" class="product-header" onclick="toggleProduct()">
+                    <span class="product-icon">🛍️</span>
+                    <span class="product-title">商品</span>
+                    <span class="product-main-arrow">▼</span>
+                </button>
+                <div class="product-body">
+                    <textarea id="product-text" class="product-textarea" placeholder="商品情報を記入（改行・空行もそのまま反映されます）"></textarea>
+                    <div class="product-footer">
+                        <button type="button" id="product-save-btn" class="product-save-btn" onclick="saveProductData()">💾 商品を保存</button>
+                        <span id="product-save-status" class="product-save-status"></span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 検索バー -->
             <div class="search-bar">
                 <input type="text" id="search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterUrlList()">
@@ -590,6 +590,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260719b"></script>
+    <script src="script.js?v=20260719c"></script>
 </body>
 </html>
