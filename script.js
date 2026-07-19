@@ -325,17 +325,15 @@ function setGlobalSectionsForView(viewName){
     var st = document.getElementById('strategy-space');      // 明日の戦略＝常時非表示（Stage3で削除）
     if (cl) cl.style.display = (viewName === 'all') ? '' : 'none';
     if (st) st.style.display = 'none';
-    // 店舗/オキニフィルタ＝出勤・在籍・管理で使用。現タブのスロットへ移動して表示（面談は非表示）
+    // 店舗フィルタ＝全4タブ／オキニフィルタ＝出勤タブのみ。現タブのスロットへ移動
     var sf = document.querySelector('.store-filter');
     var of_ = document.getElementById('okini-filter');
-    var slotId = ({ shift:'filter-slot-shift', all:'filter-slot-all', url:'filter-slot-url' })[viewName];
+    var slotId = ({ shift:'filter-slot-shift', all:'filter-slot-all', interview:'filter-slot-interview', url:'filter-slot-url' })[viewName];
     var slot = slotId ? document.getElementById(slotId) : null;
-    if (slot) {
-        if (sf) slot.appendChild(sf);
-        if (of_) slot.appendChild(of_);
-    }
+    if (slot && sf) slot.appendChild(sf);
     if (sf) sf.style.display = slot ? '' : 'none';
-    if (of_) of_.style.display = slot ? '' : 'none';
+    if (viewName === 'shift' && slot && of_) { slot.appendChild(of_); of_.style.display = ''; }
+    else if (of_) of_.style.display = 'none';
 }
 function applyView(viewName) {
     // 全てのビューを非表示
