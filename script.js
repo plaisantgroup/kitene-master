@@ -17,6 +17,8 @@ let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
 let currentShiftDateISO = ''; // Phase1: 出勤履歴/最終出勤日再計算用（'YYYY-MM-DD'）
+let attendance30d = {};          // ★Phase3(3-6): {源氏名: {work, zenketsu}} 直近30日集計（面談カード用）
+let attendance30dLoaded = false; // ★Phase3(3-6): 面談タブで1回ロード・データ変更で無効化
 let weeklyHeadcount = [];  // 週間シフトの人数（日付ごと・店舗ごと）
 let strategyFilledByUnified = false;  // 戦略フォームを相乗りで反映済みか
 let publicationCategories = [];  // 掲載カテゴリ（プルダウン選択肢）
@@ -736,6 +738,7 @@ async function loadShiftData() {
         renderShiftList();
         loadCallList();         // ★ Phase2: 声掛け候補も更新
         populateTodayAddNames(); // ★ Stage2: 当日追加の名前候補を更新（本日シフト反映）
+        attendance30dLoaded = false; // ★Phase3(3-6): 出勤データ変更→面談カードの30日を次回再取得
     } else {
         console.error('loadShiftData: エラー:', result.error);
     }
@@ -2909,6 +2912,13 @@ function showToast(message, type = 'success') {
 // 面談タブ
 // ===============================
 
+// ★Phase3(3-6): 全キャストの直近30日 出勤/当欠 を取得してグローバルに格納
+async function loadAttendance30d() {
+    const result = await apiCall('getAttendance30d');
+    attendance30d = (result && result.success && result.data) ? result.data : {};
+    attendance30dLoaded = true;
+}
+
 /**
  * 面談リストを描画
  */
@@ -2935,6 +2945,11 @@ async function renderInterviewList() {
         } catch (e) {
             console.error('renderInterviewList: コメント読み込みエラー', e);
         }
+    }
+    
+    // ★Phase3(3-6): 直近30日データを面談タブ表示前に用意（未ロード時のみ・データ変更で無効化）
+    if (!attendance30dLoaded) {
+        try { await loadAttendance30d(); } catch (e) { console.error('renderInterviewList: 30日集計エラー', e); }
     }
     
     // ★★★ 店舗フィルターを適用 ★★★
@@ -3077,6 +3092,8 @@ function renderInterviewCard(cast) {
     
     // スタッフ表示
     const staffDisplay = cast.interviewStaff ? ` (担当: ${escapeHtml(cast.interviewStaff)})` : '';
+    // ★Phase3(3-6): 直近30日 出勤/当欠
+    const d30 = attendance30d[cast.name] || { work: 0, zenketsu: 0 };
     
     // コメントセクションHTML
     const commentSectionHtml = renderCommentSection(cast.name);
@@ -3109,6 +3126,10 @@ function renderInterviewCard(cast) {
                 <div class="interview-info-item">
                     <span class="interview-info-label">🎬 動画更新</span>
                     <span class="interview-info-value ${!cast.lastVideoDate ? 'empty' : ''}">${lastVideoDisplay}</span>
+                </div>
+                <div class="interview-info-item">
+                    <span class="interview-info-label">📊 直近30日</span>
+                    <span class="interview-info-value">出勤 <b class="d30-w">${d30.work}</b> ／ 当欠 <b class="d30-z">${d30.zenketsu}</b></span>
                 </div>
             </div>
             ${commentSectionHtml}

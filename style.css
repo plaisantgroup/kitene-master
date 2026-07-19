@@ -3259,3 +3259,6 @@ html::after {
 .taa-msg{margin-top:10px;font-size:13px;min-height:18px;}
 .taa-msg.ok{color:#22c55e;}
 .taa-msg.err{color:var(--danger-color);}
+/* ★Phase3(3-6): 面談カード 直近30日 出勤/当欠 */
+.d30-w{color:#22c55e;font-weight:700;}
+.d30-z{color:var(--danger-color);font-weight:700;}
