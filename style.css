@@ -3204,3 +3204,26 @@ html::after {
 .wk-day.wk-zero { opacity: 0.45; }
 .wk-day.wk-sun .wk-date { color: #e57373; }
 .wk-day.wk-sat .wk-date { color: #64b5f6; }
+
+/* ===== Phase2: 声掛け候補リスト ===== */
+.call-list-section{margin-top:14px;}
+.cl-sec{display:flex;align-items:center;gap:7px;margin:14px 3px 7px;font-size:13px;font-weight:700;}
+.cl-sec .cl-cnt{font-size:11px;color:var(--text-secondary);font-weight:500;}
+.cl-sec.danger{color:var(--danger-color);}
+.cl-sec.warn{color:#eab308;}
+.cl-list{border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;}
+.cl-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.cl-row:last-child{border-bottom:none;}
+.cl-row.d{border-left:3px solid var(--danger-color);}
+.cl-row.w{border-left:3px solid #eab308;}
+.cl-nm{font-weight:700;font-size:14px;min-width:64px;}
+.cl-gap{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;flex-shrink:0;}
+.cl-gap.d{background:rgba(239,68,68,0.15);color:#fca5a5;}
+.cl-gap.w{background:rgba(234,179,8,0.12);color:#fde68a;}
+.cl-right{margin-left:auto;text-align:right;font-size:11px;color:var(--text-secondary);line-height:1.5;}
+.cl-last{display:block;white-space:nowrap;}
+.cl-30{display:block;white-space:nowrap;margin-top:1px;}
+.cl-right b{color:#cbd5e1;font-weight:600;}
+.cl-w30{color:#86efac;} .cl-z30{color:#fca5a5;}
+.cl-warnwrap{opacity:0.82;}
+.cl-empty{color:var(--text-secondary);font-size:12px;text-align:center;padding:14px;border:1px dashed var(--border-color);border-radius:var(--radius-md);}

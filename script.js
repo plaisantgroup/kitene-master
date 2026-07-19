@@ -413,6 +413,7 @@ async function loadAllData() {
     startAvailLockTicker();     // ★ 空き予告グレーアウト: ロック残りの自動更新を起動（1回だけ）
     renderShiftList();
     renderUrlList();
+    loadCallList();             // ★ Phase2: 声掛け候補を取得
     
     // ★ Phase 3: キャッシュ保存（次回起動時に使用）
     saveCache();
@@ -539,6 +540,38 @@ async function loadAllDataUnified(options = {}) {
     }
 }
 
+// ★ Phase2: 声掛け候補リスト（読み取り・getCallList）
+function _escCL(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+function renderCallList(danger, warn){
+    const sec = document.getElementById('call-list-section');
+    if (!sec) return;
+    const fmtMD = (v) => { const p = String(v||'').split('/'); return p.length===3 ? (Number(p[1])+'/'+Number(p[2])) : (v||''); };
+    const row = (c, g) => '<div class="cl-row '+g+'">'
+        + '<span class="cl-nm">'+_escCL(c.name)+'</span>'
+        + '<span class="cl-gap '+g+'">'+c.gapDays+'日</span>'
+        + '<span class="cl-right"><span class="cl-last">最終 <b>'+fmtMD(c.lastWork)+'</b></span><span class="cl-30">直近30日 <span class="cl-w30">出勤'+c.work30+'</span> / <span class="cl-z30">当欠'+c.zenketsu30+'</span></span></span>'
+        + '</div>';
+    let html = '';
+    if (danger && danger.length){
+        html += '<div class="cl-sec danger">🚨 危険 <span class="cl-cnt">14日以上 ・ '+danger.length+'人</span></div>';
+        html += '<div class="cl-list">'+danger.map(c=>row(c,'d')).join('')+'</div>';
+    }
+    if (warn && warn.length){
+        html += '<div class="cl-warnwrap"><div class="cl-sec warn">⚠️ 要注意 <span class="cl-cnt">7〜13日 ・ '+warn.length+'人</span></div>';
+        html += '<div class="cl-list">'+warn.map(c=>row(c,'w')).join('')+'</div></div>';
+    }
+    if ((!danger || !danger.length) && (!warn || !warn.length)){
+        html = '<div class="cl-empty">📣 声掛け候補なし（全員が最近出勤 or 今後2週間に予定あり）</div>';
+    }
+    sec.innerHTML = html;
+}
+async function loadCallList(){
+    try {
+        const result = await apiCall('getCallList');
+        if (result && result.success){ renderCallList(result.danger || [], result.warn || []); }
+    } catch (e) { console.error('loadCallList: 例外', e); }
+}
+
 async function loadShiftData() {
     const result = await apiCall('getShiftData');
     
@@ -566,6 +599,7 @@ async function loadShiftData() {
             }));
         
         renderShiftList();
+        loadCallList();         // ★ Phase2: 声掛け候補も更新
     } else {
         console.error('loadShiftData: エラー:', result.error);
     }
@@ -749,7 +783,13 @@ function readExcelFile(file, targetDate) {
                     anecan: norm(row['アネキャン']),
                     ainoshizuku: norm(row['人妻本舗愛のしずく']),
                     comment: norm(row['コメント'])
-                })).filter(r => r.name);
+                })).filter(r => {
+                    if (!r.name) return false;
+                    // ★ Phase2: 部屋番号・部屋ラベル等の非キャスト行を除外（実在キャスト名は不一致→挙動不変）
+                    if (/^[0-9０-９]+$/.test(r.name)) return false;        // 全部数字（例:202/204/304/307）
+                    if (/和室|個室|洋室|号室/.test(r.name)) return false;  // 部屋ラベル（例:和室/203(和室)）
+                    return true;
+                });
 
                 // 今日 = targetDate（ファイル名先頭日）がデータにあればそれ／無ければファイル内の最古日にフォールバック
                 const allDates = allRows.map(r => r.date).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
