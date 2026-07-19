@@ -16,6 +16,7 @@ let availLockUntil = {}; // ★ 空き予告グレーアウト（方式B）: 源
 let currentEditName = null;
 let currentDeleteName = null;
 let currentShiftDate = '';
+let currentShiftDateISO = ''; // Phase1: 出勤履歴/最終出勤日再計算用（'YYYY-MM-DD'）
 let weeklyHeadcount = [];  // 週間シフトの人数（日付ごと・店舗ごと）
 let strategyFilledByUnified = false;  // 戦略フォームを相乗りで反映済みか
 let publicationCategories = [];  // 掲載カテゴリ（プルダウン選択肢）
@@ -667,6 +668,12 @@ async function handleExcelUpload(file) {
         devLog('ステップ4.1: 週間シフトに書き込み中...', parsed.weekly.length, '行');
         await uploadWeeklyShift(parsed.weekly);
         devLog('ステップ4.1完了: 週間シフト書き込み');
+
+        // ★ Phase1・経路A: 出勤履歴を記録（営業日=parsed.dateStr='YYYY-MM-DD'）
+        currentShiftDateISO = parsed.dateStr || targetISO || '';
+        if (currentShiftDateISO && parsed.attendanceToday && parsed.attendanceToday.length > 0) {
+            await recordAttendanceHistory(currentShiftDateISO, parsed.attendanceToday);
+        }
         
         // ★ ステップ4.2: 週間シフトの人数を取得（明日の戦略の出勤人数に反映）
         await loadWeeklyHeadcount();
@@ -716,7 +723,7 @@ function readExcelFile(file, targetDate) {
                 devLog('最初の3行:', jsonData.slice(0, 3));
                 
                 // ★ 出勤扱い（出勤予/出勤確/受付終）
-                const WORKING = ['出勤予', '出勤確', '受付終'];
+                const WORKING = ['出勤予', '出勤確', '受付終', '申請中'];
                 const norm = (v) => String(v == null ? '' : v).trim();
                 // 日付を 'YYYY-MM-DD' に正規化（文字列/スラッシュ/Excelシリアル対応）
                 const toISO = (v) => {
@@ -782,8 +789,21 @@ function readExcelFile(file, targetDate) {
                         delidosu: r.delidosu, anecan: r.anecan, ainoshizuku: r.ainoshizuku, comment: r.comment
                     }));
 
-                devLog('readExcelFile: 今日' + today.length + '人 / 週間' + weekly.length + '行');
-                resolve({ today: today, weekly: weekly, dateStr: todayDate });
+                // ★ Phase1: 出勤履歴用の当日行（出勤=WORKINGの全員／当欠=Excelの当欠行／お休み等は除外）
+                const attSeen = {};
+                const attendanceToday = [];
+                today.forEach(function (t) {
+                    if (attSeen[t.name]) return;
+                    attSeen[t.name] = 1;
+                    attendanceToday.push({ name: t.name, time: t.time, status: '出勤' });
+                });
+                allRows.filter(function (r) { return r.date === todayDate && r.status === '当欠'; }).forEach(function (r) {
+                    if (attSeen[r.name]) return; // 既に出勤なら当欠にしない（出勤優先）
+                    attSeen[r.name] = 1;
+                    attendanceToday.push({ name: r.name, time: formatTimeRange(r.inTime, r.outTime), status: '当欠' });
+                });
+                devLog('readExcelFile: 今日' + today.length + '人 / 週間' + weekly.length + '行 / 履歴' + attendanceToday.length + '件');
+                resolve({ today: today, weekly: weekly, dateStr: todayDate, attendanceToday: attendanceToday });
             } catch (error) {
                 console.error('readExcelFile: エラー', error);
                 reject(error);
@@ -1071,6 +1091,29 @@ function getKanaGroup(name) {
     return 'その他';
 }
 
+
+async function recordAttendanceHistory(date, rows) {
+    try {
+        devLog('recordAttendanceHistory: 送信中...', date, rows.length, '件');
+        const response = await fetch(`${API_URL}?action=updateAttendanceHistory`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ date: date, rows: rows })
+        });
+        const resultText = await response.text();
+        const result = JSON.parse(resultText);
+        if (result.success) {
+            devLog('recordAttendanceHistory: 成功 -', result.message);
+        } else {
+            console.error('recordAttendanceHistory: APIエラー', result.error);
+        }
+        return result;
+    } catch (error) {
+        // 出勤履歴の失敗は致命的ではない（シフトデータは別途成功）ので投げない
+        console.error('recordAttendanceHistory: 例外', error);
+        return { success: false, error: String(error) };
+    }
+}
 
 async function uploadWeeklyShift(rows) {
     try {
@@ -4253,7 +4296,8 @@ async function toggleTouketu(name) {
             body: JSON.stringify({
                 name: name,
                 time: shift.time,
-                originalTime: shift.originalTime || ''
+                originalTime: shift.originalTime || '',
+                shiftDate: currentShiftDateISO || ''
             })
         });
         devLog('当欠更新:', name, shift.time);
