@@ -210,6 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.innerWidth >= 768) {
         startAutoRefresh();
     }
+
+    // ★Phase3(A): アプリ/タブ復帰時、面談タブ表示中ならコメント（既読含む）を取り直す（定期リロードなし＝画面リセットを避けつつ最新化）
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) refreshInterviewComments();
+    });
     
     // トップに戻るボタンのスクロール監視
     window.addEventListener('scroll', handleScroll);
@@ -364,6 +369,7 @@ function applyView(viewName) {
         document.getElementById('interview-view').classList.add('active');
         document.querySelector('.nav-btn:nth-child(3)').classList.add('active');
         renderInterviewList();
+        refreshInterviewComments(); // ★Phase3(A): タブ切替時に最新コメント/既読へ更新
         updateJumpButtons('interview');
         // ★コメントロードはrenderInterviewList内で実行（レイアウトシフト防止）
     } else if (viewName === 'url') {
@@ -2912,6 +2918,22 @@ async function loadAttendance30d() {
     const result = await apiCall('getAttendance30d');
     attendance30d = (result && result.success && result.data) ? result.data : {};
     attendance30dLoaded = true;
+}
+
+// ★Phase3(A): 面談タブ表示中に、タブ切替/アプリ復帰時にコメント（既読含む）を取り直して再描画。スクロール位置は維持（モバイルの画面リセット回避）
+async function refreshInterviewComments() {
+    const view = document.getElementById('interview-view');
+    if (!view || !view.classList.contains('active')) return;
+    const scrollY = window.scrollY;
+    try {
+        await loadAllLatestComments();
+    } catch (e) { console.error('refreshInterviewComments: エラー', e); }
+    if (view.classList.contains('active')) {
+        renderInterviewList();
+        // 再描画後に元のスクロール位置へ戻す（レイアウト確定＝省略判定100ms後も含め二段で復元）
+        requestAnimationFrame(() => window.scrollTo(0, scrollY));
+        setTimeout(() => window.scrollTo(0, scrollY), 130);
+    }
 }
 
 /**
