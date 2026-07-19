@@ -4411,8 +4411,10 @@ function renderNewCommentBar() {
  * @param {string} name - キャスト名
  */
 function scrollToInterview(name) {
-    // 面談タブに切り替え
-    if (typeof showView === 'function') {
+    // 面談タブに切り替え（★既に面談タブなら再描画/入場アニメを走らせない＝モバイルSafariのGPU枯渇クラッシュ回避）
+    const _interviewView = document.getElementById('interview-view');
+    const _alreadyOnInterview = _interviewView && _interviewView.classList.contains('active');
+    if (!_alreadyOnInterview && typeof showView === 'function') {
         showView('interview');
     }
     
@@ -4424,7 +4426,7 @@ function scrollToInterview(name) {
         const card = document.querySelector(`.interview-card[data-name="${name}"]`);
         if (card) {
             // スクロール
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.scrollIntoView({ behavior: 'auto', block: 'center' });
             
             // ハイライト
             card.classList.add('highlight');
