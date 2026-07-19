@@ -307,6 +307,7 @@ function initStarfield() {
     // タブが非表示の間はブラウザがsetIntervalを抑制するので負荷も気にならない
     setInterval(() => {
         if (document.hidden) return;
+        if (window.innerWidth < 768) return; // ★モバイルは流れ星を出さない（常時アニメのGPU/メモリ負荷軽減）
         if (Math.random() < 0.7) launchShootingStar();
     }, 2000);
 
@@ -3814,6 +3815,33 @@ async function markCommentReadUI(name, rowIndex, sel) {
     }
 }
 
+// ★メモリ削減(クラッシュ対策): 過去コメントHTMLを必要時に生成。commentCache[name]の2件目以降。
+function buildHistoryItems(name) {
+    const comments = commentCache[name] || [];
+    const pastComments = comments.slice(1);
+    return pastComments.map(c => {
+        const dateStr = c.date ? formatDisplayDate(c.date) : '';
+        const staffStr = c.staff || '';
+        const metaStr = [dateStr, staffStr].filter(s => s).join(' ');
+        return `
+                <div class="history-comment">
+                    <div class="comment-meta">
+                        <span class="comment-date-staff">${metaStr}</span>
+                        <div class="comment-actions">
+                            <button class="btn-comment-edit" onclick="showEditCommentModal('${name}', ${c.rowIndex})">編集</button>
+                            <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${c.rowIndex})">削除</button>
+                        </div>
+                    </div>
+                    <div class="comment-wrapper" onclick="toggleCommentExpand(this)">
+                        <div class="comment-text ${expandedComments.has(name) ? 'expanded' : 'collapsed'}">${escapeHtml(c.comment || '')}</div>
+                        <span class="expand-hint"></span>
+                    </div>
+                    ${renderReadRow(name, c)}
+                </div>
+            `;
+    }).join('');
+}
+
 /**
  * コメントセクションのHTMLを生成
  */
@@ -3854,38 +3882,16 @@ function renderCommentSection(name) {
     }
     
     // 過去の履歴
+    // 過去の履歴（★メモリ削減: 開いている時だけDOM生成。閉じている間はDOMに載せない＝モバイルのメモリ枯渇クラッシュ対策）
     let historyHtml = '';
     if (pastComments.length > 0) {
-        const historyItems = pastComments.map(c => {
-            const dateStr = c.date ? formatDisplayDate(c.date) : '';
-            const staffStr = c.staff || '';
-            const metaStr = [dateStr, staffStr].filter(s => s).join(' ');
-            
-            return `
-                <div class="history-comment">
-                    <div class="comment-meta">
-                        <span class="comment-date-staff">${metaStr}</span>
-                        <div class="comment-actions">
-                            <button class="btn-comment-edit" onclick="showEditCommentModal('${name}', ${c.rowIndex})">編集</button>
-                            <button class="btn-comment-delete" onclick="showDeleteCommentModal('${name}', ${c.rowIndex})">削除</button>
-                        </div>
-                    </div>
-                    <div class="comment-wrapper" onclick="toggleCommentExpand(this)">
-                        <div class="comment-text ${expandedComments.has(name) ? 'expanded' : 'collapsed'}">${escapeHtml(c.comment || '')}</div>
-                        <span class="expand-hint"></span>
-                    </div>
-                    ${renderReadRow(name, c)}
-                </div>
-            `;
-        }).join('');
-        
         historyHtml = `
             <button class="comment-history-toggle ${isOpen ? 'open' : ''}" onclick="toggleCommentHistory('${name}')">
                 <span class="toggle-icon">▼</span>
                 過去の履歴を見る (${pastComments.length}件)
             </button>
             <div class="comment-history-list ${isOpen ? 'open' : ''}" id="history-${name}">
-                ${historyItems}
+                ${isOpen ? buildHistoryItems(name) : ''}
             </div>
         `;
     }
@@ -3913,10 +3919,14 @@ function toggleCommentHistory(name) {
         openAccordions.delete(name);
         historyList?.classList.remove('open');
         toggle?.classList.remove('open');
+        if (historyList) historyList.innerHTML = ''; // ★メモリ削減: 閉じたら過去コメントDOMを破棄
     } else {
         openAccordions.add(name);
+        // ★メモリ削減: 開く時に過去コメントDOMを生成
+        if (historyList && historyList.innerHTML.trim() === '') historyList.innerHTML = buildHistoryItems(name);
         historyList?.classList.add('open');
         toggle?.classList.add('open');
+        setTimeout(checkCommentOverflow, 50); // 生成した過去コメントの省略判定
     }
 }
 
