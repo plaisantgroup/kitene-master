@@ -55,7 +55,7 @@ let okiniData = [];
 // localStorageキャッシュ（体感高速化用）
 // ===============================
 const CACHE_KEY = 'kitenemaster_cache_v1';
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1時間
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 /**
  * 全データをlocalStorageにキャッシュ保存
@@ -427,6 +427,7 @@ async function loadAllData() {
         }
         // 即座に画面描画
         renderShiftList();
+        { const _dd = document.getElementById('date-display'); if (_dd) _dd.textContent += ' 🔄 更新中…'; }
         devLog(`loadAllData: キャッシュから即時表示 (${Date.now() - startTime}ms)`);
     }
     
