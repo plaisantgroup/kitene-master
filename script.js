@@ -2779,7 +2779,11 @@ async function reloadCoreData() {
     } else if (document.getElementById('all-view').classList.contains('active')) {
         renderAllCastList();
     } else if (document.getElementById('interview-view').classList.contains('active')) {
+        // ★ 自動更新/手動更新でも面談タブのスクロール位置を保持（先頭への巻き戻り防止・refreshInterviewCommentsと同方針）
+        const _scrollY = window.scrollY;
         renderInterviewList();
+        requestAnimationFrame(() => window.scrollTo(0, _scrollY));
+        setTimeout(() => window.scrollTo(0, _scrollY), 130);
     } else if (document.getElementById('url-view').classList.contains('active')) {
         renderUrlList();
     }
