@@ -2932,10 +2932,13 @@ async function refreshInterviewComments() {
     const view = document.getElementById('interview-view');
     if (!view || !view.classList.contains('active')) return;
     const scrollY = window.scrollY;
+    const beforeSig = JSON.stringify(commentCache);  // ★ 取得前のコメント状態を記録
     try {
         await loadAllLatestComments();
     } catch (e) { console.error('refreshInterviewComments: エラー', e); }
     if (view.classList.contains('active')) {
+        // ★ コメントに変化が無ければ2回目の描画をスキップ（applyViewの1回目で最新が描画済み＝iOS負荷削減）
+        if (JSON.stringify(commentCache) === beforeSig) return;
         renderInterviewList();
         // 再描画後に元のスクロール位置へ戻す（レイアウト確定＝省略判定100ms後も含め二段で復元）
         requestAnimationFrame(() => window.scrollTo(0, scrollY));
