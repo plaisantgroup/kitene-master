@@ -2743,7 +2743,7 @@ html, body {
 .product-space.collapsed .product-header { margin-bottom: 0; }
 .product-textarea {
     width: 100%;
-    min-height: 500px;
+    min-height: 600px;
     box-sizing: border-box;
     padding: 12px;
     font-size: 16px;
