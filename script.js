@@ -2377,6 +2377,7 @@ async function toggleStoreCheck(name, store, isChecked) {
 function renderUrlList() {
     const listElement = document.getElementById('url-list');
     const emptyElement = document.getElementById('url-empty-state');
+    { const _cnt = filterUrlDataByStore(urlData, currentStoreFilter).filter(c => c && c.class !== 'スタッフ').length; const _e = document.getElementById('url-count'); if (_e) _e.textContent = '登録キャスト: ' + _cnt + '人'; }  // registered cast count (store-filter aware, excl staff)
     
     // ★★★ 店舗フィルターを適用 ★★★
     const filteredUrlData = filterUrlDataByStore(urlData, currentStoreFilter);

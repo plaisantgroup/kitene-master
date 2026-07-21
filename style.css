@@ -594,6 +594,12 @@ body {
 }
 
 /* ===== 検索バー ===== */
+.url-count {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 2px 4px 8px;
+}
 .search-bar {
     display: flex;
     gap: 10px;
