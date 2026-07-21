@@ -595,10 +595,15 @@ body {
 
 /* ===== 検索バー ===== */
 .url-count {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 2px 4px 8px;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 999px;
+    padding: 4px 12px;
+    margin: 2px 0 8px;
 }
 .search-bar {
     display: flex;

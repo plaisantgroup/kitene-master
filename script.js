@@ -452,7 +452,7 @@ async function loadAllData() {
     renderShiftList();
     renderUrlList();
     loadCallList();             // ★ Phase2: 声掛け候補を取得
-    setGlobalSectionsForView('shift'); // ★ Phase2: 初期タブ(出勤)のグローバル出し分け
+    { const _av = document.querySelector('.view.active'); setGlobalSectionsForView(_av ? _av.id.replace('-view', '') : 'shift'); }  // Phase2: keep current active tab's global sections (fix: store filter left the url tab when hardcoded 'shift')
     
     // ★ Phase 3: キャッシュ保存（次回起動時に使用）
     saveCache();
