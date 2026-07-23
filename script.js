@@ -595,10 +595,23 @@ function renderCallList(danger, warn){
         + '<span class="cl-gap '+g+'">'+c.gapDays+'日</span>'
         + '<span class="cl-right"><span class="cl-last">最終 <b>'+fmtMD(c.lastWork)+'</b></span><span class="cl-30">直近30日 <span class="cl-w30">出勤'+c.work30+'</span> / <span class="cl-z30">当欠'+c.zenketsu30+'</span></span></span>'
         + '</div>';
+    // ★ 店舗別の内訳（危険/要注意それぞれ）。getCallList の store（＝メイン店舗・1人1店舗）を数えるので二重カウントなし。
+    // 　 店舗未設定（URL管理にB/D/F列の店舗名がない子）は「未設定」として出し、内訳の合計が必ず総人数と一致するようにする。
+    const CL_STORE_ORDER = ['delidosu', 'anecan', 'ainoshizuku'];
+    const breakdown = (arr) => {
+        if (!arr.length) return '';
+        const cnt = {}; let unknown = 0;
+        arr.forEach(c => { const s = String(c.store || ''); if (STORE[s]) cnt[s] = (cnt[s] || 0) + 1; else unknown++; });
+        let chips = CL_STORE_ORDER.filter(s => cnt[s]).map(s =>
+            '<span class="cl-bd-i"><span class="cl-store st-'+STORE[s].c+'">'+STORE[s].l+'</span><b>'+cnt[s]+'人</b></span>').join('');
+        if (unknown) chips += '<span class="cl-bd-i"><span class="cl-store st-x">未設定</span><b>'+unknown+'人</b></span>';
+        return chips ? '<span class="cl-bd">'+chips+'</span>' : '';
+    };
     const acc = (title, g, arr) =>
         '<div class="cl-acc">'
         + '<button type="button" class="cl-acc-head '+g+'" onclick="toggleCallAcc(this)">'
-        + '<span class="cl-acc-t">'+title+'</span><span class="cl-cnt">'+arr.length+'人</span><span class="cl-arrow">▶</span>'
+        + '<span class="cl-acc-l1"><span class="cl-acc-t">'+title+'</span><span class="cl-cnt">'+arr.length+'人</span><span class="cl-arrow">▶</span></span>'
+        + breakdown(arr)
         + '</button>'
         + '<div class="cl-acc-body" style="display:none;">'+(arr.length ? arr.map(c=>row(c,g)).join('') : '<div class="cl-none-in">なし</div>')+'</div>'
         + '</div>';

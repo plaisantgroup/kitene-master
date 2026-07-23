@@ -3241,7 +3241,8 @@ html::after {
 
 /* ===== Phase2: 声掛けアコーディオン＋店舗バッジ ===== */
 .cl-acc{border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px;}
-.cl-acc-head{width:100%;display:flex;align-items:center;gap:8px;padding:11px 13px;background:var(--card-bg);border:none;color:var(--text-primary);font-size:14px;font-weight:700;cursor:pointer;text-align:left;}
+.cl-acc-head{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:11px 13px;background:var(--card-bg);border:none;color:var(--text-primary);font-size:14px;font-weight:700;cursor:pointer;text-align:left;}
+.cl-acc-l1{display:flex;align-items:center;gap:8px;width:100%;}
 .cl-acc-head.d{border-left:3px solid var(--danger-color);}
 .cl-acc-head.w{border-left:3px solid #eab308;}
 .cl-acc-head .cl-cnt{font-size:12px;color:var(--text-secondary);font-weight:600;}
@@ -3253,6 +3254,11 @@ html::after {
 .cl-store.st-d{background:#fce5a8;color:#7f6011;}
 .cl-store.st-a{background:#f4cccc;color:#a61c5c;}
 .cl-store.st-s{background:#d9d2e9;color:#5b2c8a;}
+/* ★ 声掛けリスト 店舗別内訳（アコーディオン見出しの2行目） */
+.cl-store.st-x{background:#3f4756;color:#cbd5e1;}
+.cl-bd{display:flex;flex-wrap:wrap;align-items:center;gap:5px 12px;}
+.cl-bd-i{display:inline-flex;align-items:center;gap:5px;}
+.cl-bd-i b{font-size:12px;font-weight:700;color:var(--text-primary);}
 
 /* ★ Stage2: 当日追加フォーム */
 .today-add{border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;margin:12px 0;background:var(--card-bg);}
