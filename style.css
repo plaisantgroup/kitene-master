@@ -3234,7 +3234,20 @@ html::after {
 .callmemo-hint{margin-top:6px;font-size:11px;color:var(--text-secondary);line-height:1.5;}
 @media (max-width: 600px){
   /* 狭い画面ではメモを独立した2段目に（order で末尾へ回し、幅100%で必ず改行させる） */
-  .cl-memo{order:9;flex:0 0 100%;}
+  /* ★ スマホは文字を一回り大きく（現場から見えづらいとの声）。
+     メモは全文が読めるよう省略(…)をやめて折り返す。タップ領域も広げる。 */
+  .cl-memo{order:9;flex:0 0 100%;font-size:13px;padding:6px 10px;align-items:flex-start;}
+  .cl-memo-t{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.45;}
+  .cl-memo-d{font-size:12px;padding-top:1px;}
+  .cl-nm{font-size:15px;min-width:56px;}
+  .cl-gap{font-size:12px;padding:2px 8px;}
+  .cl-store{font-size:11px;padding:2px 7px;}
+  .cl-right{font-size:12px;}
+  .cl-acc-t{font-size:15px;}
+  .cl-cnt{font-size:13px;}
+  .cl-bd-i{font-size:12px;}
+  .cl-bd-i b{font-size:13px;}
+  .cl-row{padding:11px 12px;}
 }
 .cl-row:last-child{border-bottom:none;}
 .cl-row.d{border-left:3px solid var(--danger-color);}
