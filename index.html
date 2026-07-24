@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260723a">
+    <link rel="stylesheet" href="style.css?v=20260724a">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -544,6 +544,28 @@
         </div>
     </div>
 
+    <!-- ★ 声掛けメモ モーダル（1キャスト1件・上書き。過去ログは持たない） -->
+    <div id="callmemo-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="callmemo-modal-title">声掛けメモ</h2>
+                <button class="modal-close" onclick="closeCallMemoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="callmemo-name">
+                <div class="form-group">
+                    <label>一言メモ</label>
+                    <input type="text" id="callmemo-text" class="form-input" maxlength="100" placeholder="例: TEL済 8/1から復帰予定">
+                    <div class="callmemo-hint">保存すると今日の日付が自動で記録されます。空にして保存すると削除できます。</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeCallMemoModal()">キャンセル</button>
+                <button class="btn-primary" onclick="saveCallMemo()">保存</button>
+            </div>
+        </div>
+    </div>
+
     <!-- コメント削除確認モーダル -->
     <div id="comment-delete-modal" class="modal">
         <div class="modal-content modal-small">
@@ -624,6 +646,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260723a"></script>
+    <script src="script.js?v=20260724a"></script>
 </body>
 </html>

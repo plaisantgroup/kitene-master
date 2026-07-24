@@ -582,6 +582,12 @@ async function loadAllDataUnified(options = {}) {
 
 // ★ Phase2: 声掛け候補リスト（読み取り・getCallList）
 function _escCL(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+// ★ 声掛けメモ用の日付整形（M/D）。renderCallList内の fmtMD は '/' 区切り専用かつローカルなので、
+//    'YYYY-MM-DD'（GASのresolveBizDateISO_の形式）も扱えるモジュールレベル版を用意する。
+function _fmtMemoMD(v){
+    const p = String(v == null ? '' : v).trim().split(/[\/\-]/);
+    return p.length === 3 ? (Number(p[1]) + '/' + Number(p[2])) : String(v || '');
+}
 function renderCallList(danger, warn){
     const sec = document.getElementById('call-list-section');
     if (!sec) return;
@@ -589,10 +595,21 @@ function renderCallList(danger, warn){
     const fmtMD = (v) => { const p = String(v||'').split('/'); return p.length===3 ? (Number(p[1])+'/'+Number(p[2])) : (v||''); };
     const STORE = { delidosu:{l:'でりどす',c:'d'}, anecan:{l:'アネキャン',c:'a'}, ainoshizuku:{l:'愛のしずく',c:'s'} };
     const badge = (st) => { const m = STORE[st]; return m ? '<span class="cl-store st-'+m.c+'">'+m.l+'</span>' : ''; };
+    // ★ 声掛けメモ: 日付＋一言。onclick に値を埋め込むと引用符でHTMLが壊れるので、
+    //    data-name だけ持たせて中身は callMemoMap から引く（描画後にイベントを付与）。
+    const memoCell = (c) => {
+        const has = !!(c.memo && String(c.memo).trim());
+        const d = has && c.memoDate ? _fmtMemoMD(c.memoDate) : '';
+        const inner = has
+            ? (d ? '<span class="cl-memo-d">'+_escCL(d)+'</span>' : '') + '<span class="cl-memo-t">'+_escCL(c.memo)+'</span>'
+            : '<span class="cl-memo-t cl-memo-empty">＋ メモ</span>';
+        return '<button type="button" class="cl-memo'+(has?' has':'')+'" data-name="'+_escCL(c.name)+'">'+inner+'</button>';
+    };
     const row = (c, g) => '<div class="cl-row '+g+'">'
         + '<span class="cl-nm">'+_escCL(c.name)+'</span>'
         + badge(c.store)
         + '<span class="cl-gap '+g+'">'+c.gapDays+'日</span>'
+        + memoCell(c)
         + '<span class="cl-right"><span class="cl-last">最終 <b>'+fmtMD(c.lastWork)+'</b></span><span class="cl-30">直近30日 <span class="cl-w30">出勤'+c.work30+'</span> / <span class="cl-z30">当欠'+c.zenketsu30+'</span></span></span>'
         + '</div>';
     // ★ 店舗別の内訳（危険/要注意それぞれ）。getCallList の store（＝メイン店舗・1人1店舗）を数えるので二重カウントなし。
@@ -620,6 +637,12 @@ function renderCallList(danger, warn){
         return;
     }
     sec.innerHTML = acc('🚨 危険（14日以上）', 'd', danger) + acc('⚠️ 要注意（7〜13日）', 'w', warn);
+    // ★ 声掛けメモ: 現在値を名前で引けるように保持し、ボタンにクリックを付与
+    callMemoMap = {};
+    danger.concat(warn).forEach(c => { callMemoMap[c.name] = { memo: c.memo || '', memoDate: c.memoDate || '' }; });
+    sec.querySelectorAll('.cl-memo').forEach(btn => {
+        btn.addEventListener('click', () => openCallMemoModal(btn.dataset.name));
+    });
 }
 function toggleCallAcc(btn){
     const body = btn.nextElementSibling;
@@ -730,6 +753,66 @@ async function submitTodayAdd(){
         setMsg('err', (result && result.error) ? result.error : '追加に失敗しました');
     }
 }
+// ===== 声掛けメモ =====
+// 1キャスト1件・上書き（面談履歴のような過去ログは持たない）。
+// 保存先は URL管理 T列(声掛けメモ)/U列(メモ日付)。日付はGAS側で営業日を自動付与。
+let callMemoMap = {};
+
+function openCallMemoModal(name){
+    if (!name) return;
+    const cur = callMemoMap[name] || { memo: '', memoDate: '' };
+    document.getElementById('callmemo-name').value = name;
+    document.getElementById('callmemo-modal-title').textContent = name + ' の声掛けメモ';
+    const input = document.getElementById('callmemo-text');
+    input.value = cur.memo || '';
+    document.getElementById('callmemo-modal').classList.add('active');
+    setTimeout(() => { try { input.focus(); } catch(e){} }, 50);
+}
+
+function closeCallMemoModal(){
+    document.getElementById('callmemo-modal').classList.remove('active');
+}
+
+async function saveCallMemo(){
+    const btn = document.querySelector('#callmemo-modal .btn-primary');
+    if (btn && btn.disabled) return;  // 二重送信防止
+    const name = document.getElementById('callmemo-name').value;
+    const memo = document.getElementById('callmemo-text').value.trim();
+    if (!name) { closeCallMemoModal(); return; }
+    if (btn){ btn.disabled = true; btn.textContent = '保存中...'; }
+    try {
+        const result = await apiCall('saveCallMemo', { method: 'POST', body: { name: name, memo: memo } });
+        if (result && result.success){
+            // 画面を再取得せずその場だけ更新（getCallListは往復3秒かかるため）
+            callMemoMap[name] = { memo: result.memo || '', memoDate: result.memoDate || '' };
+            updateCallMemoCell(name, result.memo || '', result.memoDate || '');
+            closeCallMemoModal();
+            showToast(memo ? 'メモを保存しました' : 'メモを削除しました', 'success');
+        } else {
+            showToast((result && result.error) || 'メモの保存に失敗しました', 'error');
+        }
+    } catch(e){
+        console.error('saveCallMemo: 例外', e);
+        showToast('メモの保存に失敗しました', 'error');
+    } finally {
+        if (btn){ btn.disabled = false; btn.textContent = '保存'; }
+    }
+}
+
+/** 保存後にその行のメモ表示だけ差し替える（全再描画しない＝スクロール位置を守る） */
+function updateCallMemoCell(name, memo, memoDate){
+    const sec = document.getElementById('call-list-section');
+    if (!sec) return;
+    const btn = sec.querySelector('.cl-memo[data-name="' + (window.CSS && CSS.escape ? CSS.escape(name) : name) + '"]');
+    if (!btn) return;
+    const has = !!(memo && memo.trim());
+    const d = has && memoDate ? _fmtMemoMD(memoDate) : '';
+    btn.className = 'cl-memo' + (has ? ' has' : '');
+    btn.innerHTML = has
+        ? (d ? '<span class="cl-memo-d">'+_escCL(d)+'</span>' : '') + '<span class="cl-memo-t">'+_escCL(memo)+'</span>'
+        : '<span class="cl-memo-t cl-memo-empty">＋ メモ</span>';
+}
+
 async function loadCallList(){
     try {
         const result = await apiCall('getCallList');
