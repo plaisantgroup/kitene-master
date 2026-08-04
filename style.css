@@ -2201,53 +2201,73 @@ body {
 }
 
 /* ========== 面談アナリティクスへのリンクバー ========== */
+/* ★ 目立たず素通りされていたため、金ベタ塗りのボタンへ変更（2026-08） */
 .analytics-link-bar {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    color: #d4af37;
-    padding: 14px 18px;
+    background: linear-gradient(135deg, #e2c04a 0%, #c9a233 100%);
+    border: 1px solid #f2dc8e;
+    color: #1a1505;
+    padding: 15px 18px;
     margin: 0 16px 16px 16px;
     border-radius: var(--radius-md);
     text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    font-weight: 700;
+    transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 3px 14px rgba(212, 175, 55, 0.30);
 }
 
 .analytics-link-bar:hover {
-    border-color: rgba(212, 175, 55, 0.7);
-    background: linear-gradient(135deg, #252525 0%, #2f2f2f 100%);
-    box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);
-    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow: 0 5px 18px rgba(212, 175, 55, 0.42);
+}
+
+/* ★ スマホはhoverが効かないのでタップ時の反応を用意 */
+.analytics-link-bar:active {
+    transform: scale(0.99);
+    filter: brightness(0.95);
 }
 
 .analytics-link-icon {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .analytics-link-text {
-    font-size: 1rem;
+    font-size: 1.02rem;
     letter-spacing: 0.05em;
-    color: #d4af37;
+    color: #1a1505;
 }
 
 .analytics-link-sub {
     flex: 1;
-    font-size: 0.8rem;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #4a3c0e;
     margin-left: 4px;
 }
 
+/* ★ 更新日バッジ：月次更新のたびに index.html の文言を書き換える */
+.analytics-link-badge {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #f2dc8e;
+    background: #1a1505;
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
 .analytics-link-arrow {
-    font-size: 1.1rem;
-    color: #d4af37;
+    font-size: 1.25rem;
+    color: #1a1505;
     transition: transform 0.2s ease;
+    flex-shrink: 0;
 }
 
 .analytics-link-bar:hover .analytics-link-arrow {
@@ -2260,19 +2280,19 @@ body {
         grid-template-columns: auto 1fr auto;
         grid-template-rows: auto auto;
         column-gap: 12px;
-        row-gap: 0;
+        row-gap: 2px;
         align-items: center;
         margin: 0 8px 12px 8px;
-        padding: 11px 14px;
+        padding: 13px 14px;
     }
     .analytics-link-icon {
         grid-row: 1 / 3;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
     }
     .analytics-link-text {
         grid-column: 2;
         grid-row: 1;
-        font-size: 0.95rem;
+        font-size: 1rem;
         line-height: 1.3;
     }
     .analytics-link-sub {
@@ -2280,13 +2300,21 @@ body {
         grid-row: 2;
         flex: unset;
         margin: 0;
-        font-size: 0.72rem;
+        font-size: 0.74rem;
         line-height: 1.35;
+    }
+    .analytics-link-badge {
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: end;
+        font-size: 0.66rem;
+        padding: 2px 8px;
     }
     .analytics-link-arrow {
         grid-column: 3;
-        grid-row: 1 / 3;
-        font-size: 1rem;
+        grid-row: 2;
+        justify-self: end;
+        font-size: 1.05rem;
     }
 }
 
@@ -3284,6 +3312,52 @@ html::after {
 .cl-bd{display:flex;flex-wrap:wrap;align-items:center;gap:5px 12px;}
 .cl-bd-i{display:inline-flex;align-items:center;gap:5px;}
 .cl-bd-i b{font-size:12px;font-weight:700;color:var(--text-primary);}
+
+/* ★ 声掛けアコーディオン：開閉できることが伝わらず素通りされていたため強化（2026-08） */
+.cl-acc-head {
+    position: relative;
+    transition: background 0.15s ease;
+}
+.cl-acc-head:hover { background: rgba(212, 175, 55, 0.07); }
+.cl-acc-head:active { background: rgba(212, 175, 55, 0.14); }
+
+/* 矢印を丸ボタン化して「押せる」ことを明示 */
+.cl-acc-head .cl-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    background: rgba(212, 175, 55, 0.12);
+    color: #d4af37;
+    font-size: 12px;
+    transition: transform 0.18s ease, background 0.15s ease;
+}
+.cl-acc-head.open .cl-arrow {
+    transform: rotate(90deg);
+    background: rgba(212, 175, 55, 0.28);
+}
+
+/* 閉じている時だけ操作ヒントを出す */
+.cl-acc-head:not(.open)::after {
+    content: "タップして一覧を開く";
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #d4af37;
+    opacity: 0.85;
+}
+.cl-acc-head.open { border-bottom: 1px solid rgba(212, 175, 55, 0.25); }
+
+@media (max-width: 600px) {
+    .cl-acc-head:not(.open)::after { font-size: 12.5px; }
+    .cl-acc-head .cl-arrow { width: 32px; height: 32px; font-size: 13px; }
+}
 
 /* ★ Stage2: 当日追加フォーム */
 .today-add{border:1px solid var(--border-color);border-radius:var(--radius-md);overflow:hidden;margin:12px 0;background:var(--card-bg);}
