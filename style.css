@@ -3314,12 +3314,39 @@ html::after {
 .cl-bd-i b{font-size:12px;font-weight:700;color:var(--text-primary);}
 
 /* ★ 声掛けアコーディオン：開閉できることが伝わらず素通りされていたため強化（2026-08） */
+/* ★ 危険=赤 / 要注意=黄 の半透明ティントで危険度を一目で判別（2026-08） */
 .cl-acc-head {
     position: relative;
     transition: background 0.15s ease;
 }
-.cl-acc-head:hover { background: rgba(212, 175, 55, 0.07); }
-.cl-acc-head:active { background: rgba(212, 175, 55, 0.14); }
+
+/* 見出しの背景：左から右へ抜ける半透明ティント */
+.cl-acc-head.d {
+    border-left: 4px solid var(--danger-color);
+    background:
+        linear-gradient(90deg, rgba(239, 68, 68, 0.22) 0%, rgba(239, 68, 68, 0.08) 55%, rgba(239, 68, 68, 0.02) 100%),
+        var(--card-bg);
+}
+.cl-acc-head.w {
+    border-left: 4px solid #eab308;
+    background:
+        linear-gradient(90deg, rgba(234, 179, 8, 0.20) 0%, rgba(234, 179, 8, 0.07) 55%, rgba(234, 179, 8, 0.02) 100%),
+        var(--card-bg);
+}
+.cl-acc-head.d:hover, .cl-acc-head.d:active {
+    background:
+        linear-gradient(90deg, rgba(239, 68, 68, 0.34) 0%, rgba(239, 68, 68, 0.14) 55%, rgba(239, 68, 68, 0.05) 100%),
+        var(--card-bg);
+}
+.cl-acc-head.w:hover, .cl-acc-head.w:active {
+    background:
+        linear-gradient(90deg, rgba(234, 179, 8, 0.31) 0%, rgba(234, 179, 8, 0.13) 55%, rgba(234, 179, 8, 0.05) 100%),
+        var(--card-bg);
+}
+
+/* 展開中の中身も薄く色を残して、どの階層を見ているか分かるように */
+.cl-acc-head.d.open { border-bottom: 1px solid rgba(239, 68, 68, 0.35); }
+.cl-acc-head.w.open { border-bottom: 1px solid rgba(234, 179, 8, 0.32); }
 
 /* 矢印を丸ボタン化して「押せる」ことを明示 */
 .cl-acc-head .cl-arrow {
@@ -3337,10 +3364,19 @@ html::after {
     font-size: 12px;
     transition: transform 0.18s ease, background 0.15s ease;
 }
-.cl-acc-head.open .cl-arrow {
-    transform: rotate(90deg);
-    background: rgba(212, 175, 55, 0.28);
+.cl-acc-head.d .cl-arrow {
+    border-color: rgba(239, 68, 68, 0.6);
+    background: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
 }
+.cl-acc-head.w .cl-arrow {
+    border-color: rgba(234, 179, 8, 0.55);
+    background: rgba(234, 179, 8, 0.15);
+    color: #fde68a;
+}
+.cl-acc-head.open .cl-arrow { transform: rotate(90deg); }
+.cl-acc-head.d.open .cl-arrow { background: rgba(239, 68, 68, 0.32); }
+.cl-acc-head.w.open .cl-arrow { background: rgba(234, 179, 8, 0.30); }
 
 /* 閉じている時だけ操作ヒントを出す */
 .cl-acc-head:not(.open)::after {
@@ -3352,7 +3388,8 @@ html::after {
     color: #d4af37;
     opacity: 0.85;
 }
-.cl-acc-head.open { border-bottom: 1px solid rgba(212, 175, 55, 0.25); }
+.cl-acc-head.d:not(.open)::after { color: #fca5a5; }
+.cl-acc-head.w:not(.open)::after { color: #fde68a; }
 
 @media (max-width: 600px) {
     .cl-acc-head:not(.open)::after { font-size: 12.5px; }
