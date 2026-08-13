@@ -128,6 +128,98 @@ function clearCache() {
 // API共通ヘルパー（fetch呼び出しの統一・エラー処理強化）
 // ===============================
 
+// ===============================
+// ★ GAS応答の一時的な404対策（gasFetch）
+// ===============================
+//
+// 【何が起きていたか】
+//   GASのWebアプリを呼ぶと、まず /macros/s/.../exec にリクエストが飛び、
+//   そこから script.googleusercontent.com/macros/echo?user_content_key=... へ
+//   リダイレクトされて、実際の結果を受け取る2段構えになっている。
+//   このリダイレクト先が、Google側の一時的な不調で404を返すことがある。
+//   デプロイURLが違うわけでも、権限が切れたわけでもない。
+//
+// 【重要な前提】
+//   404になるのは「結果を受け取る」段階。GAS本体の処理は既に実行済み。
+//   つまり書き込み系をやみくもに再試行すると、二重に書き込まれる。
+//   そのため、再試行してよいアクションだけを明示的に許可している。
+
+// 再試行しても安全なPOSTアクション（同じ内容を2回実行しても結果が変わらないもの）
+const GAS_RETRY_SAFE_ACTIONS = new Set([
+    'markCommentRead',        // スタッフ名で重複排除される
+    'updateUrlData',          // 上書き更新
+    'updateInterviewHistory', // 行指定の上書き更新
+    'updateAttendanceHistory',// date|name をキーにした upsert
+    'updateWeeklyShift',      // 全クリア→再書き込み
+    'updateShiftData',        // 全クリア→再書き込み
+    'updateCheckStatus',
+    'updateLastWorkDate',
+    'updateOkiniTalked',
+    'updateShiftTime',
+    'saveShiftDate',
+    'saveStrategy',
+    'resetAllChecks'
+]);
+//
+// ★ 再試行しないアクション（意図的に除外している。追加しないこと）
+//   addInterviewHistory / addUrlData        → 追加処理。再試行すると行が重複する
+//   deleteInterviewHistory / deleteUrlData  → 行番号指定の削除。1回目が成功していると
+//                                             行がズレて「別のデータを消す」事故になる
+
+const GAS_RETRY_MAX = 3;          // 最大試行回数（初回を含む）
+const GAS_RETRY_WAITS = [700, 1800]; // 1回目失敗後・2回目失敗後の待ち時間(ms)
+
+function gasSleep_(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+// このリクエストを再試行してよいか判定する
+function gasCanRetry_(url, options) {
+    const method = String((options && options.method) || 'GET').toUpperCase();
+    if (method === 'GET') return true; // 読み取りだけなので何度呼んでも安全
+    const m = /[?&]action=([^&]*)/.exec(String(url));
+    if (!m) return false;
+    let action = m[1];
+    try { action = decodeURIComponent(action); } catch (e) {}
+    return GAS_RETRY_SAFE_ACTIONS.has(action);
+}
+
+/**
+ * fetch と同じ使い方ができる薄いラッパー。
+ * 一時的な404・5xx・通信エラーのときだけ、安全な範囲で自動的に再試行する。
+ * 戻り値も fetch と同じ Response なので、呼び出し側の書き方は変えなくてよい。
+ */
+async function gasFetch(url, options = {}) {
+    const maxAttempts = gasCanRetry_(url, options) ? GAS_RETRY_MAX : 1;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const response = await fetch(url, options);
+            if (response.ok) {
+                if (attempt > 1) devLog('gasFetch: ' + attempt + '回目で成功しました');
+                return response;
+            }
+            // 404 と 5xx は一時的な可能性があるので、余力があれば待って再試行
+            if (attempt < maxAttempts && (response.status === 404 || response.status >= 500)) {
+                console.warn('gasFetch: HTTP ' + response.status + ' のため再試行します (' + attempt + '/' + maxAttempts + ')');
+                await gasSleep_(GAS_RETRY_WAITS[attempt - 1] || 1800);
+                continue;
+            }
+            return response; // 呼び出し側に判断を委ねる
+        } catch (e) {
+            lastError = e;
+            if (attempt < maxAttempts) {
+                console.warn('gasFetch: 通信エラーのため再試行します (' + attempt + '/' + maxAttempts + ')', e);
+                await gasSleep_(GAS_RETRY_WAITS[attempt - 1] || 1800);
+                continue;
+            }
+            throw e;
+        }
+    }
+    throw lastError || new Error('gasFetch: 不明なエラー');
+}
+
 /**
  * GAS APIへの統一的な呼び出し関数
  * @param {string} action - APIアクション名
@@ -154,9 +246,13 @@ async function apiCall(action, options = {}) {
             fetchOptions.body = JSON.stringify(body);
         }
         
-        const response = await fetch(url, fetchOptions);
+        const response = await gasFetch(url, fetchOptions);
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // ★ 404はGAS側の一時的な不調であることが多い。再試行しても駄目だったケース。
+            if (response.status === 404) {
+                throw new Error('サーバーの応答を取得できませんでした（一時的な不調の可能性があります）。少し待ってからもう一度お試しください。');
+            }
+            throw new Error(`通信エラー（HTTP ${response.status}）。少し待ってからもう一度お試しください。`);
         }
         const result = await response.json();
         return result;
@@ -1386,7 +1482,7 @@ function getKanaGroup(name) {
 async function recordAttendanceHistory(date, rows) {
     try {
         devLog('recordAttendanceHistory: 送信中...', date, rows.length, '件');
-        const response = await fetch(`${API_URL}?action=updateAttendanceHistory`, {
+        const response = await gasFetch(`${API_URL}?action=updateAttendanceHistory`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ date: date, rows: rows })
@@ -1409,7 +1505,7 @@ async function recordAttendanceHistory(date, rows) {
 async function uploadWeeklyShift(rows) {
     try {
         devLog('uploadWeeklyShift: 送信中...', rows.length, '行');
-        const response = await fetch(`${API_URL}?action=updateWeeklyShift`, {
+        const response = await gasFetch(`${API_URL}?action=updateWeeklyShift`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ rows: rows })
@@ -1435,7 +1531,7 @@ async function uploadShiftData(data) {
         devLog('送信データ件数:', data.length);
         
         // シンプルリクエストにするため、Content-Type: text/plain を使用
-        const response = await fetch(`${API_URL}?action=updateShiftData`, {
+        const response = await gasFetch(`${API_URL}?action=updateShiftData`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
@@ -2307,7 +2403,7 @@ function getCheckStatus(name, store) {
  */
 async function saveShiftDate(date) {
     try {
-        const response = await fetch(`${API_URL}?action=saveShiftDate`, {
+        const response = await gasFetch(`${API_URL}?action=saveShiftDate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
@@ -2375,7 +2471,7 @@ function formatShiftDate(dateValue) {
  */
 async function resetAllChecks() {
     try {
-        const response = await fetch(`${API_URL}?action=resetAllChecks`, {
+        const response = await gasFetch(`${API_URL}?action=resetAllChecks`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
@@ -2442,7 +2538,7 @@ async function toggleStoreCheck(name, store, isChecked) {
     
     // スプレッドシートに保存
     try {
-        const response = await fetch(`${API_URL}?action=updateCheckStatus`, {
+        const response = await gasFetch(`${API_URL}?action=updateCheckStatus`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
@@ -2763,7 +2859,7 @@ async function saveUrlData() {
     try {
         const action = currentEditName ? 'updateUrlData' : 'addUrlData';
         
-        const response = await fetch(`${API_URL}?action=${action}`, {
+        const response = await gasFetch(`${API_URL}?action=${action}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
@@ -2795,7 +2891,7 @@ async function confirmDelete() {
     if (!currentDeleteName) return;
     
     try {
-        const response = await fetch(`${API_URL}?action=deleteUrlData`, {
+        const response = await gasFetch(`${API_URL}?action=deleteUrlData`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
@@ -3482,7 +3578,7 @@ function jumpToGroup(tabName, group) {
  */
 async function updateLastWorkDate(names, date) {
     try {
-        const response = await fetch(`${API_URL}?action=updateLastWorkDate`, {
+        const response = await gasFetch(`${API_URL}?action=updateLastWorkDate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'text/plain',
@@ -3547,7 +3643,7 @@ async function loadLatestComment(cardId, name) {
     if (!latestDiv) return;
     
     try {
-        const response = await fetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
+        const response = await gasFetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
         const result = await response.json();
         
         if (result.success && result.data && result.data.length > 0) {
@@ -3790,7 +3886,7 @@ async function saveInterviewHistory() {
             };
         }
         
-        const response = await fetch(`${API_URL}?action=${action}`, {
+        const response = await gasFetch(`${API_URL}?action=${action}`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(body)
@@ -3828,7 +3924,7 @@ async function confirmHistoryDelete() {
     if (!rowIndex) return;
     
     try {
-        const response = await fetch(`${API_URL}?action=deleteInterviewHistory`, {
+        const response = await gasFetch(`${API_URL}?action=deleteInterviewHistory`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ rowIndex: parseInt(rowIndex) })
@@ -4041,7 +4137,7 @@ function toggleCommentHistory(name) {
 async function loadCommentHistory(name) {
     try {
         // ★ GETリクエストで取得
-        const response = await fetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
+        const response = await gasFetch(`${API_URL}?action=getInterviewHistory&name=${encodeURIComponent(name)}`);
         const result = await response.json();
         
         if (result.success) {
@@ -4069,7 +4165,13 @@ async function loadCommentHistory(name) {
 async function loadAllLatestComments() {
     try {
         // 一括取得APIを使用（CORSエラー対策）
-        const response = await fetch(`${API_URL}?action=getAllInterviewHistory`);
+        const response = await gasFetch(`${API_URL}?action=getAllInterviewHistory`);
+        // ★ 応答を確認せずに json() すると、404のHTMLを読んで
+        //   「Unexpected token '<'」という分かりにくいエラーになるため先に判定する
+        if (!response.ok) {
+            console.warn('loadAllLatestComments: サーバー応答が異常です HTTP ' + response.status);
+            return;
+        }
         const result = await response.json();
         
         if (result.success) {
@@ -4239,7 +4341,7 @@ async function saveComment() {
             body = { name, interviewDate: date, staff, comment };
         }
         
-        const response = await fetch(`${API_URL}?action=${action}`, {
+        const response = await gasFetch(`${API_URL}?action=${action}`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(body)
@@ -4284,7 +4386,7 @@ async function confirmDeleteComment() {
     const rowIndex = document.getElementById('delete-comment-row-index').value;
     
     try {
-        const response = await fetch(`${API_URL}?action=deleteInterviewHistory`, {
+        const response = await gasFetch(`${API_URL}?action=deleteInterviewHistory`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ rowIndex: parseInt(rowIndex) })
@@ -4644,7 +4746,7 @@ async function toggleOkiniTalked(name, store) {
     
     // GASに保存
     try {
-        await fetch(API_URL + '?action=updateOkiniTalked', {
+        await gasFetch(API_URL + '?action=updateOkiniTalked', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ name: name, store: store, talked: newTalked })
@@ -4679,7 +4781,7 @@ async function toggleTouketu(name) {
     
     // GASに保存
     try {
-        await fetch(API_URL + '?action=updateShiftTime', {
+        await gasFetch(API_URL + '?action=updateShiftTime', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
@@ -4860,7 +4962,7 @@ async function saveStrategyData() {
     };
 
     try {
-        const response = await fetch(`${API_URL}?action=saveStrategy`, {
+        const response = await gasFetch(`${API_URL}?action=saveStrategy`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ date: targetDate, stores: stores })
@@ -5127,7 +5229,7 @@ async function saveProductData() {
     if (btn) btn.disabled = true;
     if (status) status.textContent = '保存中...';
     try {
-        const response = await fetch(`${API_URL}?action=saveProduct`, {
+        const response = await gasFetch(`${API_URL}?action=saveProduct`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ text: el.value })
@@ -5174,7 +5276,7 @@ async function savePublicationsData() {
     if (status) status.textContent = '保存中...';
 
     try {
-        const response = await fetch(`${API_URL}?action=savePublications`, {
+        const response = await gasFetch(`${API_URL}?action=savePublications`, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ items: items })
