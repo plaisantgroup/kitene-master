@@ -3280,10 +3280,16 @@ html::after {
 .cl-row:last-child{border-bottom:none;}
 .cl-row.d{border-left:3px solid var(--danger-color);}
 .cl-row.w{border-left:3px solid #eab308;}
+/* ★ 本日出勤リスト（明日以降シフトなし）＝水色。当欠は消さずグレーで残す */
+.cl-row.n{border-left:3px solid #38bdf8;}
+.cl-row.n.tk{border-left-color:#94a3b8;opacity:0.55;}
+.cl-row.n.tk .cl-nm{text-decoration:line-through;text-decoration-color:rgba(203,213,225,0.55);}
 .cl-nm{font-weight:700;font-size:14px;min-width:64px;}
 .cl-gap{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;flex-shrink:0;}
 .cl-gap.d{background:rgba(239,68,68,0.15);color:#fca5a5;}
 .cl-gap.w{background:rgba(234,179,8,0.12);color:#fde68a;}
+.cl-gap.n{background:rgba(56,189,248,0.15);color:#7dd3fc;}
+.cl-gap.tk{background:rgba(148,163,184,0.16);color:#cbd5e1;}
 .cl-right{margin-left:auto;text-align:right;font-size:11px;color:var(--text-secondary);line-height:1.5;}
 .cl-last{display:block;white-space:nowrap;}
 .cl-30{display:block;white-space:nowrap;margin-top:1px;}
@@ -3298,6 +3304,7 @@ html::after {
 .cl-acc-l1{display:flex;align-items:center;gap:8px;width:100%;}
 .cl-acc-head.d{border-left:3px solid var(--danger-color);}
 .cl-acc-head.w{border-left:3px solid #eab308;}
+.cl-acc-head.n{border-left:3px solid #38bdf8;}
 .cl-acc-head .cl-cnt{font-size:12px;color:var(--text-secondary);font-weight:600;}
 .cl-acc-head .cl-arrow{margin-left:auto;font-size:11px;color:var(--text-secondary);transition:transform 0.15s;}
 .cl-acc-head.open .cl-arrow{transform:rotate(90deg);}
@@ -3333,6 +3340,17 @@ html::after {
         linear-gradient(90deg, rgba(234, 179, 8, 0.20) 0%, rgba(234, 179, 8, 0.07) 55%, rgba(234, 179, 8, 0.02) 100%),
         var(--card-bg);
 }
+.cl-acc-head.n {
+    border-left: 4px solid #38bdf8;
+    background:
+        linear-gradient(90deg, rgba(56, 189, 248, 0.20) 0%, rgba(56, 189, 248, 0.07) 55%, rgba(56, 189, 248, 0.02) 100%),
+        var(--card-bg);
+}
+.cl-acc-head.n:hover, .cl-acc-head.n:active {
+    background:
+        linear-gradient(90deg, rgba(56, 189, 248, 0.31) 0%, rgba(56, 189, 248, 0.13) 55%, rgba(56, 189, 248, 0.05) 100%),
+        var(--card-bg);
+}
 .cl-acc-head.d:hover, .cl-acc-head.d:active {
     background:
         linear-gradient(90deg, rgba(239, 68, 68, 0.34) 0%, rgba(239, 68, 68, 0.14) 55%, rgba(239, 68, 68, 0.05) 100%),
@@ -3347,6 +3365,7 @@ html::after {
 /* 展開中の中身も薄く色を残して、どの階層を見ているか分かるように */
 .cl-acc-head.d.open { border-bottom: 1px solid rgba(239, 68, 68, 0.35); }
 .cl-acc-head.w.open { border-bottom: 1px solid rgba(234, 179, 8, 0.32); }
+.cl-acc-head.n.open { border-bottom: 1px solid rgba(56, 189, 248, 0.32); }
 
 /* 矢印を丸ボタン化して「押せる」ことを明示 */
 .cl-acc-head .cl-arrow {
@@ -3374,9 +3393,15 @@ html::after {
     background: rgba(234, 179, 8, 0.15);
     color: #fde68a;
 }
+.cl-acc-head.n .cl-arrow {
+    border-color: rgba(56, 189, 248, 0.55);
+    background: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+}
 .cl-acc-head.open .cl-arrow { transform: rotate(90deg); }
 .cl-acc-head.d.open .cl-arrow { background: rgba(239, 68, 68, 0.32); }
 .cl-acc-head.w.open .cl-arrow { background: rgba(234, 179, 8, 0.30); }
+.cl-acc-head.n.open .cl-arrow { background: rgba(56, 189, 248, 0.30); }
 
 /* 閉じている時だけ操作ヒントを出す */
 .cl-acc-head:not(.open)::after {
@@ -3390,6 +3415,7 @@ html::after {
 }
 .cl-acc-head.d:not(.open)::after { color: #fca5a5; }
 .cl-acc-head.w:not(.open)::after { color: #fde68a; }
+.cl-acc-head.n:not(.open)::after { color: #7dd3fc; }
 
 @media (max-width: 600px) {
     .cl-acc-head:not(.open)::after { font-size: 12.5px; }

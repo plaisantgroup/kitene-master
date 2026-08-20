@@ -684,10 +684,14 @@ function _fmtMemoMD(v){
     const p = String(v == null ? '' : v).trim().split(/[\/\-]/);
     return p.length === 3 ? (Number(p[1]) + '/' + Number(p[2])) : String(v || '');
 }
-function renderCallList(danger, warn){
+// ★ 本日出勤リスト: 当欠トグル後に通信なしで描き直せるよう、取得結果を保持する
+let callListData = { danger: [], warn: [], today: [], weekLast: '' };
+function renderCallList(danger, warn, todayArr, weekLast){
     const sec = document.getElementById('call-list-section');
     if (!sec) return;
-    danger = danger || []; warn = warn || [];
+    // 引数あり＝getCallList取得直後 / 引数なし＝当欠トグルからの再描画（保持データで描き直す）
+    if (danger !== undefined) callListData = { danger: danger || [], warn: warn || [], today: todayArr || [], weekLast: weekLast || '' };
+    danger = callListData.danger; warn = callListData.warn;
     const fmtMD = (v) => { const p = String(v||'').split('/'); return p.length===3 ? (Number(p[1])+'/'+Number(p[2])) : (v||''); };
     const STORE = { delidosu:{l:'でりどす',c:'d'}, anecan:{l:'アネキャン',c:'a'}, ainoshizuku:{l:'愛のしずく',c:'s'} };
     const badge = (st) => { const m = STORE[st]; return m ? '<span class="cl-store st-'+m.c+'">'+m.l+'</span>' : ''; };
@@ -720,22 +724,52 @@ function renderCallList(danger, warn){
         if (unknown) chips += '<span class="cl-bd-i"><span class="cl-store st-x">未設定</span><b>'+unknown+'人</b></span>';
         return chips ? '<span class="cl-bd">'+chips+'</span>' : '';
     };
-    const acc = (title, g, arr) =>
+    const acc = (title, g, arr, rowFn) =>
         '<div class="cl-acc">'
         + '<button type="button" class="cl-acc-head '+g+'" onclick="toggleCallAcc(this)">'
         + '<span class="cl-acc-l1"><span class="cl-acc-t">'+title+'</span><span class="cl-cnt">'+arr.length+'人</span><span class="cl-arrow">▶</span></span>'
         + breakdown(arr)
         + '</button>'
-        + '<div class="cl-acc-body" style="display:none;">'+(arr.length ? arr.map(c=>row(c,g)).join('') : '<div class="cl-none-in">なし</div>')+'</div>'
+        + '<div class="cl-acc-body" style="display:none;">'+(arr.length ? arr.map(c=>rowFn(c,g)).join('') : '<div class="cl-none-in">なし</div>')+'</div>'
         + '</div>';
-    if (!danger.length && !warn.length){
+    // ★ 本日出勤リスト: 当欠は画面上の最新状態（shiftData）を優先。GASの値は初回表示用のフォールバック。
+    const clLive = {};
+    (Array.isArray(shiftData) ? shiftData : []).forEach(s => {
+        const n = String(s.name || '').trim(); if (!n) return;
+        const tk = (s.time === '当欠');
+        clLive[n] = { touketsu: tk, time: tk ? (s.originalTime || '') : (s.time || '') };
+    });
+    const todayRows = (callListData.today || []).map(c => {
+        const live = clLive[c.name];
+        return Object.assign({}, c, {
+            touketsu: live ? live.touketsu : !!c.touketsu,
+            time: live ? live.time : (c.time || '')
+        });
+    }).sort((a, b) => (!a.touketsu === !b.touketsu)
+        ? (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0))
+        : (a.touketsu ? 1 : -1));
+    // ★ 本日出勤リストの行（gapバッジの位置に本日の出勤時間 / 当欠はグレー）
+    const rowToday = (c) => '<div class="cl-row n'+(c.touketsu ? ' tk' : '')+'">'
+        + '<span class="cl-nm">'+_escCL(c.name)+'</span>'
+        + badge(c.store)
+        + (c.touketsu
+            ? '<span class="cl-gap tk">当欠</span>'
+            : '<span class="cl-gap n">'+_escCL(c.time || '出勤')+'</span>')
+        + memoCell(c)
+        + '<span class="cl-right"><span class="cl-last">最終 <b>'+(c.lastWork ? fmtMD(c.lastWork) : '—')+'</b></span><span class="cl-30">直近30日 <span class="cl-w30">出勤'+c.work30+'</span> / <span class="cl-z30">当欠'+c.zenketsu30+'</span></span></span>'
+        + '</div>';
+    if (!danger.length && !warn.length && !todayRows.length){
         sec.innerHTML = '<div class="cl-empty">📣 声掛け候補なし（全員が最近出勤 or 今後2週間に予定あり）</div>';
         return;
     }
-    sec.innerHTML = acc('🚨 危険（14日以上）', 'd', danger) + acc('⚠️ 要注意（7〜13日）', 'w', warn);
+    // ★ 本日出勤リスト: 見出しに「どこまで見て判定したか」を併記（週間シフトの最終日）
+    const clTail = callListData.weekLast ? '（'+_fmtMemoMD(callListData.weekLast)+'まで）' : '';
+    sec.innerHTML = acc('🚨 危険（14日以上）', 'd', danger, row)
+        + acc('⚠️ 要注意（7〜13日）', 'w', warn, row)
+        + acc('💧 明日以降シフトなし'+clTail, 'n', todayRows, rowToday);
     // ★ 声掛けメモ: 現在値を名前で引けるように保持し、ボタンにクリックを付与
     callMemoMap = {};
-    danger.concat(warn).forEach(c => { callMemoMap[c.name] = { memo: c.memo || '', memoDate: c.memoDate || '' }; });
+    danger.concat(warn).concat(todayRows).forEach(c => { callMemoMap[c.name] = { memo: c.memo || '', memoDate: c.memoDate || '' }; });
     sec.querySelectorAll('.cl-memo').forEach(btn => {
         btn.addEventListener('click', () => openCallMemoModal(btn.dataset.name));
     });
@@ -881,6 +915,12 @@ async function saveCallMemo(){
         if (result && result.success){
             // 画面を再取得せずその場だけ更新（getCallListは往復3秒かかるため）
             callMemoMap[name] = { memo: result.memo || '', memoDate: result.memoDate || '' };
+            // ★ 本日出勤リスト: 当欠トグルで再描画されてもメモが戻らないよう保持データも更新
+            ['danger', 'warn', 'today'].forEach(function (k) {
+                (callListData[k] || []).forEach(function (c) {
+                    if (c.name === name) { c.memo = result.memo || ''; c.memoDate = result.memoDate || ''; }
+                });
+            });
             updateCallMemoCell(name, result.memo || '', result.memoDate || '');
             closeCallMemoModal();
             showToast(memo ? 'メモを保存しました' : 'メモを削除しました', 'success');
@@ -912,7 +952,7 @@ function updateCallMemoCell(name, memo, memoDate){
 async function loadCallList(){
     try {
         const result = await apiCall('getCallList');
-        if (result && result.success){ renderCallList(result.danger || [], result.warn || []); }
+        if (result && result.success){ renderCallList(result.danger || [], result.warn || [], result.today || [], result.weekLast || ''); }
     } catch (e) { console.error('loadCallList: 例外', e); }
 }
 
@@ -4778,6 +4818,7 @@ async function toggleTouketu(name) {
     
     // 即座にUI更新
     renderShiftList();
+    renderCallList();  // ★ 本日出勤リスト：当欠のグレー表示を即反映（GAS往復なし）
     
     // GASに保存
     try {
