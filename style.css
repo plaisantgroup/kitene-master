@@ -3464,6 +3464,25 @@ html::after {
 }
 .btn-namegen:hover, .btn-namegen:active { background: rgba(167, 139, 250, 0.35); }
 
+/* ★ 検索バーの折り返し
+   検索欄＋ボタン2つはスマホ幅（約380px）に横並びで入らない。
+   input は min-width:auto のたいで固有幅以下に縮まず、ページ全体が横に伸びるため
+   min-width:0 を明示し、600px以下では検索欄を1行目・ボタン2つを2行目に分ける。 */
+.search-bar { flex-wrap: wrap; }
+.search-bar input { min-width: 0; }
+
+@media (max-width: 600px) {
+    .search-bar { gap: 8px; }
+    .search-bar input { flex: 1 1 100%; padding: 11px 16px; }
+    .search-bar .btn-namegen,
+    .search-bar .btn-primary {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 11px 8px;
+        font-size: 0.9rem;
+    }
+}
+
 .ng-sec { margin-bottom: 14px; }
 .ng-label {
     font-size: 13px;
