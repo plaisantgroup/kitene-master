@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>キテネマスター</title>
-    <link rel="stylesheet" href="style.css?v=20260820a">
+    <link rel="stylesheet" href="style.css?v=20260820b">
     <!-- XLSX読み込みライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- アイコン設定 -->
@@ -366,6 +366,7 @@
             <!-- 検索バー -->
             <div class="search-bar">
                 <input type="text" id="search-input" placeholder="🔍 源氏名で検索..." onkeyup="filterUrlList()">
+                <button class="btn-namegen" onclick="openNameGen()">🎲 源氏名</button>
                 <button class="btn-primary" onclick="showAddModal()">➕ 新規追加</button>
             </div>
 
@@ -392,6 +393,45 @@
                 <p>📝</p>
                 <p>URL情報が登録されていません</p>
                 <button class="btn-primary" onclick="showAddModal()">最初のURL情報を追加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ★ 源氏名メーカー モーダル -->
+    <div id="namegen-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎲 源氏名メーカー</h2>
+                <button class="modal-close" onclick="closeNameGen()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="ng-sec">
+                    <div class="ng-label">どの店舗で使う名前？<span class="ng-sub">被りチェックの対象になります</span></div>
+                    <div class="ng-chips" id="ng-stores"></div>
+                </div>
+                <div class="ng-sec">
+                    <div class="ng-label">文字数<span class="ng-sub">「しょうこ」は4文字（拗音も1文字）</span></div>
+                    <div class="ng-chips" id="ng-lens"></div>
+                </div>
+                <div class="ng-sec">
+                    <div class="ng-label">頭文字の行<span class="ng-sub">濁音は清音の行に入ります（が→か行）</span></div>
+                    <div class="ng-chips" id="ng-rows"></div>
+                </div>
+                <div class="ng-sec">
+                    <div class="ng-label">テイスト<span class="ng-sub">複数選べます／無選択＝全部</span></div>
+                    <div class="ng-chips" id="ng-tastes"></div>
+                </div>
+                <div class="ng-actions">
+                    <button type="button" class="ng-go" onclick="nameGenRun()">🎲 候補を出す</button>
+                    <button type="button" class="ng-ai" id="ng-ai-btn" onclick="nameGenAI()">🤖 AIでもっと出す</button>
+                </div>
+                <div class="ng-note" id="ng-note"></div>
+                <div class="ng-result" id="ng-result"></div>
+                <div class="ng-legend">
+                    <span><b>✅ 空き</b>＝この店舗でもメイン名でも未使用</span>
+                    <span><b>⚠️ メイン名が使用中</b>＝この店舗では使えるが、源氏名(メイン)は別名にする必要あり</span>
+                    <span>名前をタップでコピー／「登録」で新規追加フォームへ</span>
+                </div>
             </div>
         </div>
     </div>
@@ -647,6 +687,6 @@
         ▲
     </button>
 
-    <script src="script.js?v=20260820a"></script>
+    <script src="script.js?v=20260820b"></script>
 </body>
 </html>
