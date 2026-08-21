@@ -2745,6 +2745,349 @@ function filterUrlList() {
 // モーダル管理
 // ===============================
 
+// ============================================================
+// ★ 源氏名メーカー（2026-08-20）
+//   辞書から条件に合う候補を出し、URL管理と突き合わせて被りを判定する。
+//
+//   ★名前は2層ある（ここを間違えると壊れる）
+//     ・店舗別源氏名（URL管理 B/D/F列）：同じ店舗の中だけ一意。店が違えば被ってOK
+//     ・メイン名（URL管理 A列）      ：全店横断で絶対に一意。シフト/日記/出勤履歴/
+//       面談履歴/日記実績をつなぐ主キーで、名寄せは (店舗,店舗別名)→メイン名 で引くため、
+//       被ると後から入った子のデータが別人に加算される（最初勝ち）。
+//
+//   判定材料は urlData（既にメモリにある）＝GAS往復ゼロ。
+// ============================================================
+const NAMEGEN_DICT = {
+    cute:
+        'あん,うた,えみ,かの,きら,くみ,ここ,さな,しほ,すず,そら,ちか,つき,なな,にこ,のん,はな,ひな,ほの,まな,みう,もも,ゆあ,ゆず,りこ,りん,るる,れな,わか,あかり,'
+        + 'いのり,うらら,かえで,きらら,ここな,ことね,さくら,しおり,すみれ,そよか,ちなつ,つむぎ,なぎさ,にいな,ののか,はるひ,ひまり,ふうか,ほなみ,まりん,みつき,もえか,ゆいな,'
+        + 'ゆめか,りのん,るいか,れいな,わかば,あいりす,こころん,さくらこ,なゆたん,はなえみ,ひなたん,ふうりん,まりんか,ゆめのん,りんりん,ももたん,ひなのん,きらりん,ちゅらら',
+    loli:
+        'あむ,いち,えも,きゅ,さち,ちー,なぎ,ねね,のの,ぽむ,まめ,みみ,むぎ,ゆい,らむ,るう,ろこ,ここ,ぴの,あむね,いちご,うさぎ,えるる,きゅあ,くるみ,ここあ,こもも,さくり,'
+        + 'しゅり,ちなみ,つぼみ,ぬくみ,ねねか,ののん,ぴのん,ふわり,ぽむこ,まめか,みるく,むぎの,もこな,ゆいぴ,らむね,りぼん,るうな,ろここ,あむりん,いちごん,うさぎん,きゅあら,'
+        + 'くるみん,ここあん,こももん,つぼみん,ぴのぴの,ふわりん,まめまめ,みるきー,もこもこ,らむねん,りぼんぬ,るうるう',
+    kira:
+        'あき,えれ,きら,ひめ,まり,みあ,ゆあ,らら,りあ,るき,れあ,ろあ,あんじゅ,えれな,きらら,くれあ,こころ,しゅり,せれな,そあら,ときめ,ねろり,のえる,ひめか,ふぇりす,まりあ,'
+        + 'みあん,ゆあら,ららん,りあら,るきあ,れあな,ろあな,きらきら,くれあら,せれなん,そあらん,ねろりあ,ひめのあ,まりあん,みあらん,ゆあらん,るきあら,れあらん',
+    seiso:
+        'あい,かな,きよ,さち,しの,すず,ちえ,なな,のあ,はる,ひな,まい,みき,ゆい,ゆう,りお,れん,わこ,えま,ここ,あおい,いずみ,かすみ,きよか,さちほ,しずく,すずね,ちひろ,'
+        + 'なずな,のどか,はづき,ひなの,ふうこ,ほのか,まなみ,みずき,ゆいか,ゆきほ,りおん,わかこ,あおいろ,かすみか,きよのか,しずくり,すずかぜ,なのはな,ひなたか,ほのりん,みずきの,'
+        + 'ゆきしろ',
+    kirei:
+        'あや,えり,かな,きえ,さき,しほ,せな,その,ちさ,なお,はる,ひろ,まき,みお,ゆき,りさ,れい,るか,れみ,わこ,あやか,えりな,かおる,さゆり,しずか,せりな,ちひろ,なつき,'
+        + 'はるな,ひかる,まどか,みさき,ゆかり,れいか,るりか,わかな,のぞみ,ともか,あきな,ゆりな,しょうこ,きょうこ,りょうこ,きょうか,あやのり,かおりな,みさきな,ゆきのり,れいなん,'
+        + 'ひろのか',
+    iroke:
+        'あゆ,えな,きさ,こい,さや,しずく,せり,そよ,ちあ,つや,なぎ,ねい,はづ,ひな,ふゆ,ほむ,まゆ,みや,めい,もあ,ゆず,りお,るい,れん,あゆみ,えなり,かれん,きさら,こいろ,'
+        + 'さやね,しずり,せりか,そよぎ,ちあき,つやか,なぎほ,ねいろ,のえみ,はづき,ひなり,ふゆか,ほむら,まゆら,みやび,めいり,もあな,ゆずは,りおな,るいさ,れんか,あゆみか,えなりあ,'
+        + 'かれんな,きさらぎ,こいごろ,さやねん,しずりあ,せりかな,つやこん,なぎほな,ねいろん,ひなりあ,ふゆかぜ,ほむらび,まゆらん,みやびか,めいりあ,ゆずはな,りおなん,るいさら',
+    otona:
+        'あき,あや,かお,さち,しの,せい,ちえ,とも,なお,はな,ひろ,ふみ,まき,みち,むつ,やす,ゆう,よう,りつ,れい,わこ,あきこ,あやこ,かおり,きょう,こうこ,さちこ,しのぶ,'
+        + 'せいこ,そうこ,ちえみ,ともえ,なおこ,のりこ,はなえ,ひろみ,ふみか,まきこ,みちる,むつみ,やすこ,ゆうこ,ようこ,りつこ,れいこ,わこな,あきこさ,あやのぶ,かおりこ,きょうこ,'
+        + 'こうこな,さちこの,しのぶこ,せいこな,ちえみこ,ともえこ,なおこさ,のりこの,ひろみこ,ふみかこ,まきこさ,みちるこ,むつみこ,やすこな,ゆうこさ,ようこの,りつこさ,れいこさ',
+    kofu:
+        'あや,いと,うめ,かえ,きく,こと,さや,しの,すず,せい,たえ,ちよ,つた,とわ,なぎ,のぶ,はぎ,ふじ,ほまれ,まつ,みや,もみ,やえ,ゆう,よし,りん,れん,わさ,あやめ,いとは,'
+        + 'うめの,かえで,きくの,ことは,さやか,しのぶ,すずな,たえこ,ちより,つたえ,とわこ,なぎさ,のぶこ,はぎの,ふじの,まつり,みやこ,もみじ,やえこ,ゆうな,よしの,りんね,れんげ,'
+        + 'わさび,あやめこ,いとはな,うめのか,かぐらぎ,きくのは,ことのは,さくらぎ,しののめ,すずしろ,たまゆら,ちよのは,つきしろ,なでしこ,はつしも,まつかぜ,みやこじ,やまぶき,ゆうすげ',
+    hakanai:
+        'あお,いろ,かげ,きえ,こと,さえ,しの,すい,せつ,たえ,ちる,つゆ,とわ,なみ,ふゆ,みや,ゆめ,より,るり,れい,あおば,いろは,うつせ,かげろ,きえな,くうか,ことは,さえか,'
+        + 'しのぶ,すいか,せつな,そうび,たえこ,ちるり,つゆり,とわこ,なみだ,ぬくも,ねむり,のぞみ,はくあ,ひそか,ふゆめ,ほろび,まぼろ,みやび,むそう,ゆめじ,よりこ,るりは,れいむ,'
+        + 'あおばこ,いろはに,うつせみ,かげろう,きえのは,ことのは,さえずり,しのぶれ,すいれん,せつなり,たまゆら,ちるはな,つゆのは,とわのは,はかなみ,ひそやか,ふゆのは,ほろびか,まぼろし,'
+        + 'みやびか,よるのは,るりのは',
+    shizen:
+        'あさ,うみ,かぜ,きり,くも,しお,そら,たき,つき,つゆ,なぎ,にじ,のは,はな,ひかり,ふゆ,ほし,まつ,みず,もり,やま,ゆき,りん,れん,あさひ,うみか,かぜは,きりか,くもり,'
+        + 'こけら,さめか,しおり,すなお,そらは,たきび,つきの,つゆき,なぎさ,にじか,ねぎら,のはら,はなび,ふゆの,ほしの,まつり,みずき,もりの,やまと,ゆきの,よぞら,りんど,れんげ,'
+        + 'わたげ,あさぎり,うみかぜ,かぜのは,きりしま,こもれび,さざなみ,しおかぜ,すいれん,そらのは,たきしぶ,つゆくさ,なつぞら,にじいろ,のはらか,はなびら,ひかりの,ふゆぞら,ほしぞら,'
+        + 'みずうみ,もりのは,ゆきしろ,よぞらん,わたぼこ',
+    gal:
+        'あげ,えま,かり,こな,さり,せな,そら,てん,なる,にゃ,ぴか,まじ,みか,もえ,ゆま,るあ,れあ,ろこ,あげは,えまり,かりん,ぎゃる,こなつ,さりな,じゅり,せなん,そらん,てんか,'
+        + 'なるみ,にゃん,ぴかり,まじか,みかん,もえか,ゆまり,りぼん,るあな,れあん,ろこな,あげはん,えまりん,かりんぬ,こなつん,さりなん,じゅりあ,ぴかりん,みかんぬ,もえかん,ゆまりん,'
+        + 'るあなん,れあなん,ぎゃるみ,てんしー',
+    boyish:
+        'あお,かい,けい,せい,つき,なぎ,ひか,まこ,みず,ゆう,りく,れい,ろい,あおい,かいり,けいと,こうき,しゅん,せいら,そうた,たくみ,つかさ,とうか,なぎさ,ひかる,ふうが,'
+        + 'ほうき,まこと,みずき,ゆうき,りくと,れいじ,ろいど,あおいろ,かいりん,けいとん,しゅんか,そうたん,たくみか,つかさく,ひかるん,ふうがく,まことん,みずきり,ゆうきー,りくとん,'
+        + 'れいじー',
+    kana:
+        'アン,イヴ,エマ,カレ,キラ,クレ,サラ,シア,セラ,ソフ,ティ,ナオ,ニケ,ノア,ハナ,ピア,マヤ,ミア,メイ,モア,ユナ,ラナ,リナ,ルナ,レア,ロゼ,アンナ,イヴリ,エマリ,カレン,'
+        + 'キララ,クレア,サラサ,シアラ,セラフ,ソフィ,ティナ,ナオミ,ニケラ,ノエル,ハンナ,ピアノ,マリア,ミアナ,メイリ,モアナ,ユリア,ラナン,リナリ,ルナリ,レアナ,ロゼリ,アンジェ,'
+        + 'イヴリナ,エマリナ,カレンナ,クレアラ,サラサラ,シャルル,セラフィ,ソフィア,ティアラ,ナオミィ,ノエリア,ハンナリ,マリアン,ミアナリ,メイリナ,モアナリ,ユリアナ,ラナンナ,リナリア,'
+        + 'ルナリア,レアナリ,ロゼリア',
+    sweets:
+        'あめ,うめ,きな,くり,さと,しろ,すい,まめ,みつ,むぎ,もち,らむ,りん,れも,あめり,いもこ,うめか,かきの,きなこ,くりむ,こめこ,さとう,しろみ,すいか,ぜりー,そふれ,たると,'
+        + 'ちごろ,つぶあん,なしの,ぱふぇ,ぷりん,ほいっぷ,まかろ,みつは,むぎこ,もちこ,ゆべし,らむね,りんご,るくれ,れもん,あめだま,いもきん,くりーむ,こめこな,さとうき,しろっぷ,'
+        + 'すいかん,ぜりーな,そふれん,たるとん,ぱふぇこ,ぷりんこ,まかろん,みつあめ,もちもち,らむねん,りんごか,れもんぬ',
+    animal:
+        'うさ,くま,こい,とら,ねこ,まめ,みけ,やぎ,りす,うさぎ,えびか,かめの,きつね,くまこ,こいぬ,さるり,しかの,たぬき,とらこ,ねこみ,ぱんだ,ひつじ,ふくろ,ぺんぎ,ぽにー,'
+        + 'みけこ,もぐら,やぎこ,りすか,ろばこ,わしみ,うさぎん,かめのこ,きつねび,くまごろ,こいぬこ,しかのこ,たぬきち,とらのこ,ねこみみ,ぱんだこ,ひつじん,ふくろう,ぺんぎん,みけねこ,'
+        + 'もぐらん,やぎさん,りすりす,わしのこ',
+    kawari:
+        'えぬ,つゆ,てん,あくび,いんこ,うにこ,おとぎ,かもめ,きぬよ,くらげ,けしの,こまち,ざくろ,すいか,せみら,ちりり,つゆり,てんき,なぞの,のりこ,はりね,ひじき,ふきの,ぽちこ,'
+        + 'むくげ,めめこ,もずく,ろばこ,あくびこ,うにうに,かもめこ,こまちこ,しじまか,つゆくさ,てんとう,なぞなぞ,ひじきん,ぽちぽち,むくむく,もずくん',
+};
+
+const NAMEGEN_TASTES = [
+    { key: 'cute',    label: '可愛い系' },
+    { key: 'loli',    label: 'ロリ系' },
+    { key: 'kira',    label: 'キラキラ系' },
+    { key: 'seiso',   label: '清楚系' },
+    { key: 'kirei',   label: '綺麗系' },
+    { key: 'iroke',   label: '色気系' },
+    { key: 'otona',   label: '大人・熟女向け' },
+    { key: 'kofu',    label: '古風・和風' },
+    { key: 'hakanai', label: '儚げ・文学系' },
+    { key: 'shizen',  label: '季節・自然系' },
+    { key: 'gal',     label: 'ギャル系' },
+    { key: 'boyish',  label: '中性・ボーイッシュ' },
+    { key: 'kana',    label: 'カタカナ・外国風' },
+    { key: 'sweets',  label: 'スイーツ系' },
+    { key: 'animal',  label: '動物系' },
+    { key: 'kawari',  label: '変わり系' },
+];
+
+const NAMEGEN_ROWCHARS = {
+    'あ': 'あいうえおぁぃぅぇぉ',
+    'か': 'かきくけこがぎぐげご',
+    'さ': 'さしすせそざじずぜぞ',
+    'た': 'たちつてとだぢづでど',
+    'な': 'なにぬねの',
+    'は': 'はひふへほばびぶべぼぱぴぷぺぽ',
+    'ま': 'まみむめも',
+    'や': 'やゆよゃゅょ',
+    'ら': 'らりるれろ',
+    'わ': 'わをん',
+};
+
+const NAMEGEN_STORES = [
+    { key: 'delidosu',    label: 'でりどす',   field: 'delidosuName',    input: 'modal-deli-name' },
+    { key: 'anecan',      label: 'アネキャン', field: 'anecanName',      input: 'modal-ane-name' },
+    { key: 'ainoshizuku', label: '愛のしずく', field: 'ainoshizukuName', input: 'modal-aino-name' },
+];
+
+let nameGenState = { store: 'delidosu', len: 0, row: '', tastes: [], last: [] };
+let nameGenParsed = null;  // 辞書の展開結果（初回のみ）
+
+/** カタカナ→ひらがな（行判定用） */
+function nameGenHira_(s) {
+    let out = '';
+    for (const c of String(s)) {
+        const code = c.charCodeAt(0);
+        out += (code >= 0x30A1 && code <= 0x30F6) ? String.fromCharCode(code - 0x60) : c;
+    }
+    return out;
+}
+
+/** 頭文字の行を返す（濁音・半濁音は清音の行に含める） */
+function nameGenRowOf_(name) {
+    const c = nameGenHira_(name).charAt(0);
+    for (const r in NAMEGEN_ROWCHARS) {
+        if (NAMEGEN_ROWCHARS[r].indexOf(c) >= 0) return r;
+    }
+    return '他';
+}
+
+/** 辞書を 名前→テイスト配列 に展開（初回のみ・以降はキャッシュ） */
+function nameGenParse_() {
+    if (nameGenParsed) return nameGenParsed;
+    const map = {};
+    for (const key in NAMEGEN_DICT) {
+        String(NAMEGEN_DICT[key]).split(',').forEach(n => {
+            n = n.trim(); if (!n) return;
+            if (!map[n]) map[n] = [];
+            if (map[n].indexOf(key) < 0) map[n].push(key);
+        });
+    }
+    nameGenParsed = map;
+    return map;
+}
+
+/**
+ * URL管理から「使用中の名前」を作る。
+ * @return {Object} { byStore: {店舗キー: {名前: メイン名}}, main: {メイン名: true} }
+ */
+function nameGenUsed_() {
+    const byStore = { delidosu: {}, anecan: {}, ainoshizuku: {} };
+    const main = {};
+    (Array.isArray(urlData) ? urlData : []).forEach(u => {
+        const m = String(u.name || '').trim();
+        if (m) main[m] = true;
+        NAMEGEN_STORES.forEach(st => {
+            const v = String(u[st.field] || '').trim();
+            if (v) byStore[st.key][v] = m || v;
+        });
+    });
+    return { byStore, main };
+}
+
+/** 条件に合う候補を集める（その店舗で使用中の名前は除外） */
+function nameGenCollect_(len, row, tastes) {
+    const dict = nameGenParse_();
+    const used = nameGenUsed_();
+    const inStore = used.byStore[nameGenState.store] || {};
+    const out = [];
+    let excluded = 0;
+    for (const name in dict) {
+        if (len && name.length !== len) continue;
+        if (row && nameGenRowOf_(name) !== row) continue;
+        if (tastes.length && !tastes.some(t => dict[name].indexOf(t) >= 0)) continue;
+        if (inStore[name]) { excluded++; continue; }   // この店舗で使用中→出さない
+        out.push({ name: name, tastes: dict[name], mainUsed: !!used.main[name] });
+    }
+    return { list: out, excluded: excluded };
+}
+
+/** モーダルを開く */
+function openNameGen() {
+    nameGenState = { store: 'delidosu', len: 0, row: '', tastes: [], last: [] };
+    document.getElementById('ng-stores').innerHTML = NAMEGEN_STORES.map((s, i) =>
+        '<button type="button" class="ng-chip' + (i === 0 ? ' on' : '') + '" data-kind="store" data-val="' + s.key + '" onclick="nameGenPick(this)">' + s.label + '</button>'
+    ).join('');
+    document.getElementById('ng-lens').innerHTML =
+        [['0', '指定なし'], ['2', '2文字'], ['3', '3文字'], ['4', '4文字']].map((p, i) =>
+            '<button type="button" class="ng-chip' + (i === 0 ? ' on' : '') + '" data-kind="len" data-val="' + p[0] + '" onclick="nameGenPick(this)">' + p[1] + '</button>'
+        ).join('');
+    let rowHtml = '<button type="button" class="ng-chip on" data-kind="row" data-val="" onclick="nameGenPick(this)">指定なし</button>';
+    for (const r in NAMEGEN_ROWCHARS) {
+        rowHtml += '<button type="button" class="ng-chip" data-kind="row" data-val="' + r + '" onclick="nameGenPick(this)">' + r + '行</button>';
+    }
+    document.getElementById('ng-rows').innerHTML = rowHtml;
+    document.getElementById('ng-tastes').innerHTML = NAMEGEN_TASTES.map(t =>
+        '<button type="button" class="ng-chip" data-kind="taste" data-val="' + t.key + '" onclick="nameGenPick(this)">' + t.label + '</button>'
+    ).join('');
+    document.getElementById('ng-result').innerHTML = '<div class="ng-hint">条件を選んで「候補を出す」を押してください。<br>テイストは複数選べます（無選択＝全部）。</div>';
+    document.getElementById('ng-note').textContent = '';
+    document.getElementById('namegen-modal').classList.add('active');
+}
+
+function closeNameGen() {
+    document.getElementById('namegen-modal').classList.remove('active');
+}
+
+/** チップの選択 */
+function nameGenPick(el) {
+    const kind = el.dataset.kind, val = el.dataset.val;
+    if (kind === 'taste') {
+        el.classList.toggle('on');
+        const i = nameGenState.tastes.indexOf(val);
+        if (i >= 0) nameGenState.tastes.splice(i, 1); else nameGenState.tastes.push(val);
+        return;
+    }
+    el.parentElement.querySelectorAll('.ng-chip').forEach(b => b.classList.remove('on'));
+    el.classList.add('on');
+    if (kind === 'store') nameGenState.store = val;
+    if (kind === 'len') nameGenState.len = parseInt(val, 10) || 0;
+    if (kind === 'row') nameGenState.row = val;
+}
+
+/** 配列をシャッフルして先頭 n 件 */
+function nameGenPickRandom_(arr, n) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a.slice(0, n);
+}
+
+/** 候補を出す（条件に合うものが無ければ段階的に緩める） */
+function nameGenRun() {
+    const st = nameGenState;
+    let r = nameGenCollect_(st.len, st.row, st.tastes);
+    let relaxed = '';
+    if (!r.list.length && st.row) {
+        r = nameGenCollect_(st.len, '', st.tastes);
+        relaxed = '条件に合う名前が無かったので【行の指定を外して】探しました。';
+    }
+    if (!r.list.length && st.len) {
+        r = nameGenCollect_(0, '', st.tastes);
+        relaxed = '条件に合う名前が無かったので【文字数と行の指定を外して】探しました。';
+    }
+    nameGenState.last = nameGenPickRandom_(r.list, 12);
+    nameGenRender_(nameGenState.last, r, relaxed);
+}
+
+/** 候補の描画 */
+function nameGenRender_(list, meta, relaxed) {
+    const storeLabel = (NAMEGEN_STORES.find(s => s.key === nameGenState.store) || {}).label || '';
+    const tasteLabel = k => (NAMEGEN_TASTES.find(t => t.key === k) || {}).label || k;
+    if (!list.length) {
+        document.getElementById('ng-result').innerHTML = '<div class="ng-hint">条件に合う名前が見つかりませんでした。テイストを減らすか、AIボタンを試してください。</div>';
+    } else {
+        document.getElementById('ng-result').innerHTML = list.map(c =>
+            '<div class="ng-row' + (c.mainUsed ? ' warn' : '') + '">'
+            + '<button type="button" class="ng-name" onclick="nameGenCopy(this)" data-name="' + escapeHtml(c.name) + '">' + escapeHtml(c.name) + '</button>'
+            + '<span class="ng-tags">' + c.tastes.slice(0, 2).map(tasteLabel).map(escapeHtml).join(' / ') + '</span>'
+            + '<span class="ng-badge">' + (c.mainUsed ? '⚠️ メイン名が使用中' : '✅ 空き') + '</span>'
+            + '<button type="button" class="ng-use" onclick="nameGenUse(this)" data-name="' + escapeHtml(c.name) + '">登録</button>'
+            + '</div>'
+        ).join('');
+    }
+    let note = storeLabel + 'で使える候補：' + meta.list.length + '件';
+    if (meta.excluded) note += '（' + meta.excluded + '件は' + storeLabel + 'で使用中のため除外）';
+    if (relaxed) note = relaxed + ' ' + note;
+    document.getElementById('ng-note').textContent = note;
+}
+
+/** 名前をコピー */
+function nameGenCopy(el) {
+    const name = el.dataset.name || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(name).then(
+            () => showToast('「' + name + '」をコピーしました'),
+            () => showToast('コピーできませんでした', 'error')
+        );
+    } else {
+        showToast('このブラウザではコピーできません', 'error');
+    }
+}
+
+/** その名前で新規登録フォームを開く */
+function nameGenUse(el) {
+    const name = el.dataset.name || '';
+    const used = nameGenUsed_();
+    const st = NAMEGEN_STORES.find(s => s.key === nameGenState.store);
+    closeNameGen();
+    showAddModal();
+    if (used.main[name]) {
+        // メイン名が埋まっている場合は店舗名だけ入れて、メイン名は手で決めてもらう
+        document.getElementById('modal-name').value = '';
+        showToast('「' + name + '」はメイン名として使用中です。店舗名だけ入れました。源氏名(メイン)は別名にしてください', 'error');
+    } else {
+        document.getElementById('modal-name').value = name;
+    }
+    if (st) document.getElementById(st.input).value = name;
+}
+
+/** AIでもっと出す（GAS経由でGemini） */
+async function nameGenAI() {
+    const btn = document.getElementById('ng-ai-btn');
+    const st = nameGenState;
+    const org = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '考えています…';
+    try {
+        const tasteLabels = st.tastes.map(k => (NAMEGEN_TASTES.find(t => t.key === k) || {}).label).filter(Boolean);
+        const result = await apiCall('generateStageNames', {
+            query: { store: st.store, len: st.len || '', row: st.row || '', tastes: tasteLabels.join(',') }
+        });
+        if (!result || !result.success) throw new Error((result && result.error) || '生成に失敗しました');
+        const used = nameGenUsed_();
+        const inStore = used.byStore[st.store] || {};
+        const seen = {};
+        const list = (result.names || [])
+            .map(n => String(n || '').trim())
+            .filter(n => { if (!n || inStore[n] || seen[n]) return false; seen[n] = 1; return true; })
+            .map(n => ({ name: n, tastes: ['ai'], mainUsed: !!used.main[n] }));
+        if (!list.length) { showToast('AIの候補は全て使用中でした', 'error'); return; }
+        nameGenState.last = list;
+        nameGenRender_(list, { list: list, excluded: 0 }, 'AIが考えた候補です（辞書には入っていません）。');
+    } catch (e) {
+        showToast('AI生成に失敗：' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = org;
+    }
+}
+
 function showAddModal() {
     currentEditName = null;
     document.getElementById('modal-title').textContent = 'URL情報を追加';

@@ -3447,3 +3447,125 @@ html::after {
 .read-mark{color:var(--primary-color);}
 .read-none{color:var(--text-secondary);opacity:0.7;}
 .read-select{flex:0 0 auto;padding:4px 8px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:12px;}
+
+/* ============================================================
+   ★ 源氏名メーカー（2026-08-20）
+   ============================================================ */
+.btn-namegen {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.28), rgba(167, 139, 250, 0.12));
+    border: 1px solid rgba(167, 139, 250, 0.45);
+    color: #ddd6fe;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.btn-namegen:hover, .btn-namegen:active { background: rgba(167, 139, 250, 0.35); }
+
+.ng-sec { margin-bottom: 14px; }
+.ng-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main, #e5e7eb);
+    margin-bottom: 6px;
+}
+.ng-sub {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-sub, #9ca3af);
+    margin-top: 2px;
+}
+.ng-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ng-chip {
+    background: rgba(148, 163, 184, 0.10);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    color: #cbd5e1;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.ng-chip.on {
+    background: rgba(167, 139, 250, 0.30);
+    border-color: rgba(167, 139, 250, 0.70);
+    color: #ede9fe;
+    font-weight: 700;
+}
+
+.ng-actions { display: flex; gap: 8px; margin: 16px 0 8px; }
+.ng-go, .ng-ai {
+    flex: 1;
+    border-radius: 10px;
+    padding: 12px 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.ng-go {
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    border: none;
+    color: #fff;
+}
+.ng-ai {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #7dd3fc;
+}
+.ng-ai:disabled { opacity: 0.5; cursor: default; }
+
+.ng-note { font-size: 11px; color: var(--text-sub, #9ca3af); margin-bottom: 8px; min-height: 14px; }
+.ng-result { display: flex; flex-direction: column; gap: 6px; }
+.ng-hint {
+    font-size: 12px;
+    color: var(--text-sub, #9ca3af);
+    padding: 18px 10px;
+    text-align: center;
+    line-height: 1.7;
+}
+.ng-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: rgba(148, 163, 184, 0.06);
+    border-left: 3px solid #a78bfa;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+.ng-row.warn { border-left-color: #fbbf24; }
+.ng-name {
+    background: none;
+    border: none;
+    color: #ede9fe;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    padding: 0;
+    min-width: 74px;
+    text-align: left;
+}
+.ng-tags { font-size: 11px; color: var(--text-sub, #9ca3af); flex: 1 1 80px; }
+.ng-badge { font-size: 11px; color: #a7f3d0; white-space: nowrap; }
+.ng-row.warn .ng-badge { color: #fde68a; }
+.ng-use {
+    background: rgba(167, 139, 250, 0.20);
+    border: 1px solid rgba(167, 139, 250, 0.50);
+    color: #ddd6fe;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.ng-legend {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-sub, #9ca3af);
+    line-height: 1.6;
+}
