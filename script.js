@@ -3079,31 +3079,52 @@ function nameGenCollect_(len, row, tastes) {
     return { list: out, excluded: excluded };
 }
 
+/**
+ * 要素が無くても落ちないセッター。
+ * ★ index.html と script.js のデプロイがズレると片方に要素が無い状態が起きる。
+ *   例外でモーダルごと開かなくなるのを防ぐ（機能は部分的に欠けるが開く）。
+ */
+function ngSet_(id, html) {
+    const el = document.getElementById(id);
+    if (!el) { console.warn('[源氏名メーカー] 要素なし: ' + id + '（index.htmlが古い可能性）'); return false; }
+    el.innerHTML = html;
+    return true;
+}
+
 /** モーダルを開く */
 function openNameGen() {
     nameGenState = { store: 'delidosu', len: 0, row: '', tastes: [], last: [] };
-    document.getElementById('ng-stores').innerHTML = NAMEGEN_STORES.map((s, i) =>
+    ngSet_('ng-stores', NAMEGEN_STORES.map((s, i) =>
         '<button type="button" class="ng-chip' + (i === 0 ? ' on' : '') + '" data-kind="store" data-val="' + s.key + '" onclick="nameGenPick(this)">' + s.label + '</button>'
-    ).join('');
-    document.getElementById('ng-lens').innerHTML =
+    ).join(''));
+    ngSet_('ng-lens',
         [['0', '指定なし'], ['2', '2文字'], ['3', '3文字'], ['4', '4文字']].map((p, i) =>
             '<button type="button" class="ng-chip' + (i === 0 ? ' on' : '') + '" data-kind="len" data-val="' + p[0] + '" onclick="nameGenPick(this)">' + p[1] + '</button>'
-        ).join('');
+        ).join(''));
     let rowHtml = '<button type="button" class="ng-chip on" data-kind="row" data-val="" onclick="nameGenPick(this)">指定なし</button>';
     for (const r in NAMEGEN_ROWCHARS) {
         rowHtml += '<button type="button" class="ng-chip" data-kind="row" data-val="' + r + '" onclick="nameGenPick(this)">' + r + '行</button>';
     }
-    document.getElementById('ng-rows').innerHTML = rowHtml;
+    ngSet_('ng-rows', rowHtml);
     const chip = t => '<button type="button" class="ng-chip" data-kind="taste" data-val="' + t.key + '" onclick="nameGenPick(this)">' + t.label + '</button>';
-    document.getElementById('ng-tastes').innerHTML  = NAMEGEN_TASTES.filter(t => t.group === 'y').map(chip).join('');
-    document.getElementById('ng-tastes2').innerHTML = NAMEGEN_TASTES.filter(t => t.group === 'j').map(chip).join('');
-    document.getElementById('ng-result').innerHTML = '<div class="ng-hint">条件を選んで「候補を出す」を押してください。<br>テイストは複数選べます（無選択＝全部）。</div>';
-    document.getElementById('ng-note').textContent = '';
-    document.getElementById('namegen-modal').classList.add('show');
+    // ★ 人妻・熟女グループの入れ物が無い（index.htmlが古い）場合は全テイストを1つ目にまとめる
+    if (document.getElementById('ng-tastes2')) {
+        ngSet_('ng-tastes',  NAMEGEN_TASTES.filter(t => t.group === 'y').map(chip).join(''));
+        ngSet_('ng-tastes2', NAMEGEN_TASTES.filter(t => t.group === 'j').map(chip).join(''));
+    } else {
+        ngSet_('ng-tastes', NAMEGEN_TASTES.map(chip).join(''));
+    }
+    ngSet_('ng-result', '<div class="ng-hint">条件を選んで「候補を出す」を押してください。<br>テイストは複数選べます（無選択＝全部）。</div>');
+    const note0 = document.getElementById('ng-note');
+    if (note0) note0.textContent = '';
+    const modal = document.getElementById('namegen-modal');
+    if (!modal) { showToast('源氏名メーカーの画面が見つかりません。ページを再読み込みしてください', 'error'); return; }
+    modal.classList.add('active');
 }
 
 function closeNameGen() {
-    document.getElementById('namegen-modal').classList.remove('show');
+    const m = document.getElementById('namegen-modal');
+    if (m) m.classList.remove('active');
 }
 
 /** チップの選択 */
@@ -3154,9 +3175,9 @@ function nameGenRender_(list, meta, relaxed) {
     const storeLabel = (NAMEGEN_STORES.find(s => s.key === nameGenState.store) || {}).label || '';
     const tasteLabel = k => (NAMEGEN_TASTES.find(t => t.key === k) || {}).label || k;
     if (!list.length) {
-        document.getElementById('ng-result').innerHTML = '<div class="ng-hint">条件に合う名前が見つかりませんでした。テイストを減らすか、AIボタンを試してください。</div>';
+        ngSet_('ng-result', '<div class="ng-hint">条件に合う名前が見つかりませんでした。テイストを減らすか、AIボタンを試してください。</div>');
     } else {
-        document.getElementById('ng-result').innerHTML = list.map(c =>
+        ngSet_('ng-result', list.map(c =>
             '<div class="ng-row' + (c.mainUsed ? ' warn' : '') + '">'
             + '<button type="button" class="ng-name" onclick="nameGenCopy(this)" data-name="' + escapeHtml(c.name) + '">' + escapeHtml(c.name)
             + (c.yomi ? '<span class="ng-yomi">' + escapeHtml(c.yomi) + '</span>' : '') + '</button>'
@@ -3164,12 +3185,13 @@ function nameGenRender_(list, meta, relaxed) {
             + '<span class="ng-badge">' + (c.mainUsed ? '⚠️ メイン名が使用中' : '✅ 空き') + '</span>'
             + '<button type="button" class="ng-use" onclick="nameGenUse(this)" data-name="' + escapeHtml(c.name) + '">登録</button>'
             + '</div>'
-        ).join('');
+        ).join(''));
     }
     let note = storeLabel + 'で使える候補：' + meta.list.length + '件';
     if (meta.excluded) note += '（' + meta.excluded + '件は' + storeLabel + 'で使用中のため除外）';
     if (relaxed) note = relaxed + ' ' + note;
-    document.getElementById('ng-note').textContent = note;
+    const noteEl = document.getElementById('ng-note');
+    if (noteEl) noteEl.textContent = note;
 }
 
 /** 名前をコピー */
@@ -3192,19 +3214,20 @@ function nameGenUse(el) {
     const st = NAMEGEN_STORES.find(s => s.key === nameGenState.store);
     closeNameGen();
     showAddModal();
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     if (used.main[name]) {
         // メイン名が埋まっている場合は店舗名だけ入れて、メイン名は手で決めてもらう
-        document.getElementById('modal-name').value = '';
+        setVal('modal-name', '');
         showToast('「' + name + '」はメイン名として使用中です。店舗名だけ入れました。源氏名(メイン)は別名にしてください', 'error');
     } else {
-        document.getElementById('modal-name').value = name;
+        setVal('modal-name', name);
     }
-    if (st) document.getElementById(st.input).value = name;
+    if (st) setVal(st.input, name);
 }
 
 /** AIでもっと出す（GAS経由でGemini） */
 async function nameGenAI() {
-    const btn = document.getElementById('ng-ai-btn');
+    const btn = document.getElementById('ng-ai-btn') || { textContent: '', disabled: false };
     const st = nameGenState;
     const org = btn.textContent;
     btn.disabled = true;
