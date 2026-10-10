@@ -50,6 +50,7 @@ function devLog(...args) {
 
 // ★★★ v3.5追加: オキニトークデータ ★★★
 let okiniData = [];
+let diaryLive = null;  // ★2026-10-09 日記ライブ: getDiaryLive の結果 { bizDate, updatedAt, casts:{源氏名:{v, stores:{店舗:{q,s,t}}}} }
 
 // ===============================
 // localStorageキャッシュ（体感高速化用）
@@ -548,6 +549,7 @@ async function loadAllData() {
     renderShiftList();
     renderUrlList();
     loadCallList();             // ★ Phase2: 声掛け候補を取得
+    loadDiaryLive();            // ★2026-10-09: 出勤カードの日記バッジ（待たずに後から反映）
     { const _av = document.querySelector('.view.active'); setGlobalSectionsForView(_av ? _av.id.replace('-view', '') : 'shift'); }  // Phase2: keep current active tab's global sections (fix: store filter left the url tab when hardcoded 'shift')
     
     // ★ Phase 3: キャッシュ保存（次回起動時に使用）
@@ -1691,6 +1693,7 @@ function renderShiftList() {
                             </button>
                         </div>
                         ${getOkiniBadge(shift.name, 'delidosu')}
+                        ${getDiaryBadge(shift.name, 'delidosu')}
                     </div>
                     <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'anecan') ? 'checked' : ''}">
                         <div style="display:flex; align-items:center; gap:4px; width:100%;">
@@ -1708,6 +1711,7 @@ function renderShiftList() {
                             </button>
                         </div>
                         ${getOkiniBadge(shift.name, 'anecan')}
+                        ${getDiaryBadge(shift.name, 'anecan')}
                     </div>
                     <div class="check-btn-wrapper ${getCheckStatus(shift.name, 'ainoshizuku') ? 'checked' : ''}">
                         <div style="display:flex; align-items:center; gap:4px; width:100%;">
@@ -1725,6 +1729,7 @@ function renderShiftList() {
                             </button>
                         </div>
                         ${getOkiniBadge(shift.name, 'ainoshizuku')}
+                        ${getDiaryBadge(shift.name, 'ainoshizuku')}
                     </div>
                 </div>
                 ${getAvailabilitySection(shift.name)}
@@ -3543,6 +3548,9 @@ async function reloadCoreData() {
     // ★ キャッシュも最新化（次回起動時の即時表示用）
     saveCache();
 
+    // ★2026-10-09: 日記バッジも取り直す（待たない）
+    loadDiaryLive();
+
     // 最終更新時刻を表示
     updateLastRefreshTime();
 }
@@ -5286,6 +5294,51 @@ function getOkiniBadge(name, store) {
         '<span class="okini-badge ' + badgeClass + '">' + badgeText + '</span>' +
         talkedHtml +
     '</div>';
+}
+
+// ============================================================
+// ★2026-10-09 日記ライブ: 出勤カードに「📝 本人分/ノルマ」を出す（読むだけ）
+//   数字は巡回PC（diary_live.py）が30分おき＋精算チェックの依頼時に更新する。
+//   精算の判断はスプレッドシートのメニュー「💴 日記精算 → 精算チェック」で数え直してから行う。
+// ============================================================
+async function loadDiaryLive() {
+    try {
+        const r = await apiCall('getDiaryLive');
+        if (!r || r.success !== true) return;
+        const before = JSON.stringify(diaryLive);
+        diaryLive = r;
+        renderDiaryLiveStamp();
+        if (JSON.stringify(diaryLive) !== before &&
+            document.getElementById('shift-view').classList.contains('active')) {
+            renderShiftList();
+        }
+    } catch (e) {
+        devLog('loadDiaryLive エラー: ' + (e && e.message));
+    }
+}
+
+function renderDiaryLiveStamp() {
+    const el = document.getElementById('diary-live-stamp');
+    if (!el) return;
+    if (!diaryLive || !diaryLive.updatedAt) { el.style.display = 'none'; return; }
+    const hm = String(diaryLive.updatedAt).slice(11, 16);
+    el.textContent = '📝 日記（本人分/ノルマ） ' + hm + ' 時点' +
+        (diaryLive.nikiMissing ? '　⚠️ニキ君分未取得の子あり' : '');
+    el.style.display = 'block';
+}
+
+function getDiaryBadge(name, store) {
+    if (!diaryLive || !diaryLive.casts) return '';
+    const c = diaryLive.casts[name];
+    if (!c || !c.stores || !c.stores[store]) return '';
+    const x = c.stores[store];
+    if (x.q === null || x.q === undefined) {
+        if (!x.t) return '';
+        return '<div class="diary-row"><span class="diary-badge diary-none" title="ノルマ未設定（本人分）">📝' + x.s + '</span></div>';
+    }
+    const ok = x.s >= x.q;
+    return '<div class="diary-row"><span class="diary-badge ' + (ok ? 'diary-ok' : 'diary-ng') + '" title="本人分/ノルマ">📝' +
+        x.s + '/' + x.q + '</span></div>';
 }
 
 /**
